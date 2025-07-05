@@ -1,21 +1,17 @@
-import { useEffect, useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import './App.css';
+import Home from "./pages/Home";
 
-function App() {
-  const [msg, setMsg] = useState('');
-
-  useEffect(() => {
-    fetch('http://localhost:5000/api/test')
-      .then(response => response.json())
-      .then(data => setMsg(data.message))
-      .catch(error => console.error('Error fetching message:', error));
-  }, []);
-
+const App = () => {
   return (
-    <div>
-      <h1>Workify</h1>
-      <p>{msg || 'Loading...'}</p>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+      </Routes>
+    </Router> 
   );
-}
+};
 
 export default App;

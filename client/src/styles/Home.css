@@ -1,0 +1,53 @@
+html {
+  scroll-behavior: smooth;
+}
+
+.home-container {
+  padding: 10px;
+}
+
+section {
+  height: 50vh;
+  padding: 80px;
+  display: flex;
+  justify-content: space-between;
+}
+
+h4 {
+  color: #96bec5;
+}
+
+#home {
+  background-color: #96bec5;
+  border-radius: 20px;
+  padding-top: 100px;
+}
+
+.woman {
+  width: 40%;
+  height: 130%;
+  margin-bottom: 30px;
+}
+
+.members {
+  width: 70%;
+  margin-top: 20px;
+}
+
+#services {
+  background-color: #F5F7FB;
+  border-radius: 20px;
+}
+
+.services-container {
+  display: flex;
+  gap: 30px;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.service-card{
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.3);
+}
