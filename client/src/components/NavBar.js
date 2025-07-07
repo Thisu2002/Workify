@@ -24,7 +24,7 @@ const NavBar = () => {
           <Link to="/#contact-us">Contact Us</Link>
         </li>
         <li>
-          <Link to="">
+          <Link to="/login">
             <Button
               variant="outlined"
               color="black"
