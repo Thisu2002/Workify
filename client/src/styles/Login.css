@@ -1,0 +1,132 @@
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: white;
+  overflow: hidden;
+}
+
+.login-container {
+  display: flex;
+  width: 80%;
+  max-width: 900px;
+  background-color: black;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 0.3s ease-out;
+
+}
+
+.left-side {
+  flex: 0.5;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.left-side .logo {
+  max-width: 100%;
+  height: auto;
+}
+
+.right-side {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #0F2445;
+}
+
+.login-title {
+  font-size: 32px;
+  margin-bottom: 30px;
+  text-align: center;
+  color: white;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-form input {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.login-form input::placeholder {
+  color: #666666;
+}
+
+.login-form input:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+}
+
+.msg, .error-icon {
+  margin: 0;
+  color: orange;
+  font-size: 14px;
+  margin-top: -15px;
+}
+
+.forgot-password{
+  text-align: right;
+  font-size: 14px;
+  color: #dddddd;
+  text-decoration: none;
+  margin-top: -10px;
+}
+
+.signup-link {
+  color: #dddddd;
+  text-decoration: none;
+  font-style: italic;
+}
+
+.forgot-password:hover, a:hover {
+  text-decoration: underline;
+}
+
+.signup-button{
+  border-radius: 20px;
+  background-color: #96bec5;
+  color: white;
+  margin-top: 20px;
+  padding: 10px 30px;
+  text-transform: none;
+  font-size: 16px;
+}
+
+.password-input {
+  display: flex;
+  justify-content: space-between;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #ffffff;
+}
+
+.visibility{
+  text-align: right;
+  padding: 0;
+  right: 0px;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
