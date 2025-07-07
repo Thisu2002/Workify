@@ -1,0 +1,128 @@
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  
+  .sidebar {
+    width: 120px;
+    background: #0a2048;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 32px;
+  }
+  
+  .logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #fff;
+  }
+  
+  .logo img {
+    width: 60px;
+    margin-bottom: 8px;
+  }
+  
+  .logo h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 0;
+  }
+  
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f7fafc;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 32px 48px 0 48px;
+    background: #fff;
+  }
+  
+  .profile-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .profile-pic {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e6e6e6;
+  }
+  
+  .dashboard-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .highlight {
+    color: #3da9fc;
+  }
+  
+  .dashboard-header p {
+    margin: 4px 0 0 0;
+    color: #6c7a89;
+    font-size: 1rem;
+  }
+  
+  .stats-cards {
+    display: flex;
+    gap: 24px;
+  }
+  
+  .stat-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(44, 62, 80, 0.08);
+    padding: 20px 28px;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 8px;
+  }
+  
+  .stat-icon {
+    font-size: 1.5rem;
+    color: #3da9fc;
+    margin-bottom: 8px;
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a2233;
+  }
+  
+  .stat-label {
+    font-size: 1rem;
+    color: #6c7a89;
+    margin-top: 2px;
+  }
+  
+  .stat-sub {
+    font-size: 0.9rem;
+    color: #3da9fc;
+    margin-top: 2px;
+  }
+  
+  .dashboard-gradient {
+    flex: 1;
+    background: linear-gradient(120deg, #f7fafc 0%, #b6d0e2 100%);
+    border-top: 12px solid #f7fafc;
+    border-radius: 0 0 32px 0;
+    margin-top: 24px;
+  } 
