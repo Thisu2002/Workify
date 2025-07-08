@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Login.css";
 import Button from "@mui/material/Button";
@@ -16,7 +16,6 @@ function Signup() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [emailExists, setEmailExists] = useState(false);
-  const [checkingEmail, setCheckingEmail] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [validPassword, setValidPassword] = useState("");
@@ -29,7 +28,6 @@ function Signup() {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (email) {
-        setCheckingEmail(true);
         axios
           .post("http://localhost:5000/auth/check-email", { email })
           .then((res) => {
@@ -37,9 +35,6 @@ function Signup() {
           })
           .catch((err) => {
             console.error("Email check failed:", err);
-          })
-          .finally(() => {
-            setCheckingEmail(false);
           });
       }
 
@@ -105,36 +100,47 @@ function Signup() {
           <form onSubmit={handleSubmit} className="login-form">
             {errorMessage && <span className="msg">{errorMessage}</span>}
 
-            <input
-              type="text"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-            />
+            <div className="name-inputs">
+              <input
+                type="text"
+                placeholder="First Name*"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
 
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-            />
+              <input
+                type="text"
+                placeholder="Last Name*"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
+
+            <select className="role-select" required>
+              <option value="" disabled selected>
+                Select Role*
+              </option>
+              <option value="mentor">Mentor</option>
+              <option value="candidate">Candidate</option>
+              <option value="lead_panelist">Lead Panelist</option>
+              <option value="recruiter">Recruiter</option>
+            </select>
 
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Email: john@example.com*"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            {checkingEmail && <span className="msg">Checking email...</span>}
             {emailExists && <span className="msg">Email already exists !</span>}
 
             <div className="password-input">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="Password*"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -155,7 +161,7 @@ function Signup() {
             <div className="password-input">
               <input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Retype Password"
+                placeholder="Retype Password*"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -186,6 +192,12 @@ function Signup() {
             >
               Signup
             </Button>
+            <p className="redirect-link">
+              Already have an account?{" "}
+              <a href="/login" className="signup-link">
+                Login
+              </a>
+            </p>
           </form>
         </div>
       </div>

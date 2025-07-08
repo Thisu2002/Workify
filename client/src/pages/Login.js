@@ -77,7 +77,7 @@ function Login() {
             >
               Login
             </Button>
-            <p>Don't have an account? <a href='/signup' className='signup-link'>Signup</a></p>
+            <p className='redirect-link'>Don't have an account? <a href='/signup' className='signup-link'>Signup</a></p>
           </form>
         </div>
       </div>
