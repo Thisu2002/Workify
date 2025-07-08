@@ -4,8 +4,8 @@ import './App.css';
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import AdminDashboard from "./pages/AdminDashboard";
-import RecruiterDashboard from "./pages/RecruiterDashboard";
+import Mentor from "./pages/Mentor";
+import LeadPanelist from "./pages/LeadPanelist";
 
 const App = () => {
   return (
@@ -14,8 +14,8 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/mentor-dashboard" element={<AdminDashboard />} />
-        <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} />
+        <Route path="/mentor" element={<Mentor />} />
+        <Route path="/lead-panelist" element={<LeadPanelist />} />
       </Routes>
     </Router> 
   );
