@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import './App.css';
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import RecruiterDashboard from "./pages/RecruiterDashboard";
+import Signup from "./pages/Signup";
+import Mentor from "./pages/Mentor";
+import LeadPanelist from "./pages/LeadPanelist";
 
 const App = () => {
   return (
@@ -12,8 +13,9 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/mentor-dashboard" element={<AdminDashboard />} />
-        <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/mentor" element={<Mentor />} />
+        <Route path="/lead-panelist" element={<LeadPanelist />} />
       </Routes>
     </Router> 
   );
