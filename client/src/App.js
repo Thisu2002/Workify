@@ -6,6 +6,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Mentor from "./pages/Mentor";
 import LeadPanelist from "./pages/LeadPanelist";
+import RecruiterDashboard from "./pages/RecruiterDashboard";
+
 
 const App = () => {
   return (
@@ -16,6 +18,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/mentor" element={<Mentor />} />
         <Route path="/lead-panelist" element={<LeadPanelist />} />
+        <Route path="/recruiter" element={<RecruiterDashboard />} />
       </Routes>
     </Router> 
   );
