@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import '../styles/Login.css';
 import { useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
@@ -30,9 +31,10 @@ function Login() {
         business_manager: '/manager-dashboard',
       };
 
+      toast.success('Login successful!');
       navigate(roleRoutes[res.data.role] || '/');
     } catch (err) {
-      alert(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || 'Login failed');
     }
   };
 
