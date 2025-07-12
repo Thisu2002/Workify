@@ -37,7 +37,7 @@ const NavBar = () => {
           </Link>
         </li>
         <li>
-          <Link to="">
+          <Link to="/signup">
             <Button
               variant="contained"
               sx={{
