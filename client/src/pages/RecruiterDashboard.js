@@ -37,7 +37,7 @@ import "../styles/Recruiter.css";
 
 const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
     <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
@@ -212,8 +212,8 @@ const RecruiterDashboard = () => {
           </Box>
 
           <Box display="flex" alignItems="center" gap={2}>
-            <Grid container spacing={2}>
-              <Grid item>
+            <Grid container spacing={2} wrap="nowrap">
+              <Grid item xs={4}>
                 <StatCard 
                   icon={<WorkOutline />}
                   title="Total Job Posts"
