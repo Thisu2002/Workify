@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 import "../styles/Login.css";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
@@ -80,7 +81,7 @@ function Signup() {
         password,
       });
 
-      alert("Signup successful!");
+      toast.success("Signup successful!");
       navigate("/login");
 
       // You can redirect or reset the form here
