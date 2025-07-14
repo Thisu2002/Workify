@@ -16,7 +16,10 @@ import {
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Menu,
+  MenuItem,
+  IconButton
 } from "@mui/material";
 import {
   AddCircle,
@@ -33,11 +36,22 @@ import {
   EmojiEvents as ExpertIcon,
   FiberManualRecord as OnlineIcon
 } from "@mui/icons-material";
+import AccountCircle from "@mui/icons-material/AccountCircle";
 import "../styles/Recruiter.css";
 
 const CandidateDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleProfileClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
     <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
@@ -65,7 +79,28 @@ const CandidateDashboard = () => {
   );
 
   return (
-    <Box className="recruiter-dashboard-container">
+    <Box className="recruiter-dashboard-container" sx={{ position: "relative" }}>
+      {/* Profile Icon Top Right */}
+      <Box sx={{ position: "absolute", top: 6, right: 30, zIndex: 10 }}>
+        <IconButton
+          size="large"
+          edge="end"
+          color="inherit"
+          onClick={handleProfileClick}
+        >
+          <AccountCircle fontSize="large" />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <MenuItem onClick={handleClose}>Profile</MenuItem>
+          <MenuItem onClick={handleClose}>Logout</MenuItem>
+        </Menu>
+      </Box>
 
       {/* Navigation */}
       <Paper className="recruiter-navigation" elevation={0}>
@@ -275,7 +310,7 @@ const CandidateDashboard = () => {
         </Grid>
       </Grid> */}
 
-      {/* Recent Activity */}
+      {/* Recent Activity
       <Box sx={{ mt: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Recent Activity</Typography>
         <List>
@@ -301,7 +336,7 @@ const CandidateDashboard = () => {
             />
           </ListItem>
         </List>
-      </Box>
+      </Box> */}
     </Box>
   );
 };
