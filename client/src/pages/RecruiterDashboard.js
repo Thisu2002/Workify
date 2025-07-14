@@ -23,6 +23,7 @@ import {
   AccessTime,
   Star,
   CheckCircle,
+  Add,
   Person,
   WorkOutline,
   AssignmentInd,
@@ -116,8 +117,12 @@ const RecruiterDashboard = () => {
             </Button>
           ))}
 
-          <Button className="new-button" variant="contained"  sx={{ marginLeft: 'auto' }}>
-            Create New Job Post
+          <Button className="new-button nav-short-btn" 
+                  variant="contained" 
+                  startIcon={<Add />}
+                  sx={{ marginLeft: 'auto' }}
+          >
+            New Job Post
           </Button>
         </Box>
       </Paper>
@@ -203,7 +208,7 @@ const RecruiterDashboard = () => {
 
       <Box className="recruiter-dashboard-content">
         <Box className="content-first-row" display="flex" flexDirection="row" alignItems="space-between" p={1}>
-          <Paper className="company-profile-card" elevation={2}>
+          <Paper className="content-card company-profile" elevation={2}>
             <Box display="flex" flexDirection="column" alignItems="center" p={3}>
               <Avatar
                 src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=120&h=120&fit=crop"
@@ -225,19 +230,19 @@ const RecruiterDashboard = () => {
             </Box>
           </Paper>
 
-          <Paper className="company-profile-card" elevation={2}>
+          <Paper className="content-card job-posts" elevation={2}>
             <Box display="flex" flexDirection="column" alignItems="flex-start" p={3} >
                 <Box className="jobpost-card-header" display="flex" alignItems="center" width="100%" mb={2}>
-                  <WorkOutline sx={{ fontSize: 32, color: "#3B5998", mr: 1 }} />
-                  <Typography variant="h6" fontWeight="bold">
+                  {/* <WorkOutline sx={{ fontSize: 32, color: "#3B5998", mr: 1 }} /> */}
+                  <Typography variant="h6" className="section-title" fontWeight="bold">
                     Open Job Posts
                   </Typography>
-                  {/* <Button className="new-button" variant="contained" color="primary" size="small" sx={{ marginLeft: 'auto' }}>
-                    Create New Job Post
-                  </Button> */}
+                  <Button className="new-button" variant="contained" color="primary" size="small" sx={{ marginLeft: 'auto' }}>
+                    View All Jobs
+                  </Button>
                 </Box>
                 {/* Short list of open jobs */}
-                <Box >
+                <Box className="job-posts-list">
                   {[
                     { title: "Frontend Developer", applications: 12, location: "Remote" },
                     { title: "Backend Engineer", applications: 8, location: "Bangalore" },
@@ -251,9 +256,9 @@ const RecruiterDashboard = () => {
                     </Box>
                   ))}
                 </Box>
-                <Button variant="outlined" color="primary" size="small" sx={{ alignSelf: "flex-end" }}>
+                {/* <Button variant="outlined" color="primary" size="small" sx={{ alignSelf: "flex-end" }}>
                   View All Jobs
-                </Button>
+                </Button> */}
               </Box>  
           </Paper>
         </Box>
