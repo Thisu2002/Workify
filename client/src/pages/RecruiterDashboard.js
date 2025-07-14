@@ -33,6 +33,7 @@ import {
   EmojiEvents as ExpertIcon,
   FiberManualRecord as OnlineIcon
 } from "@mui/icons-material";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import "../styles/Recruiter.css";
 
 const RecruiterDashboard = () => {
@@ -114,56 +115,12 @@ const RecruiterDashboard = () => {
               )} */}
             </Button>
           ))}
+
+          <Button className="new-button" variant="contained"  sx={{ marginLeft: 'auto' }}>
+            Create New Job Post
+          </Button>
         </Box>
       </Paper>
-
-      {/* Top Welcome Section
-      <Grid container spacing={3} alignItems="center">
-        <Grid item>
-          <Avatar
-            alt="Recruiter"
-            src="https://randomuser.me/api/portraits/men/75.jpg"
-            sx={{ width: 80, height: 80 }}
-          />
-        </Grid>
-        <Grid item xs>
-          <Typography variant="h5">
-            Welcome <strong>back, Recruiter!</strong>
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Hiring Manager • 5 years experience
-          </Typography>
-          <Box sx={{ mt: 1 }}>
-            <Chip label="Verified" color="success" size="small" sx={{ mr: 1 }} />
-            <Chip label="Recruiter" color="info" size="small" />
-          </Box>
-        </Grid>
-
-        {/* Summary Stat Cards 
-        <Grid item container xs={12} md={4} spacing={2}>
-          <Grid item xs={4}>
-            <Paper className="recruiter-stat-card">
-              <Typography variant="body2">Total Job Posts</Typography>
-              <Typography variant="h6">28</Typography>
-              <Typography variant="caption" color="success.main">+5 this month</Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={4}>
-            <Paper className="recruiter-stat-card">
-              <Typography variant="body2">Applications Received</Typography>
-              <Typography variant="h6">102</Typography>
-              <Typography variant="caption">New this week</Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={4}>
-            <Paper className="recruiter-stat-card">
-              <Typography variant="body2">Interviews Scheduled</Typography>
-              <Typography variant="h6">14</Typography>
-              <Typography variant="caption">Ongoing</Typography>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Grid> */}
 
       <Paper className="recruiter-dashboard-header" elevation={0}>
         <Box className="recruiter-header-content">
@@ -244,65 +201,65 @@ const RecruiterDashboard = () => {
         </Box>
       </Paper>
 
-      {/* Overview Cards */}
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={3}>
-          <Paper className="recruiter-overview-card">
-            <Typography variant="body2">Open Job Posts</Typography>
-            <Typography variant="h5">8</Typography>
-            <Chip icon={<AddCircle />} label="2 new this week" size="small" />
+      <Box className="recruiter-dashboard-content">
+        <Box className="content-first-row" display="flex" flexDirection="row" alignItems="space-between" p={1}>
+          <Paper className="company-profile-card" elevation={2}>
+            <Box display="flex" flexDirection="column" alignItems="center" p={3}>
+              <Avatar
+                src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=120&h=120&fit=crop"
+                sx={{ width: 80, height: 80, mb: 2 }}
+              />
+              <Typography variant="h6" fontWeight="bold">
+                Acme Tech Solutions
+              </Typography>
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1 }}>
+                Bangalore, India
+              </Typography>
+              <Chip label="IT Services" color="primary" size="small" sx={{ mb: 2 }} />
+              <Typography variant="body2" align="center" sx={{ mb: 2 }}>
+                Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry.
+              </Typography>
+              <Button variant="contained" color="primary" size="small">
+                Edit Profile
+              </Button>
+            </Box>
           </Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className="recruiter-overview-card">
-            <Typography variant="body2">Pending Applications</Typography>
-            <Typography variant="h5">35</Typography>
-            <Chip icon={<AddCircle />} label="+7 this week" size="small" />
-          </Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className="recruiter-overview-card">
-            <Typography variant="body2">Shortlisted Candidates</Typography>
-            <Typography variant="h5">12</Typography>
-            <Chip icon={<Star />} label="Promising profiles" size="small" />
-          </Paper>
-        </Grid>
-        <Grid item xs={3}>
-          <Paper className="recruiter-overview-card">
-            <Typography variant="body2">Upcoming Interviews</Typography>
-            <Typography variant="h5">5</Typography>
-            <Chip icon={<AccessTime />} label="Next at 3PM" size="small" />
-          </Paper>
-        </Grid>
-      </Grid>
 
-      {/* Recent Activity */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Recent Activity</Typography>
-        <List>
-          <ListItem sx={{ mb: 1 }}>
-            <ListItemIcon><CheckCircle color="success" /></ListItemIcon>
-            <ListItemText
-              primary="Interview feedback submitted for James Miller"
-              secondary="1 hour ago"
-            />
-          </ListItem>
-          <ListItem sx={{ mb: 1 }}>
-            <ListItemIcon><AddCircle color="primary" /></ListItemIcon>
-            <ListItemText
-              primary="New job post: Senior UI/UX Designer"
-              secondary="Today at 9:00 AM"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon><EventNote color="warning" /></ListItemIcon>
-            <ListItemText
-              primary="Interview scheduled with Priya Sharma"
-              secondary="Tomorrow at 11:00 AM"
-            />
-          </ListItem>
-        </List>
+          <Paper className="company-profile-card" elevation={2}>
+            <Box display="flex" flexDirection="column" alignItems="flex-start" p={3} >
+                <Box className="jobpost-card-header" display="flex" alignItems="center" width="100%" mb={2}>
+                  <WorkOutline sx={{ fontSize: 32, color: "#3B5998", mr: 1 }} />
+                  <Typography variant="h6" fontWeight="bold">
+                    Open Job Posts
+                  </Typography>
+                  {/* <Button className="new-button" variant="contained" color="primary" size="small" sx={{ marginLeft: 'auto' }}>
+                    Create New Job Post
+                  </Button> */}
+                </Box>
+                {/* Short list of open jobs */}
+                <Box >
+                  {[
+                    { title: "Frontend Developer", applications: 12, location: "Remote" },
+                    { title: "Backend Engineer", applications: 8, location: "Bangalore" },
+                    { title: "UI/UX Designer", applications: 5, location: "Remote" }
+                  ].map((job, idx) => (
+                    <Box key={idx} className="job-post-summary" mb={2} p={2} sx={{ background: "#f4f7fa", borderRadius: 2 }}>
+                      <Typography variant="subtitle1" fontWeight="bold">{job.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {job.location} &nbsp;|&nbsp; {job.applications} applications
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+                <Button variant="outlined" color="primary" size="small" sx={{ alignSelf: "flex-end" }}>
+                  View All Jobs
+                </Button>
+              </Box>  
+          </Paper>
+        </Box>
+        
       </Box>
+
     </Box>
   );
 };

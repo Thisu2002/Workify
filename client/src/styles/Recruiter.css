@@ -7,7 +7,6 @@
 .recruiter-dashboard-container {
     height: 100vh;
     font-family: 'Segoe UI', Arial, sans-serif;
-    /* padding: 20px; */
     background: linear-gradient(135deg, #F5F7FB 0%, #96BEC5 100%);
   }
 
@@ -128,7 +127,8 @@
 
 .recruiter-nav-container {
   max-width: 1400px;
-  margin: 0 auto;
+  /* height: 80px; */
+  margin: 0 ;
   padding: 0 40px;
   display: flex;
   gap: 8px;
@@ -274,6 +274,67 @@
   align-items: center;
   justify-content: center;
   color: #96BEC5 !important;
+}
+.recruiter-dashboard-content {
+  padding: 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.activity-card-modern {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 247, 251, 0.9) 100%) !important;
+  border: 1px solid rgba(15, 36, 69, 0.12) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 6px 25px rgba(15, 36, 69, 0.08), 0 2px 12px rgba(150, 190, 197, 0.12) !important;
+  backdrop-filter: blur(15px);
+}
+
+.company-profile-card {
+  /* min-height: 340px; */
+  /* max-width: 320px; */
+  margin-right: 80px;
+  border: 1px solid rgba(15, 36, 69, 0.12) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 6px 25px rgba(15, 36, 69, 0.08), 0 2px 12px rgba(150, 190, 197, 0.12) !important;
+  backdrop-filter: blur(15px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 247, 251, 0.9) 100%) !important;
+}
+.recruiter-dashboard-content .MuiGrid-container {
+  margin-top: 0;
+  flex-wrap: wrap !important;
+}
+
+.jobpost-card-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-right: 40px;
+  margin-bottom: 16px;
+}
+
+.new-button {
+  background: #0F2445 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  
+  border-radius: 12px !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(15, 36, 69, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.new-button:hover {
+  background: #000000 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 36, 69, 0.4) !important;
+}
+
+.job-post-summary {
+  margin-bottom: 8px;
+  background: #f4f7fa;
+  border-radius: 8px;
+  padding: 12px;
 }
 
 /* Overview Cards */
