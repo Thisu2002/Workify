@@ -94,7 +94,7 @@ function Signup() {
     <div className="login-page">
       <div className="login-container">
         <div className="left-side">
-          <img src={logo} alt="Workify Logo" className="logo" />
+          <a href="/"><img src={logo} alt="Workify Logo" className="logo" /></a>
         </div>
         <div className="right-side">
           <h1 className="login-title">Signup</h1>
