@@ -189,10 +189,10 @@ const CandidateDashboard = () => {
             </Box>
             <Box>
               <Typography variant="h4" className="recruiter-welcome-text">
-                Welcome back, Recruiter!
+                Welcome back, Sajani Lankathilaka!
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
-                Hiring Manager • 3 years experience
+                Software Engineer • 3 years experience
               </Typography>
               <Box display="flex" gap={1} mt={1}>
                 <Chip 
@@ -203,7 +203,7 @@ const CandidateDashboard = () => {
                 />
                 <Chip 
                   icon={<ExpertIcon />} 
-                  label="Expert" 
+                  label="Job Seeker" 
                   size="small" 
                   className="expert-badge"
                 />
@@ -216,24 +216,23 @@ const CandidateDashboard = () => {
               <Grid item xs={4}>
                 <StatCard 
                   icon={<WorkOutline />}
-                  title="Total Job Posts"
+                  title="Jobs Applied"
                   value="28"
                   change="+5 this month"
                 />
               </Grid>
               <Grid item>
                 <StatCard 
-                  icon={<AssignmentInd />}
-                  title="Applications Received"
-                  value="102"
+                  icon={<EventNote />}
+                  title="Upcoming Interviews"
+                  value="11"
                   change="New this month"
-                  color="#ffa502"
                 />
               </Grid>
               <Grid item>
                 <StatCard 
                   icon={<Schedule />}
-                  title="Interviews Scheduled"
+                  title="Saved Jobs"
                   value="14"
                   change="Ongoing"
                   color="#10b981"
@@ -244,7 +243,7 @@ const CandidateDashboard = () => {
         </Box>
       </Paper>
 
-      {/* Overview Cards */}
+      {/* Overview Cards
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={3}>
           <Paper className="recruiter-overview-card">
@@ -274,7 +273,7 @@ const CandidateDashboard = () => {
             <Chip icon={<AccessTime />} label="Next at 3PM" size="small" />
           </Paper>
         </Grid>
-      </Grid>
+      </Grid> */}
 
       {/* Recent Activity */}
       <Box sx={{ mt: 4 }}>
