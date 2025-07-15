@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import {
   Person,
   WorkOutline,
   AssignmentInd,
   Schedule,
   Feedback,
-  AccountCircle,
   Close as CloseIcon,
 } from "@mui/icons-material";
+
 import Sidebar from "../components/Sidebar";
+import Header from "../components/Topbar"; // <-- new import
 import Overview from "../components/Recruiter/Overview";
 import JobPosts from "../components/Recruiter/JobPosts";
 import PostJobs from "../components/Recruiter/PostJob";
@@ -38,27 +39,13 @@ const RecruiterDashboard = () => {
       />
 
       <Box className="recruiter-main-content">
-        {/* Header */}
-        <Box
-          className="recruiter-header"
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Typography variant="h5" fontWeight="bold" className="page-title">
-            {menuTabs.find((tab) => tab.id === activeTab)?.label}
-          </Typography>
-          <IconButton
-            className="profile-icon-btn"
-            size="large"
-            sx={{ ml: 2 }}
-            onClick={() => {
-              // Profile logic here
-            }}
-          >
-            <AccountCircle sx={{ fontSize: 38 }} />
-          </IconButton>
-        </Box>
+        {/* Reusable Header */}
+        <Header
+          title={menuTabs.find((tab) => tab.id === activeTab)?.label}
+          onProfileClick={() => {
+            // handle profile logic here
+          }}
+        />
 
         {/* Page Content */}
         <Box className="recruiter-content-area">
