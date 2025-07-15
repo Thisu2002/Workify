@@ -160,11 +160,16 @@ const Overview = () => {
               <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1 }}>
                 Bangalore, India
               </Typography>
-              <Chip label="IT Services" color="primary" size="small" sx={{ mb: 2 }} />
+              <Chip 
+                label="IT Services" 
+                className="it-services-chip"
+                color="primary" 
+                // size="small" 
+                sx={{ mb: 2 }} />
               <Typography variant="body2" align="center" sx={{ mb: 2 }}>
                 Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry.
               </Typography>
-              <Button variant="contained" color="primary" size="small">
+              <Button className="new-button" variant="contained" color="primary" size="small">
                 Edit Profile
               </Button>
             </Box>
@@ -196,9 +201,6 @@ const Overview = () => {
                     </Box>
                   ))}
                 </Box>
-                {/* <Button variant="outlined" color="primary" size="small" sx={{ alignSelf: "flex-end" }}>
-                  View All Jobs
-                </Button> */}
               </Box>  
           </Paper>
         </Box>
