@@ -13,10 +13,6 @@ import CandidateDashboard from "./pages/CandidateDashboard";
 
 import Admin from "./pages/Admin";
 
-
-import PostJob from "./pages/PostJob";
-
-
 const App = () => {
   return (
     <Router>
@@ -30,8 +26,6 @@ const App = () => {
 
         <Route path="/recruiter" element={<RecruiterDashboard />} />
         <Route path="/candidate" element={<CandidateDashboard />} />
-
-        <Route path="/recruiter/post-job" element={<PostJob />} />
 
         <Route path="/admin" element={<Admin />} />
 

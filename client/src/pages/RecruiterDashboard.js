@@ -1,141 +1,83 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
+import { Box, IconButton } from "@mui/material";
 import {
-  Box,
-  Card,
-  CardContent,
-  alpha,
-  Typography,
-  Grid,
-  Paper,
-  Avatar,
-  Chip,
-  Button,
-  Zoom,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText
-} from "@mui/material";
-import {
-  AddCircle,
-  AccessTime,
-  Star,
-  CheckCircle,
-  Add,
   Person,
   WorkOutline,
   AssignmentInd,
   Schedule,
   Feedback,
-  EventNote,
-  VerifiedUser as VerifiedIcon,
-  EmojiEvents as ExpertIcon,
-  FiberManualRecord as OnlineIcon
+  Close as CloseIcon,
 } from "@mui/icons-material";
-import BarChartIcon from "@mui/icons-material/BarChart";
+
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Topbar"; // <-- new import
 import Overview from "../components/Recruiter/Overview";
+import JobPosts from "../components/Recruiter/JobPosts";
+import PostJobs from "../components/Recruiter/PostJob";
 import "../styles/Recruiter.css";
 
-const RecruiterDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(false);
+const menuTabs = [
+  { id: "overview", label: "Overview", icon: <Person /> },
+  { id: "jobs", label: "Job Posts", icon: <WorkOutline /> },
+  { id: "applications", label: "Applications", icon: <AssignmentInd /> },
+  { id: "interviews", label: "Interviews", icon: <Schedule /> },
+  { id: "feedback", label: "Feedback", icon: <Feedback /> },
+];
 
-  const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
-    <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
-      <Card className="recruiter-stat-card">
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-            <Box>
-              <Typography variant="body2" className="stat-title">
-                {title}
-              </Typography>
-              <Typography variant="h3" className="stat-value" sx={{ color }}>
-                {value}
-              </Typography>
-              <Typography variant="caption" className="stat-change">
-                {change}
-              </Typography>
-            </Box>
-            <Box className="stat-icon" sx={{ backgroundColor: alpha(color, 0.1) }}>
-              {icon}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </Zoom>
-  );
+const RecruiterDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const [showJobForm, setShowJobForm] = useState(false);
 
   return (
-    <Box className="recruiter-dashboard-container">
+    <Box className="recruiter-dashboard-root">
+      <Sidebar
+        menuTabs={menuTabs}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isRecruiter={true}
+        setShowJobForm={setShowJobForm}
+      />
 
-      {/* Navigation */}
-      <Paper className="recruiter-navigation" elevation={0}>
-        <Box className="recruiter-nav-container">
-          {[
-            {
-              id: 'overview',
-              label: 'Overview',
-              icon: <Person />
-            },
-            {
-              id: 'jobs',
-              label: 'Job Posts',
-              icon: <WorkOutline />
-            },
-            {
-              id: 'applications',
-              label: 'Applications',
-              icon: <AssignmentInd />
-            },
-            {
-              id: 'interviews',
-              label: 'Interviews',
-              icon: <Schedule />
-            },
-            {
-              id: 'feedback',
-              label: 'Feedback',
-              icon: <Feedback />
-            }
-          ].map((tab) => (
-            <Button
-              key={tab.id}
-              className={`recruiter-nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-              startIcon={tab.icon}
-              onClick={() => setActiveTab(tab.id)}
-              sx={{ position: 'relative' }}
-            >
-              {tab.label}
-              {/* {tab.badge > 0 && (
-                <Chip 
-                  label={tab.badge} 
-                  size="small" 
-                  className="nav-badge"
-                />
-              )} */}
-            </Button>
-          ))}
+      <Box className="recruiter-main-content">
+        {/* Reusable Header */}
+        <Header
+          title={menuTabs.find((tab) => tab.id === activeTab)?.label}
+          onProfileClick={() => {
+            // handle profile logic here
+          }}
+        />
 
-          <Button className="new-button nav-short-btn" 
-                  variant="contained" 
-                  startIcon={<Add />}
-                  sx={{ marginLeft: 'auto' }}
-          >
-            New Job Post
-          </Button>
+        {/* Page Content */}
+        <Box className="recruiter-content-area">
+          {activeTab === "overview" && <Overview />}
+          {activeTab === "jobs" ? (
+            showJobForm ? (
+              <Box
+                position="relative"
+                sx={{
+                  border: "1px solid #ccc",
+                  borderRadius: 2,
+                  p: 2,
+                  mb: 3,
+                }}
+              >
+                <IconButton
+                  onClick={() => setShowJobForm(false)}
+                  sx={{ position: "absolute", top: 10, right: 450 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+                <PostJobs /> <JobPosts />
+              </Box>
+            ) : (
+              <JobPosts />
+            )
+          ) : null}
+          {/*{activeTab === 'applications' && <Applications />}
+          {activeTab === 'interviews' && <Interviews />}
+          {activeTab === 'feedback' && <Feedback />} */}
         </Box>
-      </Paper>
-
-      {activeTab === 'overview' && <Overview />}
-      {/* {activeTab === 'jobs' && renderJobPosts()}
-      {activeTab === 'applications' && renderApplications()}
-      {activeTab === 'interviews' && renderInterviews()}
-      {activeTab === 'feedback' && renderFeedback()} */}
-
-      
-
+      </Box>
     </Box>
   );
 };
