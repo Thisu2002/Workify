@@ -126,9 +126,8 @@
 }
 
 .recruiter-nav-container {
-  max-width: 1400px;
-  /* height: 80px; */
-  margin: 0 ;
+  /* max-width: 1400px; */
+  margin: 0 auto;
   padding: 0 40px;
   display: flex;
   gap: 8px;
@@ -174,14 +173,23 @@
   border: 2px solid rgba(255, 255, 255, 0.9);
 }
 
+.nav-bar-icons{
+  margin-left: 160px;
+}
+
+.profile-icon-btn {
+  align-self: center;
+}
+
 .recruiter-dashboard-header {
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
-  backdrop-filter: blur(25px);
-  border: none !important;
-  border-bottom: 1px solid rgba(15, 36, 69, 0.15) !important;
   position: relative;
   z-index: 2;
   box-shadow: 0 6px 30px rgba(15, 36, 69, 0.1), 0 2px 15px rgba(150, 190, 197, 0.15) !important;
+  background: linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+  backdrop-filter: blur(20px);
+  border: none !important;
+  border-bottom: 1px solid rgba(15, 36, 69, 0.12) !important;
+  box-shadow: 0 4px 20px rgba(15, 36, 69, 0.06), 0 1px 8px rgba(150, 190, 197, 0.1) !important;
 }
 
 .recruiter-header-content {
@@ -275,6 +283,7 @@
   justify-content: center;
   color: #96BEC5 !important;
 }
+
 .recruiter-dashboard-content {
   padding: 24px 40px;
   display: flex;
@@ -314,22 +323,16 @@
   flex-shrink: 0;
 }
 
+.it-services-chip {
+  background: linear-gradient(135deg, rgba(255, 190, 27, 0.2), rgba(220, 143, 10, 0.3)) !important;
+  color: #75330a !important;
+  border: 1px solid rgba(251, 191, 36, 0.4) !important;
+  padding: 30px;             
+}
+
 .job-posts {
   flex: 1 1 0;
   min-width: 0;
-}
-
-.job-post-summary{
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(245, 247, 251, 0.8), rgba(226, 232, 240, 0.6));
-  border-radius: 20px;
-  border: 1px solid rgba(15, 36, 69, 0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 3px 15px rgba(15, 36, 69, 0.06), 0 1px 6px rgba(150, 190, 197, 0.08);
-  backdrop-filter: blur(10px);
 }
 
 .recruiter-dashboard-content .MuiGrid-container {
@@ -377,11 +380,13 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 .job-post-summary {
   display: flex;
   align-items: center;
+  /* width: 100%; */
   gap: 18px;
   padding: 20px;
   background: linear-gradient(135deg, rgba(245, 247, 251, 0.8), rgba(226, 232, 240, 0.6));
@@ -392,16 +397,9 @@
   backdrop-filter: blur(10px);
 }
 
-/* .job-post-summary {
-  margin-bottom: 8px;
-  background: #f4f7fa;
-  border-radius: 8px;
-  padding: 12px;
-} */
-
 .job-post-summary:hover {
   background: linear-gradient(135deg, rgba(150, 190, 197, 0.15), rgba(15, 36, 69, 0.12));
-  transform: translateX(15px) scale(1.02);
+  /* transform: translateX(15px) scale(1.02); */
   border-color: rgba(150, 190, 197, 0.25);
   box-shadow: 0 8px 30px rgba(15, 36, 69, 0.1), 0 4px 15px rgba(150, 190, 197, 0.15);
 }
@@ -420,24 +418,6 @@
   margin-top: 8px;
   background: #eaf3fa;
   font-size: 0.85rem;
-}
-
-/* Recent Activity */
-.recruiter-dashboard-container .MuiList-root {
-  background: #f8fbff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  padding: 16px 0;
-}
-.recruiter-dashboard-container .MuiListItem-root {
-  border-bottom: 1px solid #e3e8ee;
-}
-.recruiter-dashboard-container .MuiListItem-root:last-child {
-  border-bottom: none;
-}
-
-.recruiter-dashboard-container .MuiListItemIcon-root {
-  min-width: 36px;
 }
 
 .recruiter-dashboard-container .MuiTypography-h6 {
@@ -479,10 +459,94 @@
     margin-top: 2px;
   }
   
-  /* .dashboard-gradient {
-    flex: 1;
-    background: linear-gradient(120deg, #f7fafc 0%, #b6d0e2 100%);
-    border-top: 12px solid #f7fafc;
-    border-radius: 0 0 32px 0;
-    margin-top: 24px;
-  }  */
+.recruiter-dashboard-root {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F5F7FB 0%, #96BEC5 100%);
+}
+
+.recruiter-sidebar {
+  width: 220px;
+  background: linear-gradient(135deg, #0e264a 0%, #060a13 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding-bottom: 32px;
+  box-shadow: 2px 0 12px rgba(12, 29, 57, 0.07);
+}
+
+.sidebar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.sidebar-tab {
+  color: #e3eafc !important;
+  border-radius: 8px;
+  margin: 20px 8px;
+  transition: background 0.2s;
+}
+
+.sidebar-tab .MuiListItemIcon-root,
+.sidebar-tab .MuiListItemText-root,
+.sidebar-tab,
+.sidebar-tab .MuiTypography-root {
+  color: #fff !important;
+}
+
+.sidebar-tab.active,
+.sidebar-tab.Mui-selected {
+  background: rgba(255,255,255,0.15) !important;
+  color: #fff !important;
+}
+.sidebar-tab:hover {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+.sidebar-new-button {
+  margin-top: auto;
+  margin-bottom: 16px;
+  background: linear-gradient(45deg, #0F2445, #3B5998) !important;
+  border-radius: 10px !important;
+  font-weight: bold;
+}
+
+.recruiter-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.recruiter-header {
+  height: 64px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  box-shadow: 0 2px 8px rgba(15,36,69,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-title {
+  color: #0f2445;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.recruiter-content-area {
+  padding: 32px 40px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Optional: Profile icon alignment */
+.profile-icon-btn {
+  color: #3b5998 !important;
+}
