@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -16,7 +16,8 @@ import {
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  IconButton,
 } from "@mui/material";
 import {
   AddCircle,
@@ -32,21 +33,29 @@ import {
   EventNote,
   VerifiedUser as VerifiedIcon,
   EmojiEvents as ExpertIcon,
-  FiberManualRecord as OnlineIcon
+  FiberManualRecord as OnlineIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import Overview from "../components/Recruiter/Overview";
 import "../styles/Recruiter.css";
+import JobPosts from "../components/Recruiter/JobPosts";
+import PostJobs from "../components/Recruiter/PostJob";
 
 const RecruiterDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
+  const [showJobForm, setShowJobForm] = useState(false);
 
-  const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
-    <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
+  const StatCard = ({ icon, title, value, change, color = "#96BEC5" }) => (
+    <Zoom in={!loading} style={{ transitionDelay: "200ms" }}>
       <Card className="recruiter-stat-card">
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+          >
             <Box>
               <Typography variant="body2" className="stat-title">
                 {title}
@@ -58,7 +67,10 @@ const RecruiterDashboard = () => {
                 {change}
               </Typography>
             </Box>
-            <Box className="stat-icon" sx={{ backgroundColor: alpha(color, 0.1) }}>
+            <Box
+              className="stat-icon"
+              sx={{ backgroundColor: alpha(color, 0.1) }}
+            >
               {icon}
             </Box>
           </Box>
@@ -69,43 +81,44 @@ const RecruiterDashboard = () => {
 
   return (
     <Box className="recruiter-dashboard-container">
-
       {/* Navigation */}
       <Paper className="recruiter-navigation" elevation={0}>
         <Box className="recruiter-nav-container">
           {[
             {
-              id: 'overview',
-              label: 'Overview',
-              icon: <Person />
+              id: "overview",
+              label: "Overview",
+              icon: <Person />,
             },
             {
-              id: 'jobs',
-              label: 'Job Posts',
-              icon: <WorkOutline />
+              id: "jobs",
+              label: "Job Posts",
+              icon: <WorkOutline />,
             },
             {
-              id: 'applications',
-              label: 'Applications',
-              icon: <AssignmentInd />
+              id: "applications",
+              label: "Applications",
+              icon: <AssignmentInd />,
             },
             {
-              id: 'interviews',
-              label: 'Interviews',
-              icon: <Schedule />
+              id: "interviews",
+              label: "Interviews",
+              icon: <Schedule />,
             },
             {
-              id: 'feedback',
-              label: 'Feedback',
-              icon: <Feedback />
-            }
+              id: "feedback",
+              label: "Feedback",
+              icon: <Feedback />,
+            },
           ].map((tab) => (
             <Button
               key={tab.id}
-              className={`recruiter-nav-tab ${activeTab === tab.id ? 'active' : ''}`}
+              className={`recruiter-nav-tab ${
+                activeTab === tab.id ? "active" : ""
+              }`}
               startIcon={tab.icon}
               onClick={() => setActiveTab(tab.id)}
-              sx={{ position: 'relative' }}
+              sx={{ position: "relative" }}
             >
               {tab.label}
               {/* {tab.badge > 0 && (
@@ -118,24 +131,48 @@ const RecruiterDashboard = () => {
             </Button>
           ))}
 
-          <Button className="new-button nav-short-btn" 
-                  variant="contained" 
-                  startIcon={<Add />}
-                  sx={{ marginLeft: 'auto' }}
+          <Button
+            className="new-button nav-short-btn"
+            variant="contained"
+            startIcon={<Add />}
+            sx={{ marginLeft: "auto" }}
+            onClick={() => {
+              setActiveTab("jobs");
+              setShowJobForm(true);
+            }}
           >
             New Job Post
           </Button>
         </Box>
       </Paper>
 
-      {activeTab === 'overview' && <Overview />}
-      {/* {activeTab === 'jobs' && renderJobPosts()}
-      {activeTab === 'applications' && renderApplications()}
+      {activeTab === "overview" && <Overview />}
+      {activeTab === "jobs" ? (
+        showJobForm ? (
+          <Box
+            position="relative"
+            sx={{
+              border: "1px solid #ccc",
+              borderRadius: 2,
+              p: 2,
+              mb: 3,
+            }}
+          >
+            <IconButton
+              onClick={() => setShowJobForm(false)}
+              sx={{ position: "absolute", top: 10, right: 450 }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <PostJobs /> <JobPosts />
+          </Box>
+        ) : (
+          <JobPosts />
+        )
+      ) : null}
+      {/* {activeTab === 'applications' && renderApplications()}
       {activeTab === 'interviews' && renderInterviews()}
       {activeTab === 'feedback' && renderFeedback()} */}
-
-      
-
     </Box>
   );
 };
