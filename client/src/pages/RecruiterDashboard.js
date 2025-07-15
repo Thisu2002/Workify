@@ -49,7 +49,7 @@ const RecruiterDashboard = () => {
 
         {/* Page Content */}
         <Box className="recruiter-content-area">
-          {activeTab === "overview" && <Overview />}
+          {activeTab === "overview" && <Overview setActiveTab={setActiveTab} />}
           {activeTab === "jobs" ? (
             showJobForm ? (
               <Box

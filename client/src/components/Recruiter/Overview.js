@@ -16,7 +16,8 @@ import {
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField
 } from "@mui/material";
 import {
   AddCircle,
@@ -35,11 +36,22 @@ import {
   FiberManualRecord as OnlineIcon
 } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+// import { useNavigate } from "react-router-dom";
 import "../../styles/Recruiter.css";
 
-const Overview = () => {
+const Overview = ({ setActiveTab }) => {
     const [loading, setLoading] = useState(false);
-    
+    const [openEdit, setOpenEdit] = useState(false);
+    const [profile, setProfile] = useState({
+      name: "Acme Tech Solutions",
+      location: "Bangalore, India",
+      industry: "IT Services",
+      description: "Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry."
+    });
+    // const navigate = useNavigate();
+
       const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
         <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
           <Card className="recruiter-stat-card">
@@ -64,6 +76,16 @@ const Overview = () => {
           </Card>
         </Zoom>
       );
+
+      const handleEditOpen = () => setOpenEdit(true);
+      const handleEditClose = () => setOpenEdit(false);
+      const handleProfileChange = (e) => {
+        setProfile({ ...profile, [e.target.name]: e.target.value });
+      };
+      const handleSave = () => {
+        // Save logic here (API call, etc.)
+        setOpenEdit(false);
+      };
 
     return (
         <Box>
@@ -169,7 +191,13 @@ const Overview = () => {
               <Typography variant="body2" align="center" sx={{ mb: 2 }}>
                 Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry.
               </Typography>
-              <Button className="new-button" variant="contained" color="primary" size="small">
+              <Button
+                className="new-button"
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleEditOpen}
+              >
                 Edit Profile
               </Button>
             </Box>
@@ -182,7 +210,14 @@ const Overview = () => {
                   <Typography variant="h6" className="section-title" fontWeight="bold">
                     Open Job Posts
                   </Typography>
-                  <Button className="new-button" variant="contained" color="primary" size="small" sx={{ marginLeft: 'auto' }}>
+                  <Button
+                    className="new-button"
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    sx={{ marginLeft: 'auto' }}
+                    onClick={() => setActiveTab("jobs")}
+                  >
                     View All Jobs
                   </Button>
                 </Box>
@@ -204,8 +239,97 @@ const Overview = () => {
               </Box>  
           </Paper>
         </Box>
-        
+
+        <Box className="content-second-row" display="flex" flexDirection="row" gap={3} mt={3}>
+          {/* Statistic Chart Card */}
+          <Paper className="content-card stats-card" elevation={2} style={{ flex: 1 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" p={3}>
+              <Typography variant="h6" fontWeight="bold" mb={2}>
+                Application Statistics
+              </Typography>
+              {/* Example Bar Chart using recharts */}
+              <ResponsiveContainer width="100%" height={150}>
+                <BarChart
+                  data={[
+                    { name: "Mon", applications: 5 },
+                    { name: "Tue", applications: 8 },
+                    { name: "Wed", applications: 6 },
+                    { name: "Thu", applications: 10 },
+                    { name: "Fri", applications: 7 }
+                  ]}
+                >
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="applications" fill="#3B5998" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+
+          {/* Calendar Card */}
+          <Paper className="content-card calendar-card" elevation={2} style={{ flex: 1 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" p={3}>
+              <Typography variant="h6" fontWeight="bold" mb={2}>
+                Calendar
+              </Typography>
+              {/* Placeholder for Calendar */}
+              <CalendarMonthIcon sx={{ fontSize: 60, color: "#3B5998", mb: 2 }} />
+              <Typography variant="body2" color="text.secondary">
+                Upcoming interviews and events will appear here.
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
       </Box>
+
+      <Dialog open={openEdit} onClose={handleEditClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Company Profile</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="normal"
+            label="Company Name"
+            name="name"
+            value={profile.name}
+            onChange={handleProfileChange}
+            fullWidth
+          />
+          <TextField
+            margin="normal"
+            label="Location"
+            name="location"
+            value={profile.location}
+            onChange={handleProfileChange}
+            fullWidth
+          />
+          <TextField
+            margin="normal"
+            label="Industry"
+            name="industry"
+            value={profile.industry}
+            onChange={handleProfileChange}
+            fullWidth
+          />
+          <TextField
+            margin="normal"
+            label="Description"
+            name="description"
+            value={profile.description}
+            onChange={handleProfileChange}
+            fullWidth
+            multiline
+            rows={3}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditClose} color="secondary" variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} color="primary" variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
         </Box>
     );
 }
