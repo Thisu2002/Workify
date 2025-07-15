@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+  import React, { useState } from "react";
 import { Box, IconButton } from "@mui/material";
 import {
   Person,
@@ -49,7 +49,7 @@ const RecruiterDashboard = () => {
 
         {/* Page Content */}
         <Box className="recruiter-content-area">
-          {activeTab === "overview" && <Overview />}
+          {activeTab === "overview" && <Overview setActiveTab={setActiveTab} />}
           {activeTab === "jobs" ? (
             showJobForm ? (
               <Box

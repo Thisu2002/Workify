@@ -11,7 +11,12 @@ import LeadPanelist from "./pages/LeadPanelist";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
 
+
 import AdminDashboard from "./pages/AdminDashboard";
+=======
+import JobPosts from "./components/Recruiter/JobPosts";
+
+
 
 const App = () => {
   return (
@@ -28,6 +33,9 @@ const App = () => {
         <Route path="/candidate" element={<CandidateDashboard />} />
 
         <Route path="/admin" element={<AdminDashboard />} />
+
+
+        {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 
       </Routes>
     </Router> 
