@@ -34,26 +34,15 @@ import {
   EventNote,
   VerifiedUser as VerifiedIcon,
   EmojiEvents as ExpertIcon,
-  FiberManualRecord as OnlineIcon
+  FiberManualRecord as OnlineIcon,
+  Cancel, // Add this import
+  School, // Add this import
 } from "@mui/icons-material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import "../styles/Recruiter.css";
+import InterviewsTab from '../components/Candidate/Interviews';
 
-const CandidateDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-
-  const handleProfileClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
+const StatCard = ({ icon, title, value, change, color = '#96BEC5', loading }) => (
     <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
       <Card className="recruiter-stat-card">
         <CardContent>
@@ -77,6 +66,32 @@ const CandidateDashboard = () => {
       </Card>
     </Zoom>
   );
+
+const CandidateDashboard = () => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [trackerTab, setTrackerTab] = useState(0);
+  const open = Boolean(anchorEl);
+
+  const handleProfileClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Sample application data
+  const applications = [
+    { id: 1, name: "John Doe", position: "Frontend Developer", status: "pending" },
+    { id: 2, name: "Jane Smith", position: "Backend Developer", status: "accepted" },
+    { id: 3, name: "Sam Lee", position: "UI Designer", status: "rejected" },
+    { id: 4, name: "Priya Sharma", position: "QA Engineer", status: "pending" },
+  ];
+
+  const getFilteredApplications = (status) =>
+    applications.filter((app) => app.status === status);
 
   return (
     <Box className="recruiter-dashboard-container" sx={{ position: "relative" }}>
@@ -113,23 +128,18 @@ const CandidateDashboard = () => {
             },
             {
               id: 'jobs',
-              label: 'Job Posts',
+              label: 'Find Jobs',
               icon: <WorkOutline />
-            },
-            {
-              id: 'applications',
-              label: 'Applications',
-              icon: <AssignmentInd />
             },
             {
               id: 'interviews',
               label: 'Interviews',
-              icon: <Schedule />
+              icon: <AssignmentInd />
             },
             {
-              id: 'feedback',
-              label: 'Feedback',
-              icon: <Feedback />
+              id: 'advices',
+              label: 'Career Advices',
+              icon: <School />
             }
           ].map((tab) => (
             <Button
@@ -140,13 +150,6 @@ const CandidateDashboard = () => {
               sx={{ position: 'relative' }}
             >
               {tab.label}
-              {/* {tab.badge > 0 && (
-                <Chip 
-                  label={tab.badge} 
-                  size="small" 
-                  className="nav-badge"
-                />
-              )} */}
             </Button>
           ))}
         </Box>
@@ -224,7 +227,7 @@ const CandidateDashboard = () => {
             </Box>
             <Box>
               <Typography variant="h4" className="recruiter-welcome-text">
-                Welcome back, Sajani Lankathilaka!
+                Welcome back, Nethumini Lankathilaka!
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 Software Engineer • 3 years experience
@@ -250,27 +253,20 @@ const CandidateDashboard = () => {
             <Grid container spacing={2} wrap="nowrap">
               <Grid item xs={4}>
                 <StatCard 
+                  loading={loading}
                   icon={<WorkOutline />}
                   title="Jobs Applied"
                   value="28"
-                  change="+5 this month"
+                  // change="+5 this month"
                 />
               </Grid>
               <Grid item>
                 <StatCard 
+                  loading={loading}
                   icon={<EventNote />}
                   title="Upcoming Interviews"
                   value="11"
-                  change="New this month"
-                />
-              </Grid>
-              <Grid item>
-                <StatCard 
-                  icon={<Schedule />}
-                  title="Saved Jobs"
-                  value="14"
-                  change="Ongoing"
-                  color="#10b981"
+                  // change="New this month"
                 />
               </Grid>
             </Grid>
@@ -337,6 +333,112 @@ const CandidateDashboard = () => {
           </ListItem>
         </List>
       </Box> */}
+
+      <Box
+        sx={{
+          mt: 4,
+          mb: 2,
+          maxWidth: 1300,
+          mx: "auto",
+          p: 3,
+          borderRadius: 3,
+          boxShadow: 2,
+          background: "rgba(240,245,255,0.7)",
+        }}
+      >
+        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, textAlign: "center" }}>
+          Application Tracker
+        </Typography>
+        <Tabs
+          value={trackerTab}
+          onChange={(_, newValue) => setTrackerTab(newValue)}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+          sx={{
+            mb: 3,
+            '& .MuiTab-root': { fontWeight: 500, fontSize: 16 },
+          }}
+        >
+          <Tab icon={<AccessTime color="warning" />} iconPosition="start" label="Pending" />
+          <Tab icon={<CheckCircle color="success" />} iconPosition="start" label="Accepted" />
+          <Tab icon={<Cancel color="error" />} iconPosition="start" label="Rejected" />
+        </Tabs>
+        <List>
+          {(trackerTab === 0 ? getFilteredApplications("pending")
+            : trackerTab === 1 ? getFilteredApplications("accepted")
+            : getFilteredApplications("rejected")
+          ).map((app) => (
+            <ListItem
+              key={app.id}
+              divider
+              sx={{
+                bgcolor: trackerTab === 0
+                  ? 'warning.50'
+                  : trackerTab === 1
+                  ? 'success.50'
+                  : 'error.50',
+                borderRadius: 2,
+                mb: 1,
+                boxShadow: 1,
+              }}
+              secondaryAction={
+                <Chip
+                  label={app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                  color={
+                    trackerTab === 0
+                      ? "warning"
+                      : trackerTab === 1
+                      ? "success"
+                      : "error"
+                  }
+                  size="small"
+                  sx={{ fontWeight: 500 }}
+                />
+              }
+            >
+              <ListItemIcon>
+                {trackerTab === 0 && <AccessTime color="warning" />}
+                {trackerTab === 1 && <CheckCircle color="success" />}
+                {trackerTab === 2 && <Cancel color="error" />}
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {app.name}
+                  </Typography>
+                }
+                secondary={
+                  <Typography variant="body2" color="text.secondary">
+                    {app.position}
+                  </Typography>
+                }
+              />
+            </ListItem>
+          ))}
+          {(
+            (trackerTab === 0 && getFilteredApplications("pending").length === 0) ||
+            (trackerTab === 1 && getFilteredApplications("accepted").length === 0) ||
+            (trackerTab === 2 && getFilteredApplications("rejected").length === 0)
+          ) && (
+            <ListItem>
+              <ListItemText
+                primary={
+                  <Typography variant="body2" color="text.secondary" textAlign="center">
+                    No applications in this category.
+                  </Typography>
+                }
+              />
+            </ListItem>
+          )}
+        </List>
+      </Box>
+
+      {activeTab === "interviews" && (
+        <Box sx={{ mt: 4 }}>
+          <InterviewsTab />
+        </Box>
+      )}
     </Box>
   );
 };
