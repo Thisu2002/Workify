@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -11,19 +11,13 @@ import {
   Chip,
   Button,
   Zoom,
-  Tabs,
-  Tab,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  IconButton,
+  IconButton
 } from "@mui/material";
 import {
-  AddCircle,
-  AccessTime,
-  Star,
-  CheckCircle,
   Add,
   Person,
   WorkOutline,
@@ -35,144 +29,81 @@ import {
   EmojiEvents as ExpertIcon,
   FiberManualRecord as OnlineIcon,
   Close as CloseIcon,
+  AccountCircle
 } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import Overview from "../components/Recruiter/Overview";
 import "../styles/Recruiter.css";
-import JobPosts from "../components/Recruiter/JobPosts";
-import PostJobs from "../components/Recruiter/PostJob";
+import logo from "../images/Group 3.png";
+
+const menuTabs = [
+  { id: 'overview', label: 'Overview', icon: <Person /> },
+  { id: 'jobs', label: 'Job Posts', icon: <WorkOutline /> },
+  { id: 'applications', label: 'Applications', icon: <AssignmentInd /> },
+  { id: 'interviews', label: 'Interviews', icon: <Schedule /> },
+  { id: 'feedback', label: 'Feedback', icon: <Feedback /> }
+];
 
 const RecruiterDashboard = () => {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [loading, setLoading] = useState(false);
-  const [showJobForm, setShowJobForm] = useState(false);
-
-  const StatCard = ({ icon, title, value, change, color = "#96BEC5" }) => (
-    <Zoom in={!loading} style={{ transitionDelay: "200ms" }}>
-      <Card className="recruiter-stat-card">
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="flex-start"
-          >
-            <Box>
-              <Typography variant="body2" className="stat-title">
-                {title}
-              </Typography>
-              <Typography variant="h3" className="stat-value" sx={{ color }}>
-                {value}
-              </Typography>
-              <Typography variant="caption" className="stat-change">
-                {change}
-              </Typography>
-            </Box>
-            <Box
-              className="stat-icon"
-              sx={{ backgroundColor: alpha(color, 0.1) }}
-            >
-              {icon}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </Zoom>
-  );
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <Box className="recruiter-dashboard-container">
-      {/* Navigation */}
-      <Paper className="recruiter-navigation" elevation={0}>
-        <Box className="recruiter-nav-container">
-          {[
-            {
-              id: "overview",
-              label: "Overview",
-              icon: <Person />,
-            },
-            {
-              id: "jobs",
-              label: "Job Posts",
-              icon: <WorkOutline />,
-            },
-            {
-              id: "applications",
-              label: "Applications",
-              icon: <AssignmentInd />,
-            },
-            {
-              id: "interviews",
-              label: "Interviews",
-              icon: <Schedule />,
-            },
-            {
-              id: "feedback",
-              label: "Feedback",
-              icon: <Feedback />,
-            },
-          ].map((tab) => (
-            <Button
-              key={tab.id}
-              className={`recruiter-nav-tab ${
-                activeTab === tab.id ? "active" : ""
-              }`}
-              startIcon={tab.icon}
-              onClick={() => setActiveTab(tab.id)}
-              sx={{ position: "relative" }}
-            >
-              {tab.label}
-              {/* {tab.badge > 0 && (
-                <Chip 
-                  label={tab.badge} 
-                  size="small" 
-                  className="nav-badge"
-                />
-              )} */}
-            </Button>
-          ))}
-
-          <Button
-            className="new-button nav-short-btn"
-            variant="contained"
-            startIcon={<Add />}
-            sx={{ marginLeft: "auto" }}
-            onClick={() => {
-              setActiveTab("jobs");
-              setShowJobForm(true);
-            }}
-          >
-            New Job Post
-          </Button>
+    <Box className="recruiter-dashboard-root">
+      {/* Sidebar */}
+      <Box className="recruiter-sidebar">
+        <Box className="sidebar-logo" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 3, mt: 2 }}>
+          <img src={logo} alt="Workify Logo" style={{ width: 80, height: 80, objectFit: 'contain' }} />
         </Box>
-      </Paper>
-
-      {activeTab === "overview" && <Overview />}
-      {activeTab === "jobs" ? (
-        showJobForm ? (
-          <Box
-            position="relative"
-            sx={{
-              border: "1px solid #ccc",
-              borderRadius: 2,
-              p: 2,
-              mb: 3,
-            }}
-          >
-            <IconButton
-              onClick={() => setShowJobForm(false)}
-              sx={{ position: "absolute", top: 10, right: 450 }}
+        <List>
+          {menuTabs.map((tab) => (
+            <ListItem
+              button
+              key={tab.id}
+              selected={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`sidebar-tab ${activeTab === tab.id ? 'active' : ''}`}
             >
-              <CloseIcon />
-            </IconButton>
-            <PostJobs /> <JobPosts />
-          </Box>
-        ) : (
-          <JobPosts />
-        )
-      ) : null}
-      {/* {activeTab === 'applications' && renderApplications()}
-      {activeTab === 'interviews' && renderInterviews()}
-      {activeTab === 'feedback' && renderFeedback()} */}
+              <ListItemIcon sx={{ minWidth: 36 }}>{tab.icon}</ListItemIcon>
+              <ListItemText primary={tab.label} />
+            </ListItem>
+          ))}
+        </List>
+        <Button
+          className="new-button nav-short-btn"
+          variant="contained"
+          startIcon={<Add sx={{ fontSize: 28, fontWeight: 700 }} />}
+          sx={{ mt: 4, width: '90%', alignSelf: 'center' }}
+        >
+          New Job Post
+        </Button>
+      </Box>
+
+      {/* Main Content Area */}
+      <Box className="recruiter-main-content">
+        {/* Header */}
+        <Box className="recruiter-header" display="flex" alignItems="center" justifyContent="space-between">
+          <Typography variant="h5" fontWeight="bold" className="page-title">
+            {menuTabs.find(tab => tab.id === activeTab)?.label}
+          </Typography>
+          <IconButton
+            className="profile-icon-btn"
+            size="large"
+            sx={{ ml: 2 }}
+            onClick={() => {/* handle profile view logic here */}}
+          >
+            <AccountCircle sx={{ fontSize: 38 }} />
+          </IconButton>
+        </Box>
+
+        {/* Page Content */}
+        <Box className="recruiter-content-area">
+          {activeTab === 'overview' && <Overview />}
+          {/* {activeTab === 'jobs' && renderJobPosts()}
+          {activeTab === 'applications' && renderApplications()}
+          {activeTab === 'interviews' && renderInterviews()}
+          {activeTab === 'feedback' && renderFeedback()} */}
+        </Box>
+      </Box>
     </Box>
   );
 };
