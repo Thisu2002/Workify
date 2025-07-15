@@ -46,7 +46,7 @@ const Sidebar = ({menuTabs, activeTab, setActiveTab, isRecruiter = false, setSho
       </List>
       {isRecruiter && (
         <Button
-          className="new-button nav-short-btn"
+          className=" nav-short-btn"
           variant="contained"
           startIcon={<Add sx={{ fontSize: 28, fontWeight: 700 }} />}
           sx={{ mt: 4, width: "90%", alignSelf: "center" }}
