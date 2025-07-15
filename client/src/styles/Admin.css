@@ -10,23 +10,23 @@
   background: linear-gradient(135deg, #F5F7FB 0%, #96BEC5 100%);
 }
 
-.admin-navigation {
+/* .admin-navigation {
   background: linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
   backdrop-filter: blur(20px);
   border: none !important;
   border-bottom: 1px solid rgba(15, 36, 69, 0.12) !important;
   box-shadow: 0 4px 20px rgba(15, 36, 69, 0.06), 0 1px 8px rgba(150, 190, 197, 0.1) !important;
-}
+} */
 
-.admin-nav-container {
+/* .admin-nav-container {
   max-width: 1400px;
   margin: 0 auto;
   /* padding: 0 40px; */
-  display: flex;
-  gap: 8px;
-}
+  /* display: flex;
+  gap: 8px; */
+/* } */ */
 
-.admin-nav-tab {
+/* .admin-nav-tab {
   color: #475569 !important;
   padding: 18px 28px !important;
   border-radius: 16px 16px 0 0 !important;
@@ -37,9 +37,9 @@
   position: relative;
   margin: 0 6px !important;
   backdrop-filter: blur(10px);
-}
+} */
 
-.admin-nav-tab:hover {
+/* .admin-nav-tab:hover {
   color: #0F2445 !important;
   background: linear-gradient(135deg, rgba(150, 190, 197, 0.15), rgba(15, 36, 69, 0.12)) !important;
   transform: translateY(-3px);
@@ -51,7 +51,7 @@
   border-bottom-color: #0F2445 !important;
   background: linear-gradient(135deg, rgba(150, 190, 197, 0.25), rgba(15, 36, 69, 0.18)) !important;
   box-shadow: 0 8px 25px rgba(150, 190, 197, 0.2), inset 0 1px 3px rgba(255, 255, 255, 0.3) !important;
-}
+} */
 
 /* Header */
 .admin-dashboard-header {
@@ -75,6 +75,8 @@
 }
 
 .admin-welcome-text {
+  display: block; /* make sure it acts like a block element */
+  width: 500px;    /* or use 300px, 50%, etc. */
   color: #0F2445 !important;
   font-weight: 800 !important;
   background: linear-gradient(135deg, #0F2445 0%, #000000 30%, #96BEC5 60%, #0F2445 100%);
@@ -83,6 +85,7 @@
   background-clip: text;
   text-shadow: 0 2px 4px rgba(15, 36, 69, 0.1);
 }
+
 
 /* Stat Card */
 .admin-stat-card {
@@ -180,3 +183,23 @@
     padding: 0 8px;
   }
 }
+
+.admin-dashboard-root {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F5F7FB 0%, #96BEC5 100%);
+}
+
+.admin-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-content-area {
+  padding: 32px 40px;
+  flex: 1;
+  min-height: 0;
+}
+

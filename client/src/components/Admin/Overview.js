@@ -12,11 +12,12 @@ import {
   ListItemAvatar,
   ListItemText,
   Divider,
-  Grid
+  Zoom
 } from "@mui/material";
 import { Group, Person, BarChart, AssignmentInd, Schedule, Feedback, WorkOutline,FiberManualRecord as OnlineIcon } from "@mui/icons-material";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import "../styles/Admin.css";
+import { alpha } from '@mui/material/styles'; // For background color
+import "../../styles/Admin.css";
 
 // Sample usage data for chart
 const usageData = [
@@ -43,21 +44,41 @@ const recentActiveUsers = [...users]
   .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive))
   .slice(0, 10);
 
-const adminTabs = [
-  { id: 'overview', label: 'Overview', icon: <Person /> },
-  { id: 'users', label: 'User Management', icon: <Group /> },
-  { id: 'reports', label: 'Reports', icon: <AssignmentInd /> },
-  { id: 'analytics', label: 'Analytics', icon: <Schedule /> },
-  { id: 'feedback', label: 'Feedback', icon: <Feedback /> }
-];
 
-const Admin = () => {
+const AdminStatCard = ({ icon, title, value, change, color = '#96BEC5', loading = false }) => (
+  <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
+    <Card className="admin-stat-card">
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="body2" className="stat-title">
+              {title}
+            </Typography>
+            <Typography variant="h3" className="stat-value" sx={{ color }}>
+              {value}
+            </Typography>
+            {change && (
+              <Typography variant="caption" className="stat-change">
+                {change}
+              </Typography>
+            )}
+          </Box>
+          <Box className="stat-icon" sx={{ backgroundColor: alpha(color, 0.1) }}>
+            {icon}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  </Zoom>
+);
+
+const Overview = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
     <Box className="admin-dashboard-container">
       {/* Navigation Bar */}
-      <Paper className="admin-navigation" elevation={0}>
+      {/* <Paper className="admin-navigation" elevation={0}>
         <Box className="admin-nav-container">
           {adminTabs.map(tab => (
             <button
@@ -71,11 +92,11 @@ const Admin = () => {
             </button>
           ))}
         </Box>
-      </Paper>
+      </Paper> */}
 
       {/* Header */}
-      <Paper className="recruiter-dashboard-header" elevation={0}>
-        <Box className="recruiter-header-content">
+      <Paper className="admin-dashboard-header" elevation={0}>
+        <Box className="admin-header-content" >
           <Box display="flex" alignItems="center" gap={3}>
             <Box position="relative">
               <Avatar 
@@ -96,43 +117,42 @@ const Admin = () => {
                 }}
               />
             </Box>
-            <Box>
-              <Typography variant="h4" className="recruiter-welcome-text">
+            <Box  sx={{ minHeight: '200px' }}>
+              <Typography variant="h4" className="admin-welcome-text"  sx={{ mt: 6 }}>
                 Welcome back,<br />Admin!
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 Hiring Manager • 3 years experience
               </Typography>
             </Box>
-            {/* Total Users Card */}
-            <Card className="admin-stat-card" sx={{ width: 220, height: 140, ml: 4, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <Group sx={{ fontSize: 40, color: "#96BEC5" }} />
-              <Typography variant="body2" className="stat-title" sx={{ mt: 1 }}>
-                Total Users
-              </Typography>
-              <Typography variant="h4" className="stat-value" sx={{ color: "#96BEC5" }}>
-                {totalUsers}
-              </Typography>
-            </Card>
+            {/* Admin Stat Card */}
+            <AdminStatCard
+              icon={<Group sx={{ fontSize: 40, color: "#96BEC5" }} />}
+              title="Total Users"
+              value={totalUsers}
+              change="+45 this month"
+              color="#96BEC5"
+            />
           </Box>
         </Box>
       </Paper>
 
       {/* Usage Chart and Total Users */}
-      <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-        <Paper sx={{ flex: 1, p: 2, height: 250, maxWidth: 800 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Platform Usage</Typography>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={usageData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="users" stroke="#96BEC5" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Paper>
-      </Box>
+      <Box sx={{ display: 'flex', gap: 3, mb: 3 , mt: 5}}>
+  <Paper className="admin-usage-chart" sx={{ flex: 1, p: 2, height: 250, maxWidth: 800 }}>
+    <Typography variant="h6" sx={{ mb: 2 }}>Platform Usage</Typography>
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={usageData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Line type="monotone" dataKey="users" stroke="#96BEC5" strokeWidth={3} />
+      </LineChart>
+    </ResponsiveContainer>
+  </Paper>
+</Box>
+
 
 
       {/* Recent Active Users Section */}
@@ -160,4 +180,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default Overview;
