@@ -63,7 +63,7 @@ const pastInterviews = [
   },
 ];
 
-const InterviewsTab = () => {
+const Interviews = () => {
   const getOutcomeChip = (outcome) => {
     if (outcome === 'Advanced to Next Round') {
       return <Chip icon={<CheckCircle />} label={outcome} color="success" size="small" />;
@@ -136,4 +136,4 @@ const InterviewsTab = () => {
   );
 };
 
-export default InterviewsTab;
+export default Interviews;
