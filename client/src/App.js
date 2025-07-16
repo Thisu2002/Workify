@@ -13,6 +13,9 @@ import CandidateDashboard from "./pages/CandidateDashboard";
 
 
 import AdminDashboard from "./pages/AdminDashboard";
+
+import BusinessManagerDash from "./pages/BusinessManagerDash";
+
 import JobPosts from "./components/Recruiter/JobPosts";
 
 
@@ -32,6 +35,7 @@ const App = () => {
         <Route path="/candidate" element={<CandidateDashboard />} />
 
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/businessmanager" element={<BusinessManagerDash />} />
 
 
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
