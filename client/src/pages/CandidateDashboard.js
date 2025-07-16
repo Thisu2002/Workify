@@ -1,48 +1,21 @@
 import React, { useState} from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  alpha,
-  Typography,
-  Grid,
-  Paper,
-  Avatar,
-  Chip,
-  Button,
-  Zoom,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText
+  Box
 } from "@mui/material";
 import {
-  AddCircle,
-  AccessTime,
-  Star,
-  CheckCircle,
   Person,
   WorkOutline,
   AssignmentInd,
-  Schedule,
-  Feedback,
-  EventNote,
-  VerifiedUser as VerifiedIcon,
-  EmojiEvents as ExpertIcon,
-  FiberManualRecord as OnlineIcon,
-  Cancel, // Add this import
-  School, // Add this import
+  Feedback
 } from "@mui/icons-material";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 import "../styles/Recruiter.css";
 import Header from "../components/Topbar";
 import Sidebar from "../components/Sidebar";
 import Overview from "../components/Candidate/Overview";
 import Interviews from "../components/Candidate/Interviews";
-//import ApplicationTracker from '../components/Candidate/ApplicationTracker';
-
+import ApplicationTracker from '../components/Candidate/ApplicationTracker';
+import FindJobs from '../components/Candidate/FindJobs';
+import CareerAdvice from '../components/Candidate/CareerAdvice';
 
 const menuTabs = [
   { id: "overview", label: "Overview", icon: <Person /> },
@@ -57,16 +30,6 @@ const CandidateDashboard = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [trackerTab, setTrackerTab] = useState(0);
   const open = Boolean(anchorEl);
-
-  const applications = [
-    { id: 1, name: "John Doe", position: "Frontend Developer", status: "pending" },
-    { id: 2, name: "Jane Smith", position: "Backend Developer", status: "accepted" },
-    { id: 3, name: "Sam Lee", position: "UI Designer", status: "rejected" },
-    { id: 4, name: "Priya Sharma", position: "QA Engineer", status: "pending" },
-  ];
-
-  const getFilteredApplications = (status) =>
-    applications.filter((app) => app.status === status);
 
   return (
     <Box className="recruiter-dashboard-root">
@@ -87,16 +50,19 @@ const CandidateDashboard = () => {
       
               {/* Page Content */}
               <Box className="recruiter-content-area">
-                {activeTab === "overview" && <Overview />}
-                {/*{activeTab === 'applications' && <Applications />}
-                {activeTab === 'interviews' && <Interviews />}
-                {activeTab === 'feedback' && <Feedback />} */}
+                {activeTab === "overview" && (
+                  <>
+                    <Overview />
+                    <ApplicationTracker
+                trackerTab={trackerTab}
+                setTrackerTab={setTrackerTab}
+              />
+                  </>
+                )}
+                {activeTab === "jobs" && <FindJobs />}
+                {activeTab === "interviews" && <Interviews />}
+                {activeTab === "advices" && <CareerAdvice />}
               </Box>
-              {activeTab === "interviews" && (
-        <Box sx={{ mt: 4 }}>
-          <Interviews />
-        </Box>
-      )}
             </Box>
     
 
