@@ -13,7 +13,6 @@ import CandidateDashboard from "./pages/CandidateDashboard";
 
 
 import AdminDashboard from "./pages/AdminDashboard";
-=======
 import JobPosts from "./components/Recruiter/JobPosts";
 
 
