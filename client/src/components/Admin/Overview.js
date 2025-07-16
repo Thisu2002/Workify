@@ -156,7 +156,7 @@ const Overview = () => {
 
 
       {/* Recent Active Users Section */}
-      <Paper sx={{ p: 2 }}>
+      <Paper className="admin-active-users" sx={{ p: 2 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Recent Active Users</Typography>
         <List className="admin-user-list">
           {recentActiveUsers.map((user, idx) => (

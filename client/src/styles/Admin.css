@@ -96,6 +96,7 @@
   position: relative;
   overflow: hidden;
   min-width: 160px;
+  min-height: 200px;
   box-shadow: 0 6px 25px rgba(15, 36, 69, 0.08), 0 2px 10px rgba(150, 190, 197, 0.12) !important;
 }
 
@@ -146,6 +147,13 @@
   color: #96BEC5 !important;
 }
 
+.admin-active-users {
+  border-radius: 24px !important; /* adjust as needed */
+  overflow: hidden;    /* optional: keeps content clean inside corners */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* optional: subtle depth */
+}
+
+
 /* User List */
 .admin-user-list {
   background: #f8fbff;
@@ -153,6 +161,8 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   padding: 16px 0;
   margin-top: 24px;
+  border-radius: 24px !important; /* or 12px, 24px etc. */
+  
 }
 
 .admin-user-list .MuiListItem-root {
@@ -202,4 +212,10 @@
   flex: 1;
   min-height: 0;
 }
+
+.admin-usage-chart {
+  border-radius: 24px !important; /* or 12px, 24px etc. */
+  overflow: hidden;
+}
+
 
