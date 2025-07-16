@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   List,
@@ -8,10 +7,11 @@ import {
   Button,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
+import { NavLink } from "react-router-dom"; // <-- import NavLink
 import logo from "../images/Group 3.png";
 import "../styles/Recruiter.css";
 
-const Sidebar = ({menuTabs, activeTab, setActiveTab, isRecruiter = false, setShowJobForm = false}) => {
+const Sidebar = ({ menuTabs, isRecruiter = false, setShowJobForm }) => {
   return (
     <Box className="recruiter-sidebar">
       <Box
@@ -30,33 +30,42 @@ const Sidebar = ({menuTabs, activeTab, setActiveTab, isRecruiter = false, setSho
           style={{ width: 80, height: 80, objectFit: "contain" }}
         />
       </Box>
+
       <List>
         {menuTabs.map((tab) => (
-          <ListItem
-            button
+          <NavLink
             key={tab.id}
-            selected={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`sidebar-tab ${activeTab === tab.id ? "active" : ""}`}
+            to={tab.path}
+            style={{ textDecoration: "none", color: "inherit" }}
           >
-            <ListItemIcon sx={{ minWidth: 36 }}>{tab.icon}</ListItemIcon>
-            <ListItemText primary={tab.label} />
-          </ListItem>
+            {({ isActive }) => (
+              <ListItem
+                button
+                className={`sidebar-tab ${isActive ? "active" : ""}`}
+              >
+                <ListItemIcon sx={{ minWidth: 36 }}>{tab.icon}</ListItemIcon>
+                <ListItemText primary={tab.label} />
+              </ListItem>
+            )}
+          </NavLink>
         ))}
       </List>
+
       {isRecruiter && (
-        <Button
-          className=" nav-short-btn"
-          variant="contained"
-          startIcon={<Add sx={{ fontSize: 28, fontWeight: 700 }} />}
-          sx={{ mt: 4, width: "90%", alignSelf: "center" }}
-          onClick={() => {
-            setShowJobForm(true);
-            setActiveTab('jobs');
-          }}
+        <NavLink
+          to="/recruiter/job-posts"
+          style={{ textDecoration: "none", color: "inherit" }}
         >
-          New Job Post
-        </Button>
+          <Button
+            className="nav-short-btn"
+            variant="contained"
+            startIcon={<Add sx={{ fontSize: 28, fontWeight: 700 }} />}
+            sx={{ mt: 4, width: "90%", alignSelf: "center" }}
+            onClick={() => setShowJobForm(true)}
+          >
+            New Job Post
+          </Button>
+        </NavLink>
       )}
     </Box>
   );

@@ -8,13 +8,11 @@ import Signup from "./pages/Signup";
 import Mentor from "./pages/Mentor";
 import LeadPanelist from "./pages/LeadPanelist";
 
-import RecruiterDashboard from "./pages/RecruiterDashboard";
+import RecruiterRoot from "./pages/RecruiterRoot";
 import CandidateDashboard from "./pages/CandidateDashboard";
 
 
 import AdminDashboard from "./pages/AdminDashboard";
-import JobPosts from "./components/Recruiter/JobPosts";
-
 
 
 const App = () => {
@@ -28,13 +26,12 @@ const App = () => {
         <Route path="/mentor" element={<Mentor />} />
         <Route path="/lead-panelist" element={<LeadPanelist />} />
 
-        <Route path="/recruiter" element={<RecruiterDashboard />} />
+        <Route path="/recruiter" element={<RecruiterRoot />} />
+        <Route path="/recruiter/overview" element={<RecruiterRoot />} />
+        <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />
         <Route path="/candidate" element={<CandidateDashboard />} />
 
         <Route path="/admin" element={<AdminDashboard />} />
-
-
-        {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 
       </Routes>
     </Router> 
