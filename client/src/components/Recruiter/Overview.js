@@ -9,6 +9,7 @@ import {
   Paper,
   Avatar,
   Chip,
+  Stack,
   Button,
   Zoom,
   Tabs,
@@ -37,7 +38,8 @@ import {
 } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar,LineChart, Line, Legend } from "recharts";
+
 // import { useNavigate } from "react-router-dom";
 import "../../styles/Recruiter.css";
 
@@ -89,107 +91,271 @@ const Overview = ({ setActiveTab }) => {
 
     return (
         <Box>
-            <Paper className="recruiter-dashboard-header" elevation={0}>
-        <Box className="recruiter-header-content">
-          <Box display="flex" alignItems="center" gap={3}>
-            <Box position="relative">
-              <Avatar 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
-                sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
-              />
-              <OnlineIcon 
-                className="online-indicator"
-                sx={{ 
-                  position: 'absolute', 
-                  bottom: 5, 
-                  right: 5,
-                  color: '#10b981',
-                  backgroundColor: '#0F2445',
-                  borderRadius: '50%',
-                  fontSize: 16,
-                  padding: '2px'
-                }}
-              />
-            </Box>
-            <Box>
-              <Typography variant="h4" className="recruiter-welcome-text">
-                Welcome back, Recruiter!
-              </Typography>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                Hiring Manager • 3 years experience
-              </Typography>
-              <Box display="flex" gap={1} mt={1}>
-                <Chip 
-                  icon={<VerifiedIcon />} 
-                  label="Verified" 
-                  size="small" 
-                  className="verified-badge"
-                />
-                <Chip 
-                  icon={<ExpertIcon />} 
-                  label="Expert" 
-                  size="small" 
-                  className="expert-badge"
-                />
+          <Paper className="recruiter-dashboard-header" elevation={0}>
+            <Box className="recruiter-header-content">
+              <Box display="flex" alignItems="center" gap={3}>
+                <Box position="relative">
+                  <Avatar 
+                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
+                    sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
+                  />
+                  <OnlineIcon 
+                    className="online-indicator"
+                    sx={{ 
+                      position: 'absolute', 
+                      bottom: 5, 
+                      right: 5,
+                      color: '#10b981',
+                      backgroundColor: '#0F2445',
+                      borderRadius: '50%',
+                      fontSize: 16,
+                      padding: '2px'
+                    }}
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="h4" className="recruiter-welcome-text">
+                    Welcome back, Raveesha!
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" gutterBottom>
+                    Hiring Manager • 3 years experience
+                  </Typography>
+                  <Box display="flex" gap={1} >
+                    <Chip 
+                      icon={<VerifiedIcon />} 
+                      label="Verified" 
+                      size="small" 
+                      className="verified-badge"
+                    />
+                    <Chip 
+                      icon={<ExpertIcon />} 
+                      label="Expert" 
+                      size="small" 
+                      className="expert-badge"
+                    />
+                  </Box>
+                </Box>
+              </Box>
+
+              <Box display="flex" alignItems="center" gap={2}>
+                <Grid container spacing={2} wrap="nowrap">
+                  <Grid item xs={4}>
+                    <StatCard 
+                      icon={<WorkOutline />}
+                      title="Total Job Posts"
+                      value="28"
+                      change="+5 this month"
+                    />
+                  </Grid>
+                  <Grid item>
+                    <StatCard 
+                      icon={<AssignmentInd />}
+                      title="Applications Received"
+                      value="102"
+                      change="New this month"
+                      color="#ffa502"
+                    />
+                  </Grid>
+                  <Grid item>
+                    <StatCard 
+                      icon={<Schedule />}
+                      title="Interviews Scheduled"
+                      value="14"
+                      change="Ongoing"
+                      color="#10b981"
+                    />
+                  </Grid>
+                </Grid>
               </Box>
             </Box>
-          </Box>
-
-          <Box display="flex" alignItems="center" gap={2}>
-            <Grid container spacing={2} wrap="nowrap">
-              <Grid item xs={4}>
-                <StatCard 
-                  icon={<WorkOutline />}
-                  title="Total Job Posts"
-                  value="28"
-                  change="+5 this month"
-                />
-              </Grid>
-              <Grid item>
-                <StatCard 
-                  icon={<AssignmentInd />}
-                  title="Applications Received"
-                  value="102"
-                  change="New this month"
-                  color="#ffa502"
-                />
-              </Grid>
-              <Grid item>
-                <StatCard 
-                  icon={<Schedule />}
-                  title="Interviews Scheduled"
-                  value="14"
-                  change="Ongoing"
-                  color="#10b981"
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
       </Paper>
 
       <Box className="recruiter-dashboard-content">
-        <Box className="content-first-row" display="flex" flexDirection="row" alignItems="space-between" p={1}>
-          <Paper className="content-card company-profile" elevation={2}>
-            <Box display="flex" flexDirection="column" alignItems="center" p={3}>
+        <Box className="content-first-row" display="flex" flexDirection="row" gap={3} p={1}>
+          {/* Top Active Jobs Card */}
+          <Paper className="content-card job-posts" elevation={2} style={{ flex: 2, minWidth: 0 }}>
+            <Box display="flex" flexDirection="column" width="100%" p={3}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Top Active Jobs
+                </Typography>
+                <Button size="small" sx={{ color: "#3B5998", textTransform: "none" }}>
+                  Last 30 days
+                </Button>
+              </Box>
+              {/* Legend */}
+              <Stack direction="row" spacing={2} mb={2}>
+                <Box display="flex" alignItems="center">
+                  <Box sx={{ width: 16, height: 8, bgcolor: "#a259e6", borderRadius: 2, mr: 1 }} />
+                  <Typography variant="caption">Applications</Typography>
+                </Box>
+                <Box display="flex" alignItems="center">
+                  <Box sx={{ width: 16, height: 8, bgcolor: "#3be6c6", borderRadius: 2, mr: 1 }} />
+                  <Typography variant="caption">Shortlisted</Typography>
+                </Box>
+                <Box display="flex" alignItems="center">
+                  <Box sx={{ width: 16, height: 8, bgcolor: "#e6a2a2", borderRadius: 2, mr: 1 }} />
+                  <Typography variant="caption">Rejected</Typography>
+                </Box>
+              </Stack>
+              {/* Line Chart */}
+              <ResponsiveContainer width="100%" height={140}>
+                <LineChart data={[
+                  { date: "Mon", Applications: 20, Shortlisted: 10, Rejected: 2 },
+                  { date: "Tue", Applications: 35, Shortlisted: 15, Rejected: 5 },
+                  { date: "Wed", Applications: 30, Shortlisted: 12, Rejected: 4 },
+                  { date: "Thu", Applications: 50, Shortlisted: 25, Rejected: 8 },
+                  { date: "Fri", Applications: 40, Shortlisted: 20, Rejected: 6 },
+                ]}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="Applications" stroke="#a259e6" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Shortlisted" stroke="#3be6c6" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Rejected" stroke="#e6a2a2" strokeWidth={3} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+              {/* Job List */}
+              <Box mt={2}>
+                <Box display="flex" justifyContent="space-between" mb={1}>
+                  <Typography variant="subtitle2" color="text.secondary">Job Title</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">Applications</Typography>
+                </Box>
+                {[
+                  { title: "Full Stack Developer", applications: 203, shortlisted: true },
+                  { title: "iOS Developer", applications: 121, shortlisted: true },
+                  { title: "Product Designer", applications: 95, shortlisted: false },
+                  { title: "Design Lead", applications: 76, shortlisted: false },
+                ].map((job, idx) => (
+                  <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" py={1} borderBottom={idx < 3 ? "1px solid #f0f0f0" : "none"}>
+                    <Typography variant="body1">{job.title}</Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body1" fontWeight="bold">{job.applications}</Typography>
+                      {job.shortlisted && (
+                        <Chip label="L" size="small" sx={{ bgcolor: "#e6f7fa", color: "#3B5998", fontWeight: 700, fontSize: 12 }} />
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Paper>
+
+          <Box className="" display="flex" flexDirection="column" gap={3} style={{ flex: 1, minWidth: 0 }}>
+            {/* Acquisitions Card */}
+            <Paper className="content-card acquisitions-card" elevation={2} style={{ flex: 1, minWidth: 0 }}>
+              <Box p={3}>
+                <Box display="flex" justifyContent="space-between" >
+                  <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                    Acquisitions
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">This Month</Typography>
+                </Box>
+                
+                <Stack spacing={1}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Typography variant="body2" color="#a259e6">Applications</Typography>
+                    <Typography variant="body2" fontWeight="bold">64%</Typography>
+                  </Box>
+                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
+                    <Box sx={{ width: "64%", height: 6, bgcolor: "#a259e6", borderRadius: 3 }} />
+                  </Box>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Typography variant="body2" color="#3be6c6">Shortlisted</Typography>
+                    <Typography variant="body2" fontWeight="bold">18%</Typography>
+                  </Box>
+                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
+                    <Box sx={{ width: "18%", height: 6, bgcolor: "#3be6c6", borderRadius: 3 }} />
+                  </Box>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Typography variant="body2" color="#f7b731">On-hold</Typography>
+                    <Typography variant="body2" fontWeight="bold">10%</Typography>
+                  </Box>
+                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
+                    <Box sx={{ width: "10%", height: 6, bgcolor: "#f7b731", borderRadius: 3 }} />
+                  </Box>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Typography variant="body2" color="#e6a2a2">Rejected</Typography>
+                    <Typography variant="body2" fontWeight="bold">8%</Typography>
+                  </Box>
+                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3 }}>
+                    <Box sx={{ width: "8%", height: 6, bgcolor: "#e6a2a2", borderRadius: 3 }} />
+                  </Box>
+                </Stack>
+                {/* <Box mt={2} display="flex" justifyContent="flex-end">
+                  <Typography variant="caption" color="text.secondary">This Month</Typography>
+                </Box> */}
+              </Box>
+            </Paper>
+
+            {/* New Applicants Card */}
+            <Paper className="content-card applicants-card" elevation={2} style={{ flex: 1, minWidth: 0 }}>
+              <Box p={3}>
+                <Box display="flex" justifyContent="space-between" >
+                  <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                  New Applicants
+                </Typography>
+                  <Typography variant="caption" color="text.secondary">Today</Typography>
+                </Box>
+                <Stack spacing={2}>
+                  {[
+                    {
+                      name: "Douglas Ray",
+                      job: "Applied for iOS Developer",
+                      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+                    },
+                    {
+                      name: "Elizabeth Martin",
+                      job: "Applied for Full Stack Developer",
+                      avatar: "https://randomuser.me/api/portraits/women/44.jpg"
+                    },
+                    {
+                      name: "Emma Wade",
+                      job: "Applied for Product Designer",
+                      avatar: "https://randomuser.me/api/portraits/women/68.jpg"
+                    },
+                    {
+                      name: "Teresa Reyes",
+                      job: "Applied for Design Lead",
+                      avatar: "https://randomuser.me/api/portraits/women/65.jpg"
+                    },
+                  ].map((applicant, idx) => (
+                    <Box key={idx} display="flex" alignItems="center" gap={2}>
+                      <Avatar src={applicant.avatar} sx={{ width: 32, height: 32 }} />
+                      <Box>
+                        <Typography variant="body2" fontWeight="bold">{applicant.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">{applicant.job}</Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            </Paper>
+
+          </Box>
+          
+
+          {/* Company Profile Card */}
+          <Paper className="content-card company-profile" elevation={2} style={{ flex: 1, minWidth: 0 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" p={5}  sx={{ flex: 1, height: "100%" }} >
               <Avatar
                 src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=120&h=120&fit=crop"
                 sx={{ width: 80, height: 80, mb: 2 }}
               />
               <Typography variant="h6" fontWeight="bold">
-                Acme Tech Solutions
+                {profile.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1 }}>
-                Bangalore, India
+                {profile.location}
               </Typography>
               <Chip 
-                label="IT Services" 
+                label={profile.industry}
                 className="it-services-chip"
-                color="primary" 
-                // size="small" 
+                color="primary"
                 sx={{ mb: 2 }} />
               <Typography variant="body2" align="center" sx={{ mb: 2 }}>
-                Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry.
+                {profile.description}
               </Typography>
               <Button
                 className="new-button"
@@ -201,42 +367,6 @@ const Overview = ({ setActiveTab }) => {
                 Edit Profile
               </Button>
             </Box>
-          </Paper>
-
-          <Paper className="content-card job-posts" elevation={2}>
-            <Box display="flex" flexDirection="column" alignItems="flex-start" p={3} >
-                <Box className="jobpost-card-header" display="flex" alignItems="center" width="100%" mb={2}>
-                  {/* <WorkOutline sx={{ fontSize: 32, color: "#3B5998", mr: 1 }} /> */}
-                  <Typography variant="h6" className="section-title" fontWeight="bold">
-                    Open Job Posts
-                  </Typography>
-                  <Button
-                    className="new-button"
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    sx={{ marginLeft: 'auto' }}
-                    onClick={() => setActiveTab("jobs")}
-                  >
-                    View All Jobs
-                  </Button>
-                </Box>
-                {/* Short list of open jobs */}
-                <Box className="job-posts-list">
-                  {[
-                    { title: "Frontend Developer", applications: 12, location: "Remote" },
-                    { title: "Backend Engineer", applications: 8, location: "Bangalore" },
-                    { title: "UI/UX Designer", applications: 5, location: "Remote" }
-                  ].map((job, idx) => (
-                    <Box key={idx} className="job-post-summary" mb={2} p={2} sx={{ background: "#f4f7fa", borderRadius: 2 }}>
-                      <Typography variant="subtitle1" fontWeight="bold">{job.title}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {job.location} &nbsp;|&nbsp; {job.applications} applications
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>  
           </Paper>
         </Box>
 
