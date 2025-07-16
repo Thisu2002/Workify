@@ -12,11 +12,17 @@ import {
 } from "@mui/material";
 import { AccessTime, CheckCircle, Cancel } from "@mui/icons-material";
 
-const ApplicationTracker = ({
-  trackerTab,
-  setTrackerTab,
-  getFilteredApplications,
-}) => (
+const applications = [
+  { id: 1, name: "Wealth OS", position: "Frontend Developer", status: "pending" },
+  { id: 2, name: "WSO2", position: "Backend Developer", status: "accepted" },
+  { id: 3, name: "Furtado", position: "UI Designer", status: "rejected" },
+  { id: 4, name: "OREL IT", position: "QA Engineer", status: "pending" },
+];
+
+const getFilteredApplications = (status) =>
+  applications.filter((app) => app.status === status);
+
+const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
   <Box
     sx={{
       mt: 4,

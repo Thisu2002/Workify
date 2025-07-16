@@ -32,12 +32,13 @@ import {
   EventNote,
   VerifiedUser as VerifiedIcon,
   EmojiEvents as ExpertIcon,
-  FiberManualRecord as OnlineIcon
+  FiberManualRecord as OnlineIcon,
+  School
 } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import "../../styles/Recruiter.css";
 
-const Overview = () => {
+const Overview = React.memo(() => {
     const [loading, setLoading] = useState(false);
     
       const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
@@ -98,16 +99,14 @@ const Overview = () => {
               </Typography>
               <Box display="flex" gap={1} mt={1}>
                 <Chip 
-                  icon={<VerifiedIcon />} 
-                  label="Verified" 
-                  size="small" 
-                  className="verified-badge"
+                  icon={<School />} 
+                  label="Graduate" 
+                  size="small"
                 />
                 <Chip 
-                  icon={<ExpertIcon />} 
-                  label="Expert" 
-                  size="small" 
-                  className="expert-badge"
+                  icon={<WorkOutline />} 
+                  label="Experienced" 
+                  size="small"
                 />
               </Box>
             </Box>
@@ -117,16 +116,16 @@ const Overview = () => {
             <Grid container spacing={2} wrap="nowrap">
               <Grid item xs={4}>
                 <StatCard 
-                  icon={<WorkOutline />}
+                  icon={<AssignmentInd />}
                   title="Upcoming Interviews"
                   value="8"
                 />
               </Grid>
-              <Grid item>
+              <Grid item xs={4}>
                 <StatCard 
-                  icon={<AssignmentInd />}
+                  icon={<WorkOutline />}
                   title="Jobs Applied"
-                  value="102"
+                  value="10"
                 />
               </Grid>
             </Grid>
@@ -135,6 +134,6 @@ const Overview = () => {
       </Paper>
         </Box>
     );
-}
+})
 
 export default Overview;

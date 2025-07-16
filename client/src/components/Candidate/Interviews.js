@@ -82,7 +82,7 @@ const Interviews = () => {
       </Typography>
       <List sx={{ mb: 4 }}>
         {upcomingInterviews.map((interview) => (
-          <Paper key={interview.id} elevation={2} sx={{ mb: 2, p: 2, borderRadius: 2 }}>
+          <Paper key={interview.id} elevation={2} sx={{ mb: 2, p: 2, borderRadius: 2 ,transition: 'box-shadow 0.3s, transform 0.2s', '&:hover': { boxShadow: 6, transform: 'translateY(-4px)' }}} >
             <ListItem alignItems="flex-start" sx={{ p: 0 }}>
               <ListItemText
                 primary={
