@@ -28,9 +28,9 @@ const menuTabs = [
     icon: <Person />,
   },
   {
-    id: "registrationRequests",
+    id: "registration-requests",
     label: "Registration Requests",
-    path: "/manager/registrationrequests",
+    path: "/manager/registration-requests",
     icon: <AssignmentInd />,
   },
   {
