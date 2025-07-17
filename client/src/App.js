@@ -9,7 +9,7 @@ import Mentor from "./pages/Mentor";
 import LeadPanelist from "./pages/LeadPanelist";
 
 import RecruiterRoot from "./pages/RecruiterRoot";
-import CandidateDashboard from "./pages/CandidateDashboard";
+import CandidateRoot from "./pages/CandidateRoot";
 
 
 import AdminDashboard from "./pages/AdminDashboard";
@@ -34,7 +34,12 @@ const App = () => {
         <Route path="/recruiter" element={<RecruiterRoot />} />
         <Route path="/recruiter/overview" element={<RecruiterRoot />} />
         <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />
-        <Route path="/candidate" element={<CandidateDashboard />} />
+
+        <Route path="/candidate" element={<CandidateRoot />} />
+        <Route path="/candidate/overview" element={<CandidateRoot />} />
+        <Route path="/candidate/findjob" element={<CandidateRoot />} />
+        <Route path="/candidate/interviews" element={<CandidateRoot />} />
+        <Route path="/candidate/careeradvice" element={<CandidateRoot />} />
 
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/businessmanager" element={<BusinessManagerDash />} />
