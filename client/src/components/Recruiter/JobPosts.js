@@ -11,8 +11,10 @@ import {
 } from "@mui/material";
 import "../../styles/JobPosts.css";
 import PostJob from "./PostJob";
+import { useNavigate } from "react-router-dom";
 
 const JobPosts = ({ showJobForm, setShowJobForm }) => {
+  const navigate = useNavigate();
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedJob, setEditedJob] = useState(null);
@@ -195,7 +197,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         </DialogContent>
 
         <DialogActions>
-          <Button>View Applicants</Button>
+          <Button onClick={() => navigate('/recruiter/job-posts/applicants')}>View Applicants</Button>
           <Button onClick={handleClose}>Cancel</Button>
           {isEditing ? (
             <Button variant="contained" onClick={handleSave}>
