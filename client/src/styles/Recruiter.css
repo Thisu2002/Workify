@@ -198,7 +198,6 @@
 }
 
 .recruiter-dashboard-content {
-  /* padding: 24px 40px; */
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -219,9 +218,6 @@
 }
 
 .content-card {
-  /* min-height: 340px; */
-  /* max-width: 320px; */
-  /* margin-right: 80px; */
   border: 1px solid rgba(15, 36, 69, 0.12) !important;
   border-radius: 28px !important;
   box-shadow: 0 6px 25px rgba(15, 36, 69, 0.08), 0 2px 12px rgba(150, 190, 197, 0.12) !important;
@@ -469,7 +465,7 @@
 }
 
 .recruiter-content-area {
-  padding: 32px 40px;
+  /* padding: 32px 40px; */
   flex: 1;
   min-height: 0;
 }

@@ -171,7 +171,7 @@ const Overview = ({ setActiveTab }) => {
       </Paper>
 
       <Box className="recruiter-dashboard-content">
-        <Box className="content-first-row" display="flex" flexDirection="row" gap={3} p={1}>
+        <Box className="content-first-row" display="flex" flexDirection="row"  p={1}>
           {/* Top Active Jobs Card */}
           <Paper className="content-card job-posts" elevation={2} style={{ flex: 2, minWidth: 0 }}>
             <Box display="flex" flexDirection="column" width="100%" p={3}>
