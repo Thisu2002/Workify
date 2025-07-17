@@ -26,7 +26,7 @@ const menuTabs = [
   {
     id: "users",
     label: "User Managemnet",
-    path: "/admin/user-management",
+    path: "/admin/users",
     icon: <Group />,
   },
   {
