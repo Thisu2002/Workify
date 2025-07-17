@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 import "../styles/Login.css";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
@@ -80,7 +81,7 @@ function Signup() {
         password,
       });
 
-      alert("Signup successful!");
+      toast.success("Signup successful!");
       navigate("/login");
 
       // You can redirect or reset the form here
@@ -93,7 +94,7 @@ function Signup() {
     <div className="login-page">
       <div className="login-container">
         <div className="left-side">
-          <img src={logo} alt="Workify Logo" className="logo" />
+          <a href="/"><img src={logo} alt="Workify Logo" className="logo" /></a>
         </div>
         <div className="right-side">
           <h1 className="login-title">Signup</h1>
