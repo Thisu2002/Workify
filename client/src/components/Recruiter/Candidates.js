@@ -23,7 +23,7 @@ import {
   Close as CloseIcon,
   ArrowBack,
 } from "@mui/icons-material";
-import "./Candidates.css";
+import "../../styles/Candidates.css";
 import { useNavigate } from "react-router-dom";
 
 const candidates = [
