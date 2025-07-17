@@ -75,7 +75,7 @@ const Interviews = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box>
       {/* Upcoming Interviews Section */}
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
         Upcoming Interviews

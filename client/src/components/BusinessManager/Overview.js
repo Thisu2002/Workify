@@ -171,7 +171,7 @@ const Overview = ({ setActiveTab }) => {
 
       <Box className="manager-dashboard-content">
         <Box className="content-first-row" display="flex" flexDirection="row" alignItems="space-between" p={1}>
-          <Paper className="content-card manager-profile" elevation={2}>
+          <Paper className="manager-content-card manager-profile" elevation={2}>
             <Box display="flex" flexDirection="column" alignItems="center" p={3}>
                 <Avatar
                     src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop"
@@ -205,7 +205,7 @@ const Overview = ({ setActiveTab }) => {
         </Paper>
 
 
-        <Paper className="content-card subscription" elevation={2}>
+        <Paper className="manager-content-card subscription" elevation={2}>
             <Box display="flex" flexDirection="column" alignItems="flex-start" p={3}>
                 <Box className="subscription-card-header" display="flex" alignItems="center" width="100%" mb={2}>
                     <Typography variant="h6" className="section-title" fontWeight="bold">
@@ -261,7 +261,7 @@ const Overview = ({ setActiveTab }) => {
 
         <Box className="content-second-row" display="flex" flexDirection="row" gap={3} mt={3}>
           {/* Statistic Chart Card */}
-          <Paper className="content-card stats-card" elevation={2} style={{ flex: 1 }}>
+          <Paper className="manager-content-card stats-card" elevation={2} style={{ flex: 1 }}>
             <Box display="flex" flexDirection="column" alignItems="center" p={3}>
               <Typography variant="h6" fontWeight="bold" mb={2}>
                 Application Statistics

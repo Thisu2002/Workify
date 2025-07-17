@@ -7,9 +7,9 @@
   padding: 2rem;
   background-color: #f8f9fa;
   min-height: 100vh;
-  display: flex;
   position: relative;
   overflow-y: auto;
+  display: flex;
   flex-direction: column;
 }
 

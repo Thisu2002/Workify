@@ -28,15 +28,15 @@ const menuTabs = [
     icon: <Person />,
   },
   {
-    id: "registrationRequests",
+    id: "registration-requests",
     label: "Registration Requests",
-    path: "/manager/registrationrequests",
+    path: "/manager/registration-requests",
     icon: <AssignmentInd />,
   },
   {
     id: "companyProfiles",
     label: "Company Profiles",
-    path: "/manager/companyProfiles",
+    path: "/manager/company-profiles",
     icon: <Domain />,
   },
   {

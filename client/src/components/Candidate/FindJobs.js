@@ -93,7 +93,7 @@ const FindJobs = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box>
       {/* Search and Filter Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>

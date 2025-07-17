@@ -1,0 +1,169 @@
+/* --- CSS Variables for Professional Theme --- */
+:root {
+    --primary-dark-blue: #0A2342;
+    --primary-blue: #2C6E9E;
+    --accent-light-blue: #88BBDD;
+    --background-gray: #f0f4f8;
+    --content-background: #FFFFFF;
+    --text-dark: #212529;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    --shadow-light: rgba(0, 0, 0, 0.05);
+    --shadow-medium: rgba(0, 0, 0, 0.1);
+
+    /* Subscription Status Colors */
+    --status-paid: #28a745;
+    --status-due: #ffc107;
+    --status-pending: #dc3545;
+    --status-paid-bg: #e2f5e6;
+    --status-due-bg: #fff8e1;
+    --status-pending-bg: #f8d7da;
+}
+
+/* --- Main Page Container --- */
+.company-profiles-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- Toolbar and Search Bar --- */
+.toolbar {
+    margin-bottom: 2rem;
+}
+.search-container {
+    position: relative;
+    max-width: 400px;
+}
+.search-icon {
+    position: absolute; left: 1rem; top: 50%;
+    transform: translateY(-50%); color: var(--text-muted);
+}
+.search-input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 3rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-size: 1rem;
+}
+
+/* --- Grid of Profile Cards --- */
+.profiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.profile-card {
+    background-color: var(--content-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px var(--shadow-light);
+    text-align: center;
+    padding: 2rem 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    
+    /* --- GRADIENT BORDER IMPLEMENTATION --- */
+    position: relative; /* 1. Needed to position the ::before element */
+    border-top: none;   /* 2. Remove the old solid border */
+}
+
+.profile-card::before {
+    content: '';      /* 3. Required for pseudo-elements */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;      /* 4. The height of our "border" */
+
+    /* 5. The Gradient */
+    background: linear-gradient(110deg, #0A2342 0%, #224c75 50%, #2C6E9E 100%);
+
+    /* 6. Match the top corners of the parent card */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px var(--shadow-medium);
+}
+
+.profile-logo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: contain;
+    margin-bottom: 1rem;
+    border: 3px solid var(--accent-light-blue);
+    background-color: #fff; /* Ensure logo background is white */
+    padding: 2px;
+}
+
+.profile-name {
+    margin: 0.5rem 0;
+    font-size: 1.25rem;
+    color: var(--primary-dark-blue);
+}
+
+.profile-position {
+    margin: 0;
+    color: var(--primary-blue);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+
+/* --- Detailed Company View --- */
+.company-detail-view {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-dark);
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    transition: background-color 0.2s, color 0.2s;
+}
+.back-button:hover {
+    background-color: var(--primary-dark-blue);
+    color: var(--text-light);
+    border-color: var(--primary-dark-blue);
+}
+
+/* Re-using styles from previous version for consistency */
+.detail-header { display: flex; align-items: center; margin-bottom: 1.5rem; }
+.detail-header-logo { width: 80px; height: 80px; border-radius: 8px; margin-right: 1.5rem; }
+.detail-company-name { font-size: 2.5rem; color: var(--primary-dark-blue); margin: 0; }
+.detail-company-location { color: var(--text-muted); font-size: 1rem; margin: 0.25rem 0; }
+.detail-company-website { color: var(--primary-blue); text-decoration: none; font-weight: 500; }
+.detail-company-description { font-size: 1.1rem; line-height: 1.6; margin-bottom: 2.5rem; color: var(--text-dark); }
+.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.detail-section { background-color: var(--content-background); border-radius: 8px; padding: 1.5rem; border: 1px solid var(--border-color); }
+.detail-section-title { display: flex; align-items: center; gap: 0.75rem; font-size: 1.2rem; color: var(--primary-dark-blue); margin: 0 0 1rem 0; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
+.team-member-card { background-color: var(--background-gray); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; }
+.team-member-name { font-weight: 500; color: var(--text-dark); margin: 0; }
+.team-member-position { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+.subscription-card { text-align: center; }
+.subscription-plan { font-size: 1.1rem; font-weight: 600; color: var(--primary-blue); margin-top: 0; }
+.subscription-status { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500; margin: 0.5rem 0; }
+.subscription-status.paid { background-color: var(--status-paid-bg); color: var(--status-paid); }
+.subscription-status.payment-due { background-color: var(--status-due-bg); color: #8a6d3b; }
+.subscription-status.pending-payment { background-color: var(--status-pending-bg); color: var(--status-pending); }
+.subscription-next-payment { display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+.no-data-text { color: var(--text-muted); font-style: italic; text-align: center; padding: 1rem; }
