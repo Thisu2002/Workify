@@ -48,7 +48,7 @@ const App = () => {
 
         <Route path="/manager" element={<BusinessManagerRoot />} />
         <Route path="/manager/overview" element={<BusinessManagerRoot />} />
-
+        <Route path="/manager/company-profiles" element={<BusinessManagerRoot />} />
 
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 
