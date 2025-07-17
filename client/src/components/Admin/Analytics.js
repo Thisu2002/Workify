@@ -184,8 +184,8 @@ const RecruiterAnalytics = () => (
           <YAxis />
           <Tooltip />
           <Legend />
-          <Bar dataKey="New Sign-ups" fill="#8884d8" />
-          <Bar dataKey="Active Recruiters" fill="#82ca9d" />
+          <Bar dataKey="New Sign-ups" fill="#60A5FA" />
+          <Bar dataKey="Active Recruiters" fill="#1E3A8A" />
         </BarChart>
       </ResponsiveContainer>
       <DataTable 
@@ -202,8 +202,8 @@ const RecruiterAnalytics = () => (
           <YAxis />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="Jobs Posted" stroke="#8884d8" />
-          <Line type="monotone" dataKey="Applications" stroke="#82ca9d" />
+          <Line type="monotone" dataKey="Jobs Posted" stroke="#1E3A8A" />
+          <Line type="monotone" dataKey="Applications" stroke="#60A5FA" />
         </LineChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -213,7 +213,7 @@ const RecruiterAnalytics = () => (
          <ResponsiveContainer width="100%" height={100}>
             <LineChart data={mockData.recruiter.timeToFill}>
                 <Tooltip />
-                <Line type="monotone" dataKey="Days" stroke="#ffc658" strokeWidth={3} />
+                <Line type="monotone" dataKey="Days" stroke="#10B981" strokeWidth={3} />
             </LineChart>
         </ResponsiveContainer>
     </ChartCard>
@@ -223,7 +223,7 @@ const RecruiterAnalytics = () => (
         <FunnelChart>
           <Tooltip />
           <Funnel dataKey="value" data={mockData.recruiter.candidateFunnel} isAnimationActive>
-            <LabelList position="right" fill="#000" stroke="none" dataKey="name" />
+            <LabelList position="right" fill="#1E293B" stroke="none" dataKey="name" />
           </Funnel>
         </FunnelChart>
       </ResponsiveContainer>
@@ -241,8 +241,8 @@ const MentorAnalytics = () => (
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="New Mentors" fill="#8884d8" />
-                    <Bar dataKey="Active Mentors" fill="#82ca9d" />
+                    <Bar dataKey="New Mentors" fill="#60A5FA" />
+                    <Bar dataKey="Active Mentors" fill="#1E3A8A" />
                 </BarChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -255,8 +255,8 @@ const MentorAnalytics = () => (
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="Requested" stroke="#ff7300" />
-                    <Line type="monotone" dataKey="Completed" stroke="#387908" />
+                    <Line type="monotone" dataKey="Requested" stroke="#60A5FA" />
+                    <Line type="monotone" dataKey="Completed" stroke="#10B981" />
                 </LineChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -271,7 +271,7 @@ const MentorAnalytics = () => (
                     <XAxis type="number" />
                     <YAxis dataKey="name" type="category" width={140} />
                     <Tooltip />
-                    <Bar dataKey="sessions" fill="#8884d8" />
+                    <Bar dataKey="sessions" fill="#1E3A8A" />
                 </BarChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -289,8 +289,8 @@ const BusinessManagerAnalytics = () => (
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="New Subscriptions" stroke="#34C759" />
-                    <Line type="monotone" dataKey="Cancellations" stroke="#FF3B30" />
+                    <Line type="monotone" dataKey="New Subscriptions" stroke="#10B981" />
+                    <Line type="monotone" dataKey="Cancellations" stroke="#EF4444" />
                 </LineChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -303,8 +303,8 @@ const BusinessManagerAnalytics = () => (
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="CAC" stroke="#FF9500" name="CAC ($)" />
-                    <Line type="monotone" dataKey="CLV" stroke="#007AFF" name="CLV ($)" />
+                    <Line type="monotone" dataKey="CAC" stroke="#EF4444" name="CAC ($)" />
+                    <Line type="monotone" dataKey="CLV" stroke="#1E3A8A" name="CLV ($)" />
                 </LineChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -316,7 +316,7 @@ const BusinessManagerAnalytics = () => (
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="companies" stroke="#34C759" name="New Companies" />
+                    <Line type="monotone" dataKey="companies" stroke="#1E3A8A" name="New Companies" />
                 </LineChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -329,7 +329,7 @@ const BusinessManagerAnalytics = () => (
       <YAxis />
       <Tooltip />
       <Legend />
-      <Line type="monotone" dataKey="unsubscribed" stroke="#FF3B30" name="Unsubscribed" />
+      <Line type="monotone" dataKey="unsubscribed" stroke="#EF4444" name="Unsubscribed" />
     </LineChart>
   </ResponsiveContainer>
 </ChartCard>
@@ -346,7 +346,7 @@ const CandidateAnalytics = () => (
                     <XAxis dataKey="source" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="New Sign-ups" fill="#8884d8" />
+                    <Bar dataKey="New Sign-ups" fill="#60A5FA" />
                 </BarChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -364,8 +364,8 @@ const CandidateAnalytics = () => (
                     <YAxis yAxisId="right" orientation="right" />
                     <Tooltip />
                     <Legend />
-                    <Line yAxisId="left" type="monotone" dataKey="Applications Sent" stroke="#8884d8" />
-                    <Line yAxisId="right" type="monotone" dataKey="Avg per Candidate" stroke="#82ca9d" />
+                    <Line yAxisId="left" type="monotone" dataKey="Applications Sent" stroke="#1E3A8A" />
+                    <Line yAxisId="right" type="monotone" dataKey="Avg per Candidate" stroke="#10B981" />
                 </LineChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -375,7 +375,7 @@ const CandidateAnalytics = () => (
                 <FunnelChart>
                     <Tooltip />
                     <Funnel dataKey="value" data={mockData.candidate.interviewFunnel} isAnimationActive>
-                         <LabelList position="right" fill="#000" stroke="none" dataKey="name" />
+                         <LabelList position="right" fill="#1E293B" stroke="none" dataKey="name" />
                     </Funnel>
                 </FunnelChart>
             </ResponsiveContainer>
