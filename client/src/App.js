@@ -12,9 +12,9 @@ import RecruiterRoot from "./pages/RecruiterRoot";
 import CandidateDashboard from "./pages/CandidateDashboard";
 
 
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoot from "./pages/AdminRoot";
 
-import BusinessManagerDash from "./pages/BusinessManagerDash";
+import BusinessManagerRoot from "./pages/BusinessManagerRoot";
 
 import JobPosts from "./components/Recruiter/JobPosts";
 
@@ -36,8 +36,12 @@ const App = () => {
         <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />
         <Route path="/candidate" element={<CandidateDashboard />} />
 
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/businessmanager" element={<BusinessManagerDash />} />
+        <Route path="/admin" element={<AdminRoot />} />
+        <Route path="/admin/overview" element={<AdminRoot />} />
+        <Route path="/admin/analytics" element={<AdminRoot />} />
+
+        <Route path="/manager" element={<BusinessManagerRoot />} />
+        <Route path="/manager/overview" element={<BusinessManagerRoot />} />
 
 
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
