@@ -36,7 +36,7 @@ const menuTabs = [
   {
     id: "companyProfiles",
     label: "Company Profiles",
-    path: "/manager/companyProfiles",
+    path: "/manager/company-profiles",
     icon: <Domain />,
   },
   {

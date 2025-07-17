@@ -106,7 +106,26 @@
     text-align: center;
     padding: 2rem 1.5rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-top: 5px solid var(--primary-blue);
+    border-top: 4px solid var(--primary-blue);
+
+    position: relative; /* 1. Needed to position the ::before element */
+    border-top: none;
+}
+
+.user-card::before {
+    content: '';      /* 3. Required for pseudo-elements */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;      /* 4. The height of our "border" */
+
+    /* 5. The Gradient */
+    background: linear-gradient(110deg, #0A2342 0%, #224c75 50%, #2C6E9E 100%);
+
+    /* 6. Match the top corners of the parent card */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
 }
 
 .user-card:hover {
