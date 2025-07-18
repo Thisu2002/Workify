@@ -474,3 +474,32 @@
 .profile-icon-btn {
   color: #3b5998 !important;
 }
+
+.applicant-card{
+  border-radius: 4;
+  box-shadow: 2;
+  padding: 2;
+  display: "flex";
+  align-items: "flex-start";
+  background: white;
+}
+
+.application-tabs {
+  margin-bottom: 20px;
+  /* border-radius: 8px; */
+ 
+}
+
+.application-tab {
+  font-weight: 600;
+  font-size: 12px;
+  /* min-width: 120px; */
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.application-tab.Mui-selected {
+  color: #ffffff !important;
+  background: #0F2445 !important;
+  border-radius: 12px;
+}

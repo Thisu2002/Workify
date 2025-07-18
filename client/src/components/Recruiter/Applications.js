@@ -132,7 +132,7 @@ const Applications = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [cvStatus, setCvStatus] = useState("");
-  // NEW: State for the CV viewer modal
+  
   const [cvModalOpen, setCvModalOpen] = useState(false);
   const [selectedCvUrl, setSelectedCvUrl] = useState('');
 
@@ -145,7 +145,6 @@ const Applications = () => {
     { id: 'panel2', name: 'Marketing Panel B' },
     { id: 'panel3', name: 'Product Panel C' }
   ];
-
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -218,12 +217,14 @@ const Applications = () => {
       <Tabs
         value={activeTab}
         onChange={handleTabChange}
-        indicatorColor="primary"
-        textColor="primary"
-        sx={{ mb: 3 }}
+        className="application-tabs"
         >
         {tabOptions.map((tab) => (
-          <Tab key={tab.value} label={tab.label} value={tab.value} />
+          <Tab 
+            key={tab.value} 
+            label={tab.label} 
+            value={tab.value}
+            className="application-tab" />
         ))}
       </Tabs>
         
@@ -231,7 +232,7 @@ const Applications = () => {
         {activeTab === "new" && (
           <Stack spacing={3}>
             {newApplicants.map((applicant, idx) => (
-              <Card key={idx} sx={{ borderRadius: 4, boxShadow: 2, p: 2, display: "flex", alignItems: "flex-start", background: "linear-gradient(90deg,#eaf6fa 0%,#fafdff 100%)" }}>
+              <Card key={idx} className="applicant-card" sx={{ borderRadius: 4, boxShadow: 2, p: 2, display: "flex", alignItems: "flex-start", background: "white" }}>
                 <Avatar src={applicant.avatar} sx={{ width: 56, height: 56, mr: 3, mt: 1 }} />
                 <Box flex={1}>
                   <Box display="flex" alignItems="center" justifyContent="space-between">
