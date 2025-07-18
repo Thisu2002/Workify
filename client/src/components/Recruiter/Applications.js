@@ -263,6 +263,8 @@ const Applications = () => {
                       startIcon={<UpdateIcon />}
                       size="small"
                       onClick={() => handleOpenModal(applicant)}
+                      sx={{background: "#052353ff", color: "white", fontWeight: 200}}
+                      
                       > 
                       Change Status
                     </Button>
@@ -276,7 +278,7 @@ const Applications = () => {
         {activeTab === "shortlisted" && (
           <Stack spacing={3}>
             {shortlistedApplicants.map((applicant, idx) => (
-              <Card key={idx} sx={{ borderRadius: 4, boxShadow: 2, p: 2, display: "flex", alignItems: "flex-start", background: "linear-gradient(90deg,#eaf6fa 0%,#fafdff 100%)" }}>
+              <Card key={idx} sx={{ borderRadius: 4, boxShadow: 2, p: 2, display: "flex", alignItems: "flex-start", background: "white" }}>
                 <Avatar src={applicant.avatar} sx={{ width: 56, height: 56, mr: 3, mt: 1 }} />
                 <Box flex={1}>
                   <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -296,9 +298,11 @@ const Applications = () => {
                   <Box display="flex" gap={1}>
                     <Button 
                       variant="outlined" 
+                      // className="view-cv-button"
                       startIcon={<CvIcon />} 
                       size="small"
                       onClick={() => handleOpenCvModal(applicant)}
+                      
                       >
                       View CV
                     </Button>
@@ -307,6 +311,7 @@ const Applications = () => {
                       startIcon={<UpdateIcon />}
                       size="small"
                       onClick={() => handleOpenInterviewModal(applicant)}
+                      sx={{background: "#052353ff", color: "white", fontWeight: 200}}
                       > 
                       Call for Interview
                     </Button>

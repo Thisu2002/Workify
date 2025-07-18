@@ -142,7 +142,7 @@ const Overview = ({ setActiveTab }) => {
                   <Grid item xs={4}>
                     <StatCard 
                       icon={<WorkOutline />}
-                      title="Total Job Posts"
+                      title="Job Posts"
                       value="28"
                       change="+5 this month"
                     />
@@ -150,7 +150,7 @@ const Overview = ({ setActiveTab }) => {
                   <Grid item>
                     <StatCard 
                       icon={<AssignmentInd />}
-                      title="Applications Received"
+                      title="Applications"
                       value="102"
                       change="New this month"
                       color="#ffa502"
@@ -159,7 +159,7 @@ const Overview = ({ setActiveTab }) => {
                   <Grid item>
                     <StatCard 
                       icon={<Schedule />}
-                      title="Interviews Scheduled"
+                      title="Interviews"
                       value="14"
                       change="Ongoing"
                       color="#10b981"
