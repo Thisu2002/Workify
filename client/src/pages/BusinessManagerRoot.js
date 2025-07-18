@@ -48,13 +48,13 @@ const menuTabs = [
   {
     id: "blacklist",
     label: "Candidate Blacklist",
-    path: "/manager/blacklist",
+    path: "/manager/blacklist-requests",
     icon: <BlockIcon />,
   },
   {
     id: "mentorVerification",
     label: "Mentor Verification",
-    path: "/manager/mentorVerification",
+    path: "/manager/mentor-verification",
     icon: <VerifiedUserIcon />,
   },
   {
