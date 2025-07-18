@@ -1,0 +1,185 @@
+/* --- Global & Container Styles --- */
+.mentor-verification-container {
+  max-width: 950px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.mentor-verification-container h1 {
+  color: #0D3B66; /* Deep, classic blue for the main heading */
+  border-bottom: 2px solid #eef2f7;
+  padding-bottom: 0.75rem;
+  margin-top: 0;
+}
+
+.mentor-verification-container > p {
+  color: #5a6e83; /* Softer text color */
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Mentor List --- */
+.mentor-list {
+  list-style: none;
+  padding: 0;
+}
+
+.mentor-item {
+  display: flex;
+  align-items: center; /* Vertically align items */
+  background-color: #ffffff;
+  border: 1px solid #dbe2ea;
+  border-left: 6px solid #0D3B66; /* Deep blue accent */
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px; /* Slightly more rounded */
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
+}
+
+.mentor-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  border-left-color: #1171ba; /* A brighter professional blue on hover */
+}
+
+/* NEW: Styles for the list item profile picture */
+.mentor-item-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%; /* Makes the image circular */
+  object-fit: cover; /* Prevents the image from being stretched */
+  margin-right: 1.5rem;
+  border: 2px solid #eef2f7;
+}
+
+.mentor-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.mentor-item h3 {
+  margin: 0;
+  color: #1171ba; /* Professional blue for names */
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.mentor-item p {
+  margin: 5px 0 0;
+  color: #4a5a6a;
+  font-size: 0.95em;
+}
+
+/* --- Modal Styles --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(13, 59, 102, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  width: 90%;
+  max-width: 650px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+  padding: 1.25rem 1.75rem;
+  background-color: #0D3B66;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative; /* Needed for positioning the avatar */
+}
+
+/* NEW: Styles for the modal profile picture */
+.modal-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ffffff;
+  position: absolute;
+  top: 1.25rem; /* Align with header padding */
+  left: 1.75rem; /* Align with header padding */
+  transform: translateY(50%); /* Move half of its height down to overlap */
+  background-color: #fff; /* Background for the border */
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  /* Push the title to the right to make space for the avatar */
+  padding-left: 95px; 
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-body {
+  /* Add more top padding to avoid content overlapping with the avatar */
+  padding: 3.5rem 1.75rem 1.75rem 1.75rem;
+  line-height: 1.7;
+  color: #333;
+}
+
+.modal-body p { margin: 0 0 1rem 0; }
+.modal-body p strong { color: #0D3B66; }
+.modal-body a { color: #1171ba; text-decoration: none; font-weight: 500; }
+.modal-body a:hover { text-decoration: underline; }
+
+.modal-footer {
+  padding: 1.25rem 1.75rem;
+  background-color: #f7f9fc;
+  border-top: 1px solid #eef2f7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-2px);
+}
+
+.btn-accept { background-color: #28a745; color: white; }
+.btn-decline { background-color: #dc3545; color: white; }

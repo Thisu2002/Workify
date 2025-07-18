@@ -1,0 +1,198 @@
+/* --- Main Container & Typography --- */
+.blacklist-container {
+  max-width: 950px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.blacklist-container h1 {
+  color: #0D3B66; /* Deep Blue */
+  border-bottom: 2px solid #eef2f7;
+  padding-bottom: 0.75rem;
+  margin-top: 0;
+  font-size: 1.8rem;
+}
+
+.blacklist-container > p {
+  color: #5a6e83;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Request List --- */
+.request-list {
+  list-style: none;
+  padding: 0;
+}
+
+.request-item {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #dbe2ea;
+  border-left: 6px solid #B00020; /* A cautionary, dark red accent */
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
+}
+
+.request-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  border-left-color: #CF6679; /* Lighter red on hover */
+}
+
+.request-item-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 1.5rem;
+  border: 2px solid #eef2f7;
+}
+
+.request-item-info {
+  flex-grow: 1;
+}
+
+.request-item h3 {
+  margin: 0;
+  color: #B00020; /* Dark red to indicate a warning */
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.request-item p {
+  margin: 5px 0 0;
+  color: #4a5a6a;
+  font-size: 0.95em;
+}
+
+.request-item p strong {
+  color: #333;
+}
+
+/* --- Modal Styles --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(13, 59, 102, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  width: 90%;
+  max-width: 700px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+  padding: 1.25rem 1.75rem;
+  background-color: #0D3B66; /* Professional Deep Blue */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.75rem;
+  line-height: 1.7;
+}
+
+.modal-section {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+}
+
+.candidate-details {
+  background-color: #f7f9fc;
+}
+
+.request-details {
+  background-color: #fff4f4; /* Light red background to highlight the reason */
+  border: 1px solid #ffd1d1;
+}
+
+.modal-body h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #0D3B66;
+  border-bottom: 1px solid #eef2f7;
+  padding-bottom: 0.5rem;
+}
+
+.modal-body p { margin: 0 0 0.5rem 0; color: #333; }
+.modal-body p strong { color: #0D3B66; }
+.request-details p strong { color: #B00020; } /* Use red for emphasis in this section */
+
+.modal-footer {
+  padding: 1.25rem 1.75rem;
+  background-color: #f7f9fc;
+  border-top: 1px solid #eef2f7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-2px);
+}
+
+/* Specific button styling for clarity */
+.btn-do-not-blacklist {
+  background-color: #6c757d; /* Neutral grey */
+  color: white;
+}
+
+.btn-blacklist {
+  background-color: #B00020; /* Strong cautionary red */
+  color: white;
+}
