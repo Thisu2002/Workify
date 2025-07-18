@@ -41,6 +41,7 @@ const App = () => {
         <Route path="/recruiter" element={<RecruiterRoot />} />
         <Route path="/recruiter/overview" element={<RecruiterRoot />} />
         <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />
+        <Route path="/recruiter/job-posts/applicants" element={<RecruiterRoot />} />
         <Route path="/recruiter/applications" element={<RecruiterRoot />} />
 
         <Route path="/candidate" element={<CandidateRoot />} />

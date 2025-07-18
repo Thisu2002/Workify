@@ -63,7 +63,7 @@ const CareerAdvice = () => {
   );
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box>
       {/* Page Header and Search */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>

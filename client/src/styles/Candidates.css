@@ -1,0 +1,136 @@
+.candidates-main {
+  position: relative;
+  overflow: hidden;
+}
+
+.candidates-root {
+  display: flex;
+  width: 100%;
+  max-height: fit-content;
+  min-height: 0;
+  position: relative;
+  background-color: #f7fafc;
+  border-radius: 24px;
+}
+
+.candidates-list-panel {
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    max-width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 32px 50px 32px 32px;
+  max-height: fit-content;
+  overflow-y: auto;
+  background: #f7fafc;
+  border-radius: 24px;
+}
+
+.candidates-list-panel.full {
+  width: 100%;
+  max-width: 100%;
+}
+
+.candidates-list-panel.shrink {
+  width: 48%;
+  border-right: 1px solid #e0e0e0;
+}
+
+.candidate-card {
+  background: #fff;
+  margin-bottom: 16px;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.candidate-card.active,
+.candidate-card:hover {
+  background: #e3f2fd;
+  box-shadow: 0 4px 24px rgba(30, 136, 229, 0.08);
+}
+
+.candidate-details-panel {
+  position: fixed;
+  top: 100px;
+  right: 0;
+  width: 50vw;
+  max-width: 850px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(30, 136, 229, 0.08);
+  z-index: 2000;
+  padding: 40px 32px 32px 32px;
+  border-top-left-radius: 24px;
+  border-bottom-left-radius: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.candidate-about {
+  color: #222;
+  font-size: 1.08rem;
+  margin-bottom: 8px;
+}
+
+.candidate-tools-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.candidate-tool-chip {
+  background: #f5f5f5;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.close-icon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: #222;
+  z-index: 10;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.close-icon:hover {
+  background: #e0e0e0;
+}
+
+.candidate-timeline-stepper {
+  background: transparent;
+  padding-left: 0;
+}
+
+.candidate-timeline-horizontal {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.candidate-timeline-stepper .MuiStepLabel-labelContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-label {
+  font-weight: 500;
+  font-size: 1rem;
+  margin-right: 8px;
+}
+
+.timeline-date {
+  color: #888;
+  font-size: 0.95rem;
+  margin-left: 0;
+  margin-top: 2px;
+}
