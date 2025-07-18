@@ -10,7 +10,7 @@ import LeadPanelist from "./pages/LeadPanelist";
 
 import RecruiterRoot from "./pages/RecruiterRoot";
 import CandidateRoot from "./pages/CandidateRoot";
-
+import MentorRoot from "./pages/MentorRoot"; // Add this import
 
 import AdminRoot from "./pages/AdminRoot";
 
@@ -28,9 +28,16 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/mentor" element={<Mentor />} />
         <Route path="/lead-panelist" element={<LeadPanelist />} />
 
+        {/* Mentor Routes */}
+        <Route path="/mentor" element={<MentorRoot />} />
+        <Route path="/mentor/overview" element={<MentorRoot />} />
+        <Route path="/mentor/sessions" element={<MentorRoot />} />
+        <Route path="/mentor/requests" element={<MentorRoot />} />
+        <Route path="/mentor/history" element={<MentorRoot />} />
+        
+        {/* Existing routes */}
         <Route path="/recruiter" element={<RecruiterRoot />} />
         <Route path="/recruiter/overview" element={<RecruiterRoot />} />
         <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />

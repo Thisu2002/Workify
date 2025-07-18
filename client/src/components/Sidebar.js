@@ -11,7 +11,13 @@ import { NavLink } from "react-router-dom"; // <-- import NavLink
 import logo from "../images/Group 3.png";
 import "../styles/Recruiter.css";
 
-const Sidebar = ({ menuTabs, isRecruiter = false, setShowJobForm }) => {
+const Sidebar = ({
+  menuTabs,
+  isRecruiter = false,
+  isMentor = false,
+  setShowJobForm,
+  setShowSessionForm,
+}) => {
   return (
     <Box className="recruiter-sidebar">
       <Box
@@ -64,6 +70,23 @@ const Sidebar = ({ menuTabs, isRecruiter = false, setShowJobForm }) => {
             onClick={() => setShowJobForm(true)}
           >
             New Job Post
+          </Button>
+        </NavLink>
+      )}
+
+      {isMentor && (
+        <NavLink
+          to="/mentor/sessions"
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <Button
+            className="nav-short-btn"
+            variant="contained"
+            startIcon={<Add sx={{ fontSize: 28, fontWeight: 700 }} />}
+            sx={{ mt: 4, width: "90%", alignSelf: "center" }}
+            onClick={() => setShowSessionForm(true)}
+          >
+            New Session
           </Button>
         </NavLink>
       )}
