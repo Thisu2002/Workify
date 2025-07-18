@@ -9,6 +9,7 @@ import {
   Feedback,
   Group,
   Domain,
+  Subscriptions,
   InsertChart as InsertChartIcon,
   Block as BlockIcon,
   VerifiedUser as VerifiedUserIcon,
@@ -68,6 +69,12 @@ const menuTabs = [
     label: "Reports",
     path: "/manager/reports",
     icon: <InsertChartIcon />,
+  },
+  {
+    id: "subscription-plans",
+    label: "Subscription Plans",
+    path: "/manager/subscription-plans",
+    icon: <Subscriptions  />,
   },
 ];
 
