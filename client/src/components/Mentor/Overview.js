@@ -32,10 +32,11 @@ const Overview = () => {
   const [loading, setLoading] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [profile, setProfile] = useState({
-    name: "Alex Morgan",
+    name: "Priyantha Hettiarachchi", // Update name to a more realistic one
     expertise: "Senior Tech Mentor",
     experience: "5 years mentoring experience",
-    description: "Experienced mentor specializing in software development, career guidance, and interview preparation."
+    description: "Experienced mentor specializing in software development, career guidance, and interview preparation.",
+    photoUrl: "https://randomuser.me/api/portraits/men/39.jpg" // Add photo URL to state
   });
 
   const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
@@ -79,7 +80,7 @@ const Overview = () => {
           <Box display="flex" alignItems="center" gap={3}>
             <Box position="relative">
               <Avatar 
-                src="https://randomuser.me/api/portraits/men/32.jpg"
+                src={profile.photoUrl} // Use photo URL from state
                 sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
               />
               <OnlineIcon 
@@ -203,10 +204,10 @@ const Overview = () => {
                   <Typography variant="subtitle2" color="text.secondary">Time</Typography>
                 </Box>
                 {[
-                  { name: "Douglas Ray", type: "CV Review", time: "Today, 2:00 PM" },
-                  { name: "Elizabeth Martin", type: "Mock Interview", time: "Today, 4:30 PM" },
-                  { name: "Emma Wade", type: "Career Guidance", time: "Tomorrow, 10:00 AM" },
-                  { name: "Teresa Reyes", type: "Technical Mentoring", time: "Tomorrow, 3:00 PM" },
+                  { name: "Saman Anurapriya", type: "CV Review", time: "Today, 2:00 PM" },
+                  { name: "Malith Kumara", type: "Mock Interview", time: "Today, 4:30 PM" },
+                  { name: "Kamal Perera", type: "Career Guidance", time: "Tomorrow, 10:00 AM" },
+                  { name: "Thisara Gamage", type: "Technical Mentoring", time: "Tomorrow, 3:00 PM" },
                 ].map((session, idx) => (
                   <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" py={1} borderBottom={idx < 3 ? "1px solid #f0f0f0" : "none"}>
                     <Box>
@@ -271,19 +272,19 @@ const Overview = () => {
                 <Stack spacing={2}>
                   {[
                     {
-                      name: "John Smith",
+                      name: "Sandaruwan Perera",
                       feedback: "Excellent mentoring session. Very helpful!",
                       avatar: "https://randomuser.me/api/portraits/men/42.jpg",
                       rating: "5.0"
                     },
                     {
-                      name: "Sarah Johnson",
+                      name: "Malani Chandrasekara",
                       feedback: "Great advice on career progression. Thank you!",
                       avatar: "https://randomuser.me/api/portraits/women/24.jpg",
                       rating: "4.8"
                     },
                     {
-                      name: "Mike Williams",
+                      name: "Saman Perera",
                       feedback: "The mock interview was really well structured.",
                       avatar: "https://randomuser.me/api/portraits/men/18.jpg",
                       rating: "4.9"
@@ -309,7 +310,7 @@ const Overview = () => {
           <Paper className="content-card company-profile" elevation={2} style={{ flex: 1, minWidth: 0 }}>
             <Box display="flex" flexDirection="column" alignItems="center" p={5} sx={{ flex: 1, height: "100%" }} >
               <Avatar
-                src="https://randomuser.me/api/portraits/men/32.jpg"
+                src={profile.photoUrl} // Use photo URL from state
                 sx={{ width: 80, height: 80, mb: 2 }}
               />
               <Typography variant="h6" fontWeight="bold">
@@ -350,6 +351,15 @@ const Overview = () => {
       <Dialog open={openEdit} onClose={handleEditClose} maxWidth="sm" fullWidth>
         <DialogTitle>Edit Mentor Profile</DialogTitle>
         <DialogContent>
+          <TextField
+            margin="normal"
+            label="Photo URL"
+            name="photoUrl"
+            value={profile.photoUrl}
+            onChange={handleProfileChange}
+            fullWidth
+            helperText="Enter a URL for your profile photo"
+          />
           <TextField
             margin="normal"
             label="Name"
