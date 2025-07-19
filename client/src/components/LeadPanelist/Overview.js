@@ -444,11 +444,7 @@ const Overview = () => {
                       size="small" 
                       sx={{ mb: 1 }}
                     />
-                    <Chip 
-                      label="Senior Evaluator" 
-                      size="small" 
-                      sx={{ mb: 1 }}
-                    />
+                    
                   </Stack>
                 </Box>
                 
