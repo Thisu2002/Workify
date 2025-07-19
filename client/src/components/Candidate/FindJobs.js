@@ -37,7 +37,7 @@ const jobPostings = [
     location: 'Colombo',
     type: 'Full-time',
     model: 'Remote',
-    salary: '$120,000 - $150,000',
+    salary: 'Rs.120,000 - Rs.150,000',
     postedDate: '5d ago',
     description: 'Join our team to build next-generation web applications with React and TypeScript. You will be responsible for developing and implementing user interface components using React.js concepts and workflows such as Redux, Flux, and Webpack.',
     responsibilities: ['Developing new user-facing features', 'Building reusable components', 'Translating designs into high-quality code'],
@@ -51,7 +51,7 @@ const jobPostings = [
     location: 'Colombo',
     type: 'Contract',
     model: 'Hybrid',
-    salary: '$90,000 - $110,000',
+    salary: 'Rs.90,000 - Rs.110,000',
     postedDate: '2d ago',
     description: 'We are looking for a talented UI/UX Designer to create amazing user experiences. The ideal candidate should have an eye for clean and artful design, possess superior UI skills and be able to translate high-level requirements into interaction flows and artifacts.',
     responsibilities: ['Gather and evaluate user requirements', 'Illustrate design ideas using storyboards', 'Design graphical user interface elements'],
@@ -138,7 +138,7 @@ const FindJobs = () => {
             <Box sx={{ my: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Chip label={job.type} size="small" />
               <Chip label={job.model} size="small" variant="outlined" />
-              <Chip icon={<MonetizationOn />} label={job.salary} size="small" variant="outlined" color="success" />
+              <Chip label={job.salary} size="small" variant="outlined" color="success" />
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" color="text.secondary">

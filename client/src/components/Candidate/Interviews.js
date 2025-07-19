@@ -108,7 +108,7 @@ const Interviews = () => {
             </Box>
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                 <IconButton size="small"><CalendarToday /></IconButton>
-                <Button variant="outlined" size="small">Prepare</Button>
+                {/* <Button variant="outlined" size="small">Prepare</Button> */}
                 {interview.link && <Button variant="contained" size="small" href={interview.link} target="_blank">Join Meeting</Button>}
             </Box>
           </Paper>
