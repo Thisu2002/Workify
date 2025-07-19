@@ -61,7 +61,7 @@ const menuTabs = [
   {
     id: "jobPostings",
     label: "Job Postings",
-    path: "/manager/jobPostings",
+    path: "/manager/job-postings",
     icon: <WorkOutline />,
   },
   {
