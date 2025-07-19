@@ -33,7 +33,7 @@ const jobPostings = [
     id: 1,
     title: 'Senior React Developer',
     company: 'WealthOS',
-    logo: 'https://via.placeholder.com/40?text=I',
+    logo: 'https://via.placeholder.com/40?text=W',
     location: 'Colombo',
     type: 'Full-time',
     model: 'Remote',
@@ -47,7 +47,7 @@ const jobPostings = [
     id: 2,
     title: 'UI/UX Designer',
     company: 'IFS',
-    logo: 'https://via.placeholder.com/40?text=C',
+    logo: 'https://via.placeholder.com/40?text=I',
     location: 'Colombo',
     type: 'Contract',
     model: 'Hybrid',
@@ -62,6 +62,7 @@ const jobPostings = [
 const FindJobs = () => {
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [savedJobs, setSavedJobs] = useState(new Set());
+  const [showOnlySaved, setShowOnlySaved] = useState(false);
 
   const [isApplyFormOpen, setApplyFormOpen] = useState(false);
   const [applyingForJob, setApplyingForJob] = useState(null);
@@ -82,7 +83,11 @@ const FindJobs = () => {
     });
   };
 
-   const handleOpenApplyForm = (job) => {
+  const handleToggleShowSaved = () => {
+    setShowOnlySaved(prev => !prev);
+  };
+
+  const handleOpenApplyForm = (job) => {
     setApplyingForJob(job);
     setApplyFormOpen(true);
   };
@@ -91,14 +96,34 @@ const FindJobs = () => {
     setApplyFormOpen(false);
     setTimeout(() => setApplyingForJob(null), 300);
   };
+  
+  const filteredJobs = showOnlySaved
+    ? jobPostings.filter(job => savedJobs.has(job.id))
+    : jobPostings;
+
 
   return (
     <Box>
       {/* Search and Filter Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
-          Find Your Next Opportunity
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                {showOnlySaved ? 'Your Saved Jobs' : 'Find Your Next Opportunity'}
+            </Typography>
+            <Button
+                variant="contained" // Changed to contained for a solid background
+                onClick={handleToggleShowSaved}
+                sx={{
+                    backgroundColor: '#0a2048', // Your custom background color
+                    color: '#ffffff',           // White text color
+                    '&:hover': {
+                        backgroundColor: '#1a3668' // A slightly lighter color on hover
+                    }
+                }}
+            >
+                {showOnlySaved ? 'All Jobs' : 'Saved Jobs'}
+            </Button>
+        </Box>
         <TextField
           fullWidth
           variant="outlined"
@@ -111,81 +136,93 @@ const FindJobs = () => {
             ),
           }}
         />
-        {/* Filter chips could go here */}
       </Box>
 
       {/* Job Postings List */}
       <Box>
-        {jobPostings.map((job) => (
-          <Paper key={job.id} elevation={2} sx={{ mb: 2, p: 2.5, borderRadius: 2, transition: 'box-shadow 0.3s', '&:hover': { boxShadow: 6 } }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item>
-                <Avatar src={job.logo} sx={{ width: 50, height: 50 }} />
+        {filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            <Paper key={job.id} elevation={2} sx={{ mb: 2, p: 2.5, borderRadius: 2, transition: 'box-shadow 0.3s', '&:hover': { boxShadow: 6 } }}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item>
+                  <Avatar src={job.logo} sx={{ width: 50, height: 50 }} />
+                </Grid>
+                <Grid item xs>
+                  <Typography variant="h6">{job.title}</Typography>
+                  <Box display="flex" alignItems="center" gap={2} color="text.secondary" flexWrap="wrap">
+                    <Box display="flex" alignItems="center"><Apartment fontSize="small" sx={{ mr: 0.5 }} /> {job.company}</Box>
+                    <Box display="flex" alignItems="center"><LocationOn fontSize="small" sx={{ mr: 0.5 }} /> {job.location}</Box>
+                  </Box>
+                </Grid>
+                <Grid item>
+                  <IconButton onClick={() => handleToggleSave(job.id)}>
+                    {savedJobs.has(job.id) ? <Bookmark color="primary" /> : <BookmarkBorder />}
+                  </IconButton>
+                </Grid>
               </Grid>
-              <Grid item xs>
-                <Typography variant="h6">{job.title}</Typography>
-                <Box display="flex" alignItems="center" gap={2} color="text.secondary" flexWrap="wrap">
-                  <Box display="flex" alignItems="center"><Apartment fontSize="small" sx={{ mr: 0.5 }} /> {job.company}</Box>
-                  <Box display="flex" alignItems="center"><LocationOn fontSize="small" sx={{ mr: 0.5 }} /> {job.location}</Box>
+              <Box sx={{ my: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Chip label={job.type} size="small" />
+                <Chip label={job.model} size="small" variant="outlined" />
+                <Chip label={job.salary} size="small" variant="outlined" color="success" />
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" color="text.secondary">
+                  Posted {job.postedDate}
+                </Typography>
+                <Box>
+                  <Button variant="text" size="small" onClick={() => handleToggleDetails(job.id)}>
+                    {selectedJobId === job.id ? 'Hide Details' : 'View Details'}
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    size="small" 
+                    sx={{ ml: 1 }}
+                    onClick={() => handleOpenApplyForm(job)}
+                  >
+                    Apply Now
+                  </Button>
                 </Box>
-              </Grid>
-              <Grid item>
-                <IconButton onClick={() => handleToggleSave(job.id)}>
-                  {savedJobs.has(job.id) ? <Bookmark color="primary" /> : <BookmarkBorder />}
-                </IconButton>
-              </Grid>
-            </Grid>
-            <Box sx={{ my: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip label={job.type} size="small" />
-              <Chip label={job.model} size="small" variant="outlined" />
-              <Chip label={job.salary} size="small" variant="outlined" color="success" />
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary">
-                Posted {job.postedDate}
-              </Typography>
-              <Box>
-                <Button variant="text" size="small" onClick={() => handleToggleDetails(job.id)}>
-                  {selectedJobId === job.id ? 'Hide Details' : 'View Details'}
-                </Button>
-                <Button 
-                  variant="contained" 
-                  size="small" 
-                  sx={{ ml: 1 }}
-                  onClick={() => handleOpenApplyForm(job)}
-                >
-                  Apply Now
-                </Button>
               </Box>
-            </Box>
 
-            {/* Collapsible Details Section */}
-            <Collapse in={selectedJobId === job.id} timeout="auto" unmountOnExit>
-              <Divider sx={{ my: 2 }} />
-              <Box sx={{ p: 1 }}>
-                <Typography variant="body1" paragraph>{job.description}</Typography>
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>Responsibilities</Typography>
-                <List dense>
-                  {job.responsibilities.map((item, index) => (
-                    <ListItem key={index} sx={{ py: 0 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}><CheckIcon fontSize="small" color="primary" /></ListItemIcon>
-                      <ListItemText primary={item} />
-                    </ListItem>
-                  ))}
-                </List>
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mt: 2 }}>Qualifications</Typography>
-                <List dense>
-                  {job.qualifications.map((item, index) => (
-                    <ListItem key={index} sx={{ py: 0 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}><CheckIcon fontSize="small" color="primary" /></ListItemIcon>
-                      <ListItemText primary={item} />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </Collapse>
+              {/* Collapsible Details Section */}
+              <Collapse in={selectedJobId === job.id} timeout="auto" unmountOnExit>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ p: 1 }}>
+                  <Typography variant="body1" paragraph>{job.description}</Typography>
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>Responsibilities</Typography>
+                  <List dense>
+                    {job.responsibilities.map((item, index) => (
+                      <ListItem key={index} sx={{ py: 0 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><CheckIcon fontSize="small" color="primary" /></ListItemIcon>
+                        <ListItemText primary={item} />
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mt: 2 }}>Qualifications</Typography>
+                  <List dense>
+                    {job.qualifications.map((item, index) => (
+                      <ListItem key={index} sx={{ py: 0 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><CheckIcon fontSize="small" color="primary" /></ListItemIcon>
+                        <ListItemText primary={item} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              </Collapse>
+            </Paper>
+          ))
+        ) : (
+          <Paper elevation={1} sx={{ p: 4, textAlign: 'center', backgroundColor: 'grey.50' }}>
+            <Typography variant="h6" color="text.secondary">
+              {showOnlySaved ? "You haven't saved any jobs yet." : "No jobs found."}
+            </Typography>
+            {showOnlySaved && (
+              <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>
+                Click the bookmark icon <BookmarkBorder fontSize="small" /> on a job to save it for later.
+              </Typography>
+            )}
           </Paper>
-        ))}
+        )}
       </Box>
       {applyingForJob && (
           <ApplyForm 

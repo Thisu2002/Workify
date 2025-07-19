@@ -22,7 +22,7 @@ const MOCK_MENTORS = [
   {
     id: 1,
     name: 'Diluni Amarasinghe',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
+    avatar: '',
     role: 'Senior Product Manager at Surge Global',
     bio: 'Passionate about building great products and helping aspiring PMs navigate their career path.',
     specialties: ['Resume Review', 'Product Strategy', 'Interview Prep', 'Career Growth']
@@ -30,7 +30,7 @@ const MOCK_MENTORS = [
   {
     id: 2,
     name: 'Nudam Perera',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    avatar: '',
     role: 'Lead Software Engineer at Furtado',
     bio: 'Specializing in scalable systems and architecture. Happy to conduct mock technical interviews.',
     specialties: ['System Design', 'Technical Interviews', 'GoLang', 'React']
@@ -38,7 +38,7 @@ const MOCK_MENTORS = [
   {
     id: 3,
     name: 'Tharushi Nethmini',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+    avatar: '',
     role: 'Engineering Manager at TechCorp',
     bio: 'Focused on leadership, team building, and growing engineers from mid-level to senior roles.',
     specialties: ['Leadership', 'Salary Negotiation', 'Team Culture', 'Public Speaking']
@@ -46,7 +46,7 @@ const MOCK_MENTORS = [
   {
     id: 4,
     name: 'Rasika Samarasinghe',
-    avatar: 'https://randomuser.me/api/portraits/men/75.jpg',
+    avatar: '',
     role: 'UX Designer at Sysco Labs',
     bio: 'I help people understand the "why" behind user behavior and translate insights into impactful design.',
     specialties: ['UX Research', 'Portfolio Review', 'User Testing', 'Career Change']
