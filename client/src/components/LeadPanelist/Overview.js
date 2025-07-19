@@ -406,9 +406,27 @@ const Overview = () => {
           </Box>
 
           {/* Right Most Column */}
-          <Box className="" display="flex" flexDirection="column" gap={3} style={{ flex: 1, minWidth: 0 }}>
+          <Box 
+            className="" 
+            display="flex" 
+            flexDirection="column" 
+            gap={3} 
+            style={{ 
+              flex: 1,
+              minWidth: 300,  // Add fixed minimum width
+              maxWidth: 300   // Add fixed maximum width
+            }}
+          >
             {/* Lead Panelist Profile Card */}
-            <Paper className="content-card company-profile" elevation={2} style={{ flex: 1, minWidth: 0, height: '100%' }}>
+            <Paper 
+              className="content-card company-profile" 
+              elevation={2} 
+              style={{ 
+                flex: 1,
+                minWidth: 300,
+                maxWidth: 300
+              }}
+            >
               <Box p={3} display="flex" flexDirection="column" height="100%">
                 <Typography variant="subtitle1" fontWeight="bold" mb={2}>
                   Panelist Profile
@@ -469,8 +487,16 @@ const Overview = () => {
               </Box>
             </Paper>
 
-            {/* Calendar Card - Moved here */}
-            <Paper className="content-card calendar-card" elevation={2} style={{ flex: 1, minWidth: 0 }}>
+            {/* Calendar Card */}
+            <Paper 
+              className="content-card calendar-card" 
+              elevation={2} 
+              style={{ 
+                flex: 1,
+                minWidth: 300,
+                maxWidth: 300
+              }}
+            >
               <Box p={3}>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="subtitle1" fontWeight="bold" mb={2}>
