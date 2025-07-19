@@ -1,11 +1,17 @@
 import React, { useState } from "react";
+import { useLocation, Link as RouterLink } from "react-router-dom"; 
 import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon } from "@mui/material";
-import { AccountCircle, Logout, Settings } from "@mui/icons-material";
+import { AccountCircle, Logout, Person } from "@mui/icons-material";
 import "../styles/Recruiter.css";
+
 
 const Header = ({ title, onProfileClick, onLogout }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+
+  const location = useLocation();
+  const isCandidatePage = location.pathname.startsWith('/candidate');
+  //const isRecruiterPage = location.pathname.startsWith('/recruiter');
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -35,17 +41,21 @@ const Header = ({ title, onProfileClick, onLogout }) => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem
-          onClick={() => {
-            handleMenuClose();
-            if (onProfileClick) onProfileClick();
-          }}
-        >
-          <ListItemIcon>
-            <Settings fontSize="small" />
-          </ListItemIcon>
-          Profile Settings
-        </MenuItem>
+
+        {isCandidatePage && (
+          <MenuItem
+            component={RouterLink}
+            to="/candidate/profile" 
+            onClick={handleMenuClose}
+          >
+            <ListItemIcon>
+              <Person fontSize="small" />
+            </ListItemIcon>
+            My Profile
+          </MenuItem>
+        )}
+        {/*isRecruiterPage && */}
+
         <MenuItem
           onClick={() => {
             handleMenuClose();

@@ -21,33 +21,33 @@ import {
 const MOCK_MENTORS = [
   {
     id: 1,
-    name: 'Sarah Chen',
+    name: 'Diluni Amarasinghe',
     avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-    role: 'Senior Product Manager at Google',
+    role: 'Senior Product Manager at Surge Global',
     bio: 'Passionate about building great products and helping aspiring PMs navigate their career path.',
     specialties: ['Resume Review', 'Product Strategy', 'Interview Prep', 'Career Growth']
   },
   {
     id: 2,
-    name: 'David Lee',
+    name: 'Nudam Perera',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    role: 'Lead Software Engineer at Meta',
+    role: 'Lead Software Engineer at Furtado',
     bio: 'Specializing in scalable systems and architecture. Happy to conduct mock technical interviews.',
     specialties: ['System Design', 'Technical Interviews', 'GoLang', 'React']
   },
   {
     id: 3,
-    name: 'Maria Garcia',
+    name: 'Tharushi Nethmini',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    role: 'Engineering Manager at Netflix',
+    role: 'Engineering Manager at TechCorp',
     bio: 'Focused on leadership, team building, and growing engineers from mid-level to senior roles.',
     specialties: ['Leadership', 'Salary Negotiation', 'Team Culture', 'Public Speaking']
   },
   {
     id: 4,
-    name: 'James Miller',
+    name: 'Rasika Samarasinghe',
     avatar: 'https://randomuser.me/api/portraits/men/75.jpg',
-    role: 'Principal UX Researcher at Amazon',
+    role: 'UX Designer at Sysco Labs',
     bio: 'I help people understand the "why" behind user behavior and translate insights into impactful design.',
     specialties: ['UX Research', 'Portfolio Review', 'User Testing', 'Career Change']
   },

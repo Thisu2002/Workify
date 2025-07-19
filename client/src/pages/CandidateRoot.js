@@ -17,15 +17,15 @@ const menuTabs = [
 
 const CandidateRoot = () => {
   const location = useLocation();
-  // const [activeTab, setActiveTab] = useState('overview');
-  // const [loading, setLoading] = useState(false);
-  // const [anchorEl, setAnchorEl] = useState(null);
-  // const [trackerTab, setTrackerTab] = useState(0);
-  // const open = Boolean(anchorEl);
 
-  const activeLabel =
-    menuTabs.find((tab) => location.pathname.startsWith(tab.path))?.label ||
-    "Overview";
+  let activeLabel;
+  if (location.pathname === "/candidate/profile") {
+    activeLabel = "My Profile";
+  } else {
+    // This is the original logic for other pages
+    activeLabel =
+      menuTabs.find((tab) => location.pathname.startsWith(tab.path))?.label || "Overview";
+  }
 
   return (
     <Box className="recruiter-dashboard-root">

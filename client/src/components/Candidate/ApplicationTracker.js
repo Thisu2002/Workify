@@ -30,9 +30,9 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
       maxWidth: 1300,
       mx: "auto",
       p: 3,
-      borderRadius: 3,
+      borderRadius: '28px',
       boxShadow: 2,
-      background: "rgba(240,245,255,0.7)",
+      background: "linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)"
     }}
   >
     <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, textAlign: "center" }}>
