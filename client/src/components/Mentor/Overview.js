@@ -32,11 +32,11 @@ const Overview = () => {
   const [loading, setLoading] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [profile, setProfile] = useState({
-    name: "Priyantha Hettiarachchi", // Update name to a more realistic one
+    name: "Priyantha Hettiarachchi", 
     expertise: "Senior Tech Mentor",
     experience: "5 years mentoring experience",
     description: "Experienced mentor specializing in software development, career guidance, and interview preparation.",
-    photoUrl: "https://randomuser.me/api/portraits/men/39.jpg" // Add photo URL to state
+    photoUrl: "https://randomuser.me/api/portraits/men/39.jpg" 
   });
 
   const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
