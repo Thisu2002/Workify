@@ -40,7 +40,7 @@ const evaluationData = [
     status: "Highly Recommended",
     interviewer: "Ms. Fernando"
   },
-  // ...Add more dummy evaluation data as needed
+  
 ];
 
 const Evaluations = () => {

@@ -45,7 +45,7 @@ const feedbackData = [
     interviewer: "Ms. Perera",
     status: "Highly Positive"
   },
-  // ...Add more dummy feedback data as needed
+  
 ];
 
 const Feedback = () => {
