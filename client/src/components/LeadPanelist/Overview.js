@@ -405,47 +405,159 @@ const Overview = () => {
             </Paper>
           </Box>
 
-          {/* Lead Panelist Profile Card */}
-          <Paper className="content-card company-profile" elevation={2} style={{ flex: 1, minWidth: 0 }}>
-            <Box p={3}>
-              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
-                Panelist Profile
-              </Typography>
-              
-              <Box display="flex" alignItems="center" mb={2}>
-                <Avatar 
-                  src={profile.photoUrl}
-                  sx={{ width: 56, height: 56, border: '2px solid #96BEC5', mr: 2 }}
-                />
-                <Box>
-                  <Typography variant="body1" fontWeight="medium">
-                    {profile.name}
+          {/* Right Most Column */}
+          <Box className="" display="flex" flexDirection="column" gap={3} style={{ flex: 1, minWidth: 0 }}>
+            {/* Lead Panelist Profile Card */}
+            <Paper className="content-card company-profile" elevation={2} style={{ flex: 1, minWidth: 0, height: '100%' }}>
+              <Box p={3} display="flex" flexDirection="column" height="100%">
+                <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                  Panelist Profile
+                </Typography>
+                
+                <Box display="flex" alignItems="center" mb={3}>
+                  <Avatar 
+                    src={profile.photoUrl}
+                    sx={{ width: 56, height: 56, border: '2px solid #96BEC5', mr: 2 }}
+                  />
+                  <Box>
+                    <Typography variant="body1" fontWeight="medium">
+                      {profile.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {profile.position}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box flex={1} mb={3}>
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {profile.description}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {profile.position}
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip 
+                      label="Technical Interviews" 
+                      size="small" 
+                      sx={{ mb: 1 }}
+                    />
+                    <Chip 
+                      label="Panel Lead" 
+                      size="small" 
+                      sx={{ mb: 1 }}
+                    />
+                    <Chip 
+                      label="Senior Evaluator" 
+                      size="small" 
+                      sx={{ mb: 1 }}
+                    />
+                  </Stack>
+                </Box>
+                
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  sx={{ 
+                    color: '#0F2445', 
+                    borderColor: '#96BEC5', 
+                    textTransform: 'none',
+                    borderRadius: 2,
+                    alignSelf: 'flex-start',
+                    '&:hover': {
+                      borderColor: '#0F2445',
+                      backgroundColor: alpha('#0F2445', 0.1),
+                    }
+                  }}
+                  onClick={handleEditOpen}
+                >
+                  Edit Profile
+                </Button>
+              </Box>
+            </Paper>
+
+            {/* Calendar Card - Moved here */}
+            <Paper className="content-card calendar-card" elevation={2} style={{ flex: 1, minWidth: 0 }}>
+              <Box p={3}>
+                <Box display="flex" justifyContent="space-between">
+                  <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                    Interview Calendar
                   </Typography>
+                  <Typography variant="caption" color="text.secondary">January 2024</Typography>
+                </Box>
+                
+                {/* Calendar Grid */}
+                <Box sx={{ mt: 2 }}>
+                  <Grid container spacing={1}>
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                      <Grid item xs={1.7} key={day}>
+                        <Typography variant="caption" align="center" display="block" fontWeight="bold">
+                          {day}
+                        </Typography>
+                      </Grid>
+                    ))}
+                    
+                    {[...Array(31)].map((_, index) => (
+                      <Grid item xs={1.7} key={index}>
+                        <Box
+                          sx={{
+                            height: '28px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 1,
+                            position: 'relative',
+                            cursor: 'pointer',
+                            ...(index + 1 === 15 && {
+                              bgcolor: '#e6f7fa',
+                              color: '#0F2445',
+                              fontWeight: 'bold'
+                            }),
+                            '&:hover': {
+                              bgcolor: '#f5f5f5'
+                            }
+                          }}
+                        >
+                          <Typography variant="caption">
+                            {index + 1}
+                          </Typography>
+                          {[5, 12, 15, 20].includes(index + 1) && (
+                            <Box
+                              sx={{
+                                width: 4,
+                                height: 4,
+                                borderRadius: '50%',
+                                bgcolor: '#3B5998',
+                                position: 'absolute',
+                                bottom: 2
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+
+                {/* Today's Schedule */}
+                <Box mt={2} pt={2} borderTop="1px solid #f0f0f0">
+                  <Typography variant="body2" fontWeight="medium" mb={1}>
+                    Today's Schedule
+                  </Typography>
+                  { [
+                    { time: '10:00 AM', candidate: 'Technical Interview - John Doe' },
+                    { time: '02:30 PM', candidate: 'System Design - Sarah Smith' }
+                  ].map((schedule, idx) => (
+                    <Box key={idx} display="flex" gap={2} mb={1}>
+                      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
+                        {schedule.time}
+                      </Typography>
+                      <Typography variant="caption">
+                        {schedule.candidate}
+                      </Typography>
+                    </Box>
+                  ))}
                 </Box>
               </Box>
-              
-              <Button 
-                variant="outlined" 
-                size="small" 
-                sx={{ 
-                  color: '#0F2445', 
-                  borderColor: '#96BEC5', 
-                  textTransform: 'none',
-                  borderRadius: 2,
-                  '&:hover': {
-                    borderColor: '#0F2445',
-                    backgroundColor: alpha('#0F2445', 0.1),
-                  }
-                }}
-                onClick={handleEditOpen}
-              >
-                Edit Profile
-              </Button>
-            </Box>
-          </Paper>
+            </Paper>
+          </Box>
         </Box>
       </Box>
 
