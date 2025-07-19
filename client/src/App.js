@@ -11,6 +11,7 @@ import LeadPanelist from "./pages/LeadPanelist";
 import RecruiterRoot from "./pages/RecruiterRoot";
 import CandidateRoot from "./pages/CandidateRoot";
 import MentorRoot from "./pages/MentorRoot"; // Add this import
+import LeadPanelistRoot from "./pages/LeadPanelistRoot"; // Add this import
 
 import AdminRoot from "./pages/AdminRoot";
 
@@ -28,8 +29,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/lead-panelist" element={<LeadPanelist />} />
-
+        
         {/* Mentor Routes */}
         <Route path="/mentor" element={<MentorRoot />} />
         <Route path="/mentor/overview" element={<MentorRoot />} />
@@ -37,6 +37,14 @@ const App = () => {
         <Route path="/mentor/requests" element={<MentorRoot />} />
         <Route path="/mentor/history" element={<MentorRoot />} />
         
+        {/* Lead Panelist Routes */}
+        <Route path="/lead-panelist" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/overview" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/panels" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/interviews" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/evaluations" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/feedback" element={<LeadPanelistRoot />} />
+
         {/* Existing routes */}
         <Route path="/recruiter" element={<RecruiterRoot />} />
         <Route path="/recruiter/overview" element={<RecruiterRoot />} />

@@ -471,3 +471,24 @@
 .calendar-empty-cell {
   aspect-ratio: 1;
 }
+
+.lead-panelist-dashboard-root {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F5F7FB 0%, #96BEC5 100%);
+}
+
+.lead-panelist-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lead-panelist-content-area {
+  padding: 32px 40px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Keep all existing panelist styles... */
