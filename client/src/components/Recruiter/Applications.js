@@ -25,12 +25,25 @@ import {
 import {
   Description as CvIcon,
   FactCheck as QuizIcon,
-  Update as UpdateIcon
+  Update as UpdateIcon,
+  EventNote as InterviewIcon,
+  Feedback as FeedbackIcon,
+  AssignmentInd as ApplicationIcon,
+  FiberManualRecord as DotIcon
 } from "@mui/icons-material";
+import { 
+  Timeline, 
+  TimelineItem, 
+  TimelineSeparator, 
+  TimelineConnector, 
+  TimelineContent, 
+  TimelineDot, 
+  TimelineOppositeContent } from '@mui/lab';
+
 import "../../styles/Recruiter.css";
 
 const tabOptions = [
-  { label: "New", value: "new" },
+  { label: "All", value: "all" },
   { label: "Shortlisted", value: "shortlisted" },
   { label: "Selected", value: "selected" },
   { label: "Rejected", value: "rejected" },
@@ -49,7 +62,39 @@ const newApplicants = [
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     date: "2024-01-15",
     priority: "medium",
-    cvUrl: dummyCvUrl
+    cvUrl: dummyCvUrl,
+    activityLog: [
+      {
+        date: "2024-01-15",
+        type: "application",
+        title: "Applied for Senior Software Engineer",
+        details: "Application submitted via company portal."
+      },
+      {
+        date: "2023-09-20",
+        type: "feedback",
+        title: "Feedback Received for Frontend Developer role",
+        details: "Panel feedback: 'Excellent technical skills in React, but needs more experience with large-scale state management.'"
+      },
+      {
+        date: "2023-09-18",
+        type: "interview",
+        title: "Technical Interview for Frontend Developer",
+        details: "Panel: Jane Doe, John Smith"
+      },
+      {
+        date: "2023-09-05",
+        type: "status_change",
+        title: "Application Status Updated",
+        details: "Status changed from 'New' to 'Shortlisted' for Frontend Developer role."
+      },
+      {
+        date: "2023-09-01",
+        type: "application",
+        title: "Applied for Frontend Developer",
+        details: "Final result: Not selected for this role."
+      }
+    ]
   },
   {
     name: "Elizabeth Martin",
@@ -128,8 +173,9 @@ const shortlistedApplicants = [
 ];
 
 const Applications = () => {
-  const [activeTab, setActiveTab] = useState("new");
+  const [activeTab, setActiveTab] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [cvStatus, setCvStatus] = useState("");
   
@@ -154,6 +200,33 @@ const Applications = () => {
     setSelectedApplicant(applicant);
     setCvStatus(applicant.status || "new");
     setModalOpen(true);
+  };
+
+  const handleActivityModal = (applicant) => {
+    setSelectedApplicant(applicant);
+    // setCvStatus(applicant.status || "new");
+    setActivityModalOpen(true);
+  };
+
+  const handleCloseActivityModal = () => {
+    setActivityModalOpen(false);
+    // It's good practice to clear the selected applicant after closing
+    setTimeout(() => setSelectedApplicant(null), 300); 
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'application':
+        return <ApplicationIcon sx={{ color: 'primary.main' }} />;
+      case 'interview':
+        return <InterviewIcon sx={{ color: 'secondary.main' }} />;
+      case 'feedback':
+        return <FeedbackIcon sx={{ color: 'warning.main' }} />;
+      case 'status_change':
+        return <UpdateIcon sx={{ color: 'success.main' }} />;
+      default:
+        return <DotIcon />;
+    }
   };
 
   const handleCloseModal = () => {
@@ -229,7 +302,7 @@ const Applications = () => {
       </Tabs>
         
       <Box>
-        {activeTab === "new" && (
+        {activeTab === "all" && (
           <Stack spacing={3}>
             {newApplicants.map((applicant, idx) => (
               <Card key={idx} className="applicant-card" sx={{ borderRadius: 4, boxShadow: 2, p: 2, display: "flex", alignItems: "flex-start", background: "white" }}>
@@ -262,11 +335,11 @@ const Applications = () => {
                       variant="contained"
                       startIcon={<UpdateIcon />}
                       size="small"
-                      onClick={() => handleOpenModal(applicant)}
+                      onClick={() => handleActivityModal(applicant)}
                       sx={{background: "#052353ff", color: "white", fontWeight: 200}}
                       
                       > 
-                      Change Status
+                      View Activity
                     </Button>
                   </Box>
                 </Box>
@@ -349,6 +422,44 @@ const Applications = () => {
         </DialogActions>
       </Dialog>
 
+      <Dialog open={activityModalOpen} onClose={handleCloseActivityModal} maxWidth="sm" fullWidth>
+        <DialogTitle>Activity History for {selectedApplicant?.name}</DialogTitle>
+        <DialogContent dividers>
+          {selectedApplicant?.activityLog && selectedApplicant.activityLog.length > 0 ? (
+            <Timeline position="right">
+              {selectedApplicant.activityLog.map((activity, index) => (
+                <TimelineItem key={index}>
+                  <TimelineOppositeContent sx={{ flex: 0.4 }} color="text.secondary">
+                    {activity.date}
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot variant="outlined">
+                      {getActivityIcon(activity.type)}
+                    </TimelineDot>
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Typography variant="h6" component="span">
+                      {activity.title}
+                    </Typography>
+                    <Typography>{activity.details}</Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
+          ) : (
+            <Typography sx={{ p: 3, textAlign: 'center' }}>
+              No past activity found for this candidate.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseActivityModal} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* NEW: Modal for displaying the CV */}
       <Dialog open={cvModalOpen} onClose={handleCloseCvModal} maxWidth="md" fullWidth>
         <DialogTitle>CV of {selectedApplicant?.name}</DialogTitle>
@@ -377,7 +488,7 @@ const Applications = () => {
               value={selectedPanel}
               onChange={(e) => setSelectedPanel(e.target.value)}
               label="Assign Interview Panel"
-            >
+              >
               {availablePanels.map((panel) => (
                 <MenuItem key={panel.id} value={panel.id}>{panel.name}</MenuItem>
               ))}
@@ -409,7 +520,6 @@ const Applications = () => {
           <Button onClick={handleConfirmInterview} color="primary" variant="contained">Send Invitation</Button>
         </DialogActions>
       </Dialog>  
-
     </Box>
   );
 };

@@ -29,16 +29,16 @@ const menuTabs = [
     icon: <WorkOutline />,
   },
   {
-    id: "applications",
-    label: "Applications",
-    path: "/recruiter/applications",
-    icon: <AssignmentInd />,
-  },
-  {
     id: "interviews",
     label: "Interviews",
     path: "/recruiter/interviews",
     icon: <Schedule />,
+  },
+  {
+    id: "candidates",
+    label: "Candidates",
+    path: "/recruiter/candidates",
+    icon: <AssignmentInd />,
   },
   {
     id: "feedback",
