@@ -53,10 +53,10 @@ const ProfileSection = ({ title, icon, children, ...props }) => (
 // --- MOCK DATA (Unchanged) ---
 const mockCandidate = {
   name: "Sajani Ranaweera",
-  avatarUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face",
+  avatarUrl: "",
   about: "Self-taught logo/brand designer with 4+ years of experience creating modern, clean, and minimal brands that make a lasting impression.",
   contact: {
-    email: "sajani.ranaweera@email.com",
+    email: "sajani.ranaweera@gmail.com",
     phone: "+94 77 123 4567",
     location: "Colombo, Sri Lanka",
     age: "26 years"
@@ -151,25 +151,74 @@ const Profile = () => {
             </Box>
 
             {/* Name, About, and Contact Info */}
-            <Stack spacing={1} sx={{ flexGrow: 1, width: '100%' }}>
-              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{candidate.name}</Typography>
-              <Typography variant="body1" color="text.secondary">{candidate.about}</Typography>
-              <Divider sx={{ my: 2 }}/>
-              <Grid container spacing={1}>
-                <Grid item xs={12} sm={6}><Stack direction="row" spacing={1}><Email color="primary"/> <Link href={`mailto:${candidate.contact.email}`}>{candidate.contact.email}</Link></Stack></Grid>
-                <Grid item xs={12} sm={6}><Stack direction="row" spacing={1}><Phone color="primary"/> <Typography>{candidate.contact.phone}</Typography></Stack></Grid>
-                <Grid item xs={12} sm={6}><Stack direction="row" spacing={1}><LocationOn color="primary"/> <Typography>{candidate.contact.location}</Typography></Stack></Grid>
-                <Grid item xs={12} sm={6}><Stack direction="row" spacing={1}><CalendarToday color="primary"/> <Typography>{candidate.contact.age}</Typography></Stack></Grid>
-              </Grid>
-            </Stack>
+            <Stack spacing={3} sx={{ flexGrow: 1, width: '100%' }}>
+  {/* Group 1: Name and About section with its own internal spacing */}
+  <Stack spacing={2}>
+    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+      {candidate.name}
+    </Typography>
+    <Typography variant="body1" color="text.secondary">
+      {candidate.about}
+    </Typography>
+  </Stack>
+
+  {/* Group 2: The Divider (no margin needed, the parent Stack handles it) */}
+  <Divider />
+
+  {/* Group 3: The Contact Details Grid */}
+  <Grid container spacing={2}> {/* Increased spacing slightly for better layout */}
+    <Grid item xs={12} sm={6}>
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        <Email color="primary" />
+        <Link href={`mailto:${candidate.contact.email}`} underline="hover">
+          {candidate.contact.email}
+        </Link>
+      </Stack>
+    </Grid>
+    <Grid item xs={12} sm={6}>
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        <Phone color="primary" />
+        <Typography variant="body1">{candidate.contact.phone}</Typography>
+      </Stack>
+    </Grid>
+    <Grid item xs={12} sm={6}>
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        <LocationOn color="primary" />
+        <Typography variant="body1">{candidate.contact.location}</Typography>
+      </Stack>
+    </Grid>
+    <Grid item xs={12} sm={6}>
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        <CalendarToday color="primary" />
+        <Typography variant="body1">{candidate.contact.age}</Typography>
+      </Stack>
+    </Grid>
+  </Grid>
+</Stack>
           </Stack>
         </Paper>
       </Grid>
       
-      <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
-        <MenuItem onClick={handleUpload}><FileUpload sx={{ mr: 1 }} fontSize="small" />Upload Photo</MenuItem>
-        <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}><Delete sx={{ mr: 1 }} fontSize="small" />Delete Photo</MenuItem>
-      </Menu>
+      <Menu
+  anchorEl={anchorEl}
+  open={open}
+  onClose={handleMenuClose}
+>
+  {/* The primary action, highlighted with the theme's primary color */}
+  <MenuItem onClick={handleUpload} sx={{ color: 'primary.main' }}>
+    <FileUpload sx={{ mr: 1.5 }} fontSize="small" />
+    Upload Photo
+  </MenuItem>
+  
+  {/* A divider to separate action types */}
+  <Divider sx={{ my: 0.5 }} />
+  
+  {/* The destructive action, highlighted with the theme's error color */}
+  <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+    <Delete sx={{ mr: 1.5 }} fontSize="small" />
+    Delete Photo
+  </MenuItem>
+</Menu>
 
       <Grid item xs={12} md={6}>
         <ProfileSection title="Work Experience" icon={<Work color="primary" />}>
