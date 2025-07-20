@@ -16,13 +16,16 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Divider,
+  TextField,
+  InputAdornment,
   FormControl,
   Select,
   InputLabel,
   MenuItem,
-  TextField
 } from "@mui/material";
 import {
+  Search as SearchIcon,
   Description as CvIcon,
   FactCheck as QuizIcon,
   Update as UpdateIcon,
@@ -32,6 +35,9 @@ import {
   FiberManualRecord as DotIcon,
   DoNotDisturbOn as RejectionIcon
 } from "@mui/icons-material";
+
+// import SearchIcon from '@mui/icons-material/Search';
+
 import { 
   Timeline, 
   TimelineItem, 
@@ -45,7 +51,7 @@ import "../../styles/Recruiter.css";
 
 const tabOptions = [
   { label: "All", value: "all" },
-  { label: "Shortlisted", value: "shortlisted" },
+  // { label: "Shortlisted", value: "shortlisted" },
   { label: "Selected", value: "selected" },
   { label: "Rejected", value: "rejected" },
 ];
@@ -56,14 +62,16 @@ const dummyCvUrl = "https://upload.wikimedia.org/wikipedia/commons/c/cc/Resume.p
 const newApplicants = [
   {
     name: "John Doe",
-    experience: "2 years • Frontend Development",
-    skills: ["React", "TypeScript", "CSS"],
-    job: "Senior Software Engineer",
+    experience: "2 years",
+    title: "Senior Frontend Developer",
+    skills: ["React", "TypeScript", "Next.js", "GraphQL"],
     quiz: "85",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    date: "2024-01-15",
-    priority: "medium",
     cvUrl: dummyCvUrl,
+    overallStatus: "Hired",
+    email: "john12@gmail.com",
+    phone: "+94 701 8892",
+    totalApplications: 3,
     activityLog: [
       {
         jobTitle: "Frontend Developer",
@@ -85,43 +93,52 @@ const newApplicants = [
   },
   {
     name: "Elizabeth Martin",
-    experience: "3 years • Backend Development",
-    skills: ["Node.js", "Express", "MongoDB"],
-    job: "Backend Developer",
+    experience: "3 years",
+    skills: ["Node.js", "Express", "MongoDB", "Docker"],
+    title: "Backend Developer",
     quiz: "90",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    date: "2024-01-14",
-    priority: "high"
+    overallStatus: "Hired",
+    email: "e.martin@work.com",
+    phone: "(+94) 987 6543",
+    totalApplications: 1
+    
   },
   {
     name: "Emma Wade",
-    experience: "1 year • UI/UX Design",
-    skills: ["Figma", "Sketch", "Adobe XD"],
-    job: "Product Designer",
+    experience: "1 year",
+    skills: ["Figma", "Sketch", "Adobe XD", "User Research"],
+    title: "Product Designer",
     quiz: "78",
     avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    date: "2024-01-13",
-    priority: "low"
+    overallStatus: "Past Applicant",
+    email: "emma.w@gmail.com",
+    phone: "(+94) 714 5208",
+    totalApplications: 2
   },
   {
     name: "Teresa Reyes",
-    experience: "4 years • Project Management",
+    experience: "4 years",
     skills: ["Agile", "Scrum", "Jira"],
-    job: "Design Lead",
+    title: "Design Lead",
     quiz: "88",
     avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    date: "2024-01-12",
-    priority: "medium"
+    overallStatus: "Hired",
+    email: "teresa.r@gmail.com",
+    phone: "(+94) 771 5678",
+    totalApplications: 2,
   },
   {
     name: "Crystal Austin",
-    experience: "2 years • Marketing",
+    experience: "2 years",
     skills: ["SEO", "Content Writing", "Analytics"],
-    job: "Marketing Manager",
+    title: "Marketing Manager",
     quiz: "82",
     avatar: "https://randomuser.me/api/portraits/women/12.jpg",
-    date: "2024-01-11",
-    priority: "high"
+    overallStatus: "Past Applicant",
+    email: "austin@gmail.com.com",
+    phone: "(+94) 723 8934",
+    totalApplications: 2,
   },
 ];
 
@@ -133,7 +150,6 @@ const shortlistedApplicants = [
     job: "Senior Software Engineer",
     quiz: "85",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    date: "2024-01-15",
     priority: "medium",
     cvUrl: dummyCvUrl
   },
@@ -144,8 +160,6 @@ const shortlistedApplicants = [
     job: "Backend Developer",
     quiz: "90",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    date: "2024-01-14",
-    priority: "high"
   },
   {
     name: "Emma Wade",
@@ -161,6 +175,8 @@ const shortlistedApplicants = [
 
 const Applications = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [modalOpen, setModalOpen] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
@@ -173,15 +189,15 @@ const Applications = () => {
   const [selectedPanel, setSelectedPanel] = useState('');
   const [selectedDates, setSelectedDates] = useState(['', '', '']); // initialize with 3 empty dates
 
-  const availablePanels = [
-    { id: 'panel1', name: 'Engineering Panel A' },
-    { id: 'panel2', name: 'Marketing Panel B' },
-    { id: 'panel3', name: 'Product Panel C' }
-  ];
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
+
+  // Filtering logic
+  const filteredApplicants = newApplicants.filter(applicant =>
+    applicant.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleOpenModal = (applicant) => {
     setSelectedApplicant(applicant);
@@ -197,23 +213,7 @@ const Applications = () => {
 
   const handleCloseActivityModal = () => {
     setActivityModalOpen(false);
-    // It's good practice to clear the selected applicant after closing
     setTimeout(() => setSelectedApplicant(null), 300); 
-  };
-
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'application':
-        return <ApplicationIcon sx={{ color: 'primary.main' }} />;
-      case 'interview':
-        return <InterviewIcon sx={{ color: 'secondary.main' }} />;
-      case 'feedback':
-        return <FeedbackIcon sx={{ color: 'warning.main' }} />;
-      case 'status_change':
-        return <UpdateIcon sx={{ color: 'success.main' }} />;
-      default:
-        return <DotIcon />;
-    }
   };
 
   const getStatusChipColor = (status) => {
@@ -232,6 +232,20 @@ const Applications = () => {
         return 'primary';
     }
   };
+
+  const getCandidateStatusChipColor = (status) => {
+  if (!status) return 'default';
+  switch (status.toLowerCase()) {
+    case 'hired':
+      return 'success';
+    case 'past applicant':
+      return 'warning';
+    case 'blacklisted':
+      return 'error';
+    default:
+      return 'primary';
+  }
+};
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -267,89 +281,137 @@ const Applications = () => {
     setInterviewModalOpen(true);
   };
 
-  const handleCloseInterviewModal = () => {
-    setInterviewModalOpen(false);
-    setSelectedPanel('');
-    setSelectedDates(['', '', '']);
-  };
+  // const handleCloseInterviewModal = () => {
+  //   setInterviewModalOpen(false);
+  //   setSelectedPanel('');
+  //   setSelectedDates(['', '', '']);
+  // };
 
-  const handleDateChange = (index, value) => {
-    const newDates = [...selectedDates];
-    newDates[index] = value;
-    setSelectedDates(newDates);
-  };
+  // const handleDateChange = (index, value) => {
+  //   const newDates = [...selectedDates];
+  //   newDates[index] = value;
+  //   setSelectedDates(newDates);
+  // };
 
-  const handleAddDateField = () => {
-    setSelectedDates([...selectedDates, '']);
-  };
+  // const handleAddDateField = () => {
+  //   setSelectedDates([...selectedDates, '']);
+  // };
 
-  const handleConfirmInterview = () => {
-    // Submit logic here (API call or local state update)
-    setInterviewModalOpen(false);
-  };
+  // const handleConfirmInterview = () => {
+  //   // Submit logic here (API call or local state update)
+  //   setInterviewModalOpen(false);
+  // };
 
   
   return (
     <Box>
-      <Tabs
-        value={activeTab}
-        onChange={handleTabChange}
-        className="application-tabs"
-        >
-        {tabOptions.map((tab) => (
-          <Tab 
-            key={tab.value} 
-            label={tab.label} 
-            value={tab.value}
-            className="application-tab" />
-        ))}
-      </Tabs>
+      <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: 1,
+          borderColor: 'divider',
+          mb: 3
+        }}> 
+
+        <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            className="application-tabs"
+          >
+          {tabOptions.map((tab) => (
+            <Tab 
+              key={tab.value} 
+              label={tab.label} 
+              value={tab.value}
+              className="application-tab" />
+          ))}
+        </Tabs>
+
+        <TextField
+          size="small"
+          // variant="outlined"
+          placeholder="Search by name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ width: '300px',   backgroundColor: '#96BEC5' }}
+        />
+      
+      </Box>
+      
         
       <Box>
-        {activeTab === "all" && (
+        {activeTab === "all" && (          
           <Stack spacing={3}>
-            {newApplicants.map((applicant, idx) => (
-              <Card key={idx} className="applicant-card" sx={{ borderRadius: 4, boxShadow: 2, p: 2, display: "flex", alignItems: "flex-start", background: "white" }}>
-                <Avatar src={applicant.avatar} sx={{ width: 56, height: 56, mr: 3, mt: 1 }} />
+            {filteredApplicants.map((applicant, idx) => (
+              <Card key={idx} className="applicant-card" sx={{ borderRadius: 4, boxShadow: 3, p: 3, display: "flex", alignItems: "flex-start", background: "white" }}>
+                <Avatar src={applicant.avatar} sx={{ width: 60, height: 60, mr: 3 }} />
                 <Box flex={1}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center">
+
+                  {/* --- Top Section: Name, Title, and Status --- */}
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                    <Box>
                       <Typography variant="h6" fontWeight="bold">{applicant.name}</Typography>
-                      <Chip label={`Applied For: ${applicant.job}`} size="small" sx={{ fontWeight: 600, ml: 2, p: 1 }} />
+                      <Typography variant="body1" color="text.secondary">
+                        {applicant.title} • {applicant.experience}
+                      </Typography>
                     </Box>
-                    <Typography variant="body2" color="text.secondary">Applied On: {applicant.date}</Typography>
+                    <Chip
+                      label={applicant.overallStatus}
+                      color={getCandidateStatusChipColor(applicant.overallStatus)}
+                      sx={{ fontWeight: 'bold' }}
+                    />
                   </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {applicant.experience}
+
+                  {/* --- Contact Info --- */}
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {applicant.email} • {applicant.phone}
                   </Typography>
-                  {/* <Typography variant="body2" sx={{ display: "flex", alignItems: "center", mb: 1, color: "#111" }} >
-                    <QuizIcon sx={{ mr: 1 }} />
-                    Quiz Score: <span style={{ fontWeight: 600, marginLeft: 6 }}>{applicant.quiz}</span>
-                  </Typography> */}
-                  <Box display="flex" gap={1}>
-                    <Button 
-                      variant="outlined" 
-                      startIcon={<CvIcon />} 
-                      size="small"
-                      onClick={() => handleOpenCvModal(applicant)}
-                      >
-                      View CV
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<UpdateIcon />}
-                      size="small"
-                      onClick={() => handleActivityModal(applicant)}
-                      sx={{background: "#052353ff", color: "white", fontWeight: 200}}
-                      
-                      > 
-                      View Activity
-                    </Button>
+
+                  {/* --- Skills Section --- */}
+                  <Box sx={{ my: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {applicant.skills.map((skill) => (
+                      <Chip key={skill} label={skill} size="small" variant="outlined" />
+                    ))}
                   </Box>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* --- Bottom Section: Totals and Actions --- */}
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>{applicant.totalApplications}</strong> Total Applications
+                    </Typography>
+                    <Box display="flex" gap={1}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleOpenCvModal(applicant)}
+                      >
+                        View CV
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleActivityModal(applicant)}
+                        sx={{ background: "#052353ff", color: "white", fontWeight: 200 }}
+                      >
+                        View Activity
+                      </Button>
+                    </Box>
+                  </Box>
+
                 </Box>
               </Card>
             ))}
-          </Stack>      
+          </Stack>
         )}
 
         {activeTab === "shortlisted" && (
@@ -378,8 +440,7 @@ const Applications = () => {
                       // className="view-cv-button"
                       startIcon={<CvIcon />} 
                       size="small"
-                      onClick={() => handleOpenCvModal(applicant)}
-                      
+                      onClick={() => handleOpenCvModal(applicant)}  
                       >
                       View CV
                     </Button>
@@ -425,44 +486,6 @@ const Applications = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* <Dialog open={activityModalOpen} onClose={handleCloseActivityModal} maxWidth="sm" fullWidth>
-        <DialogTitle>Activity History for {selectedApplicant?.name}</DialogTitle>
-        <DialogContent dividers>
-          {selectedApplicant?.activityLog && selectedApplicant.activityLog.length > 0 ? (
-            <Timeline position="right">
-              {selectedApplicant.activityLog.map((activity, index) => (
-                <TimelineItem key={index}>
-                  <TimelineOppositeContent sx={{ flex: 0.4 }} color="text.secondary">
-                    {activity.date}
-                  </TimelineOppositeContent>
-                  <TimelineSeparator>
-                    <TimelineDot variant="outlined">
-                      {getActivityIcon(activity.type)}
-                    </TimelineDot>
-                    <TimelineConnector />
-                  </TimelineSeparator>
-                  <TimelineContent>
-                    <Typography variant="h6" component="span">
-                      {activity.title}
-                    </Typography>
-                    <Typography>{activity.details}</Typography>
-                  </TimelineContent>
-                </TimelineItem>
-              ))}
-            </Timeline>
-          ) : (
-            <Typography sx={{ p: 3, textAlign: 'center' }}>
-              No past activity found for this candidate.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseActivityModal} variant="contained">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog> */}
 
       {/* Modal for displaying the CV */}
       <Dialog open={cvModalOpen} onClose={handleCloseCvModal} maxWidth="md" fullWidth>
