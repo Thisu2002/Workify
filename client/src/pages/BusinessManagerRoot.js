@@ -65,9 +65,9 @@ const menuTabs = [
     icon: <WorkOutline />,
   },
   {
-    id: "reports",
-    label: "Reports",
-    path: "/manager/reports",
+    id: "feedback",
+    label: "Feedback",
+    path: "/manager/feedback",
     icon: <InsertChartIcon />,
   },
   {
