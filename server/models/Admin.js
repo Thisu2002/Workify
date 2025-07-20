@@ -2,7 +2,11 @@
 const mongoose = require('mongoose');
 
 const adminSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId, // SAME as user's _id
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // link back to User
+    required: true
+  },
   privileges: [String] // Example field
 });
 

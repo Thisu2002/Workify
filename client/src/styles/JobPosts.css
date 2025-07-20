@@ -41,6 +41,7 @@
   flex-direction: column;
   justify-content: space-between;
   min-height: 270px;
+  min-width: 500px;
   cursor: pointer;
   position: relative;
   transition: box-shadow 0.2s, transform 0.2s !important;

@@ -1,0 +1,9 @@
+// models/Company.js
+const mongoose = require('mongoose');
+
+const companySchema = new mongoose.Schema({
+  name: String,
+  location: String
+});
+
+module.exports = mongoose.model('Company', companySchema);

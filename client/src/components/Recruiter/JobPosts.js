@@ -1,5 +1,5 @@
 // [Imports unchanged]
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,11 +15,14 @@ import {
   Grid,
   Stack,
   Divider,
+  InputAdornment,
 } from "@mui/material";
 import "../../styles/JobPosts.css";
 import PostJob from "./PostJob";
 import { useNavigate } from "react-router-dom";
 import companyLogo from "../../uploads/companyLogo.jpg";
+import { Search } from "@mui/icons-material";
+import axios from "axios";
 
 const cardColors = [
   "#e5e3f0", // purple-ish
@@ -30,88 +33,17 @@ const cardColors = [
   "#f7e5e5", // pinkish
 ];
 
-const openJobs = [
-  {
-    id: 1,
-    title: "Senior UI Developer",
-    company: "Nike",
-    location: "Remote",
-    description: "Looking for a skilled UI developer to join our team.",
-    status: "Open",
-    rate: "$120/hr",
-    role: "Senior UI Developer",
-    skills: ["React", "UI/UX", "Figma", "JavaScript", "Teamwork"],
-    numApplicants: 12,
-    postedAgo: 5,
-  },
-  {
-    id: 2,
-    title: "Senior Backend Engineer",
-    company: "Google",
-    location: "New York, NY",
-    description: "Seeking a backend engineer with experience in Node.js.",
-    status: "Open",
-    rate: "$150/hr",
-    role: "Senior Backend Engineer",
-    skills: ["Node.js", "API Design", "Cloud", "MongoDB"],
-    numApplicants: 3,
-    postedAgo: 2,
-  },
-  {
-    id: 3,
-    title: "Azure Data Engineer",
-    company: "Airbnb",
-    location: "San Francisco, CA",
-    description: "Looking for an Azure Data Engineer.",
-    status: "Open",
-    rate: "$125-145/hr",
-    role: "Azure Data Engineer",
-    skills: ["Azure", "ETL", "SQL", "Python", "Data Warehousing"],
-    numApplicants: 12,
-    postedAgo: 5,
-  },
-];
-
-const closedJobs = [
-  {
-    id: 4,
-    title: "Azure Data Engineer",
-    company: "Airbnb",
-    location: "San Francisco, CA",
-    description: "Closed position for an Azure Data Engineer.",
-    status: "Closed",
-    rate: "$125-145/hr",
-    role: "Azure Data Engineer",
-    skills: ["Azure", "ETL", "SQL", "Python", "Data Warehousing"],
-    numApplicants: 12,
-    postedAgo: 5,
-  },
-  {
-    id: 5,
-    title: "Senior Backend Engineer",
-    company: "Google",
-    location: "Remote",
-    description: "Closed position for a backend engineer.",
-    status: "Closed",
-    rate: "$150/hr",
-    role: "Senior Backend Engineer",
-    skills: ["Node.js", "API Design", "Cloud", "MongoDB"],
-    numApplicants: 100,
-    postedAgo: 10,
-  },
-  {
-    id: 6,
-    title: "Senior UI Developer",
-    company: "Nike",
-    location: "Remote",
-    description: "Closed position for a UI developer.",
-    status: "Closed",
-    rate: "$120/hr",
-    role: "Senior UI Developer",
-    skills: ["React", "UI/UX", "Figma", "JavaScript", "Teamwork"],
-    numApplicants: 20,
-    postedAgo: 12,
-  },
+const dummySkills = [
+  { id: 1, name: "JavaScript" },
+  { id: 2, name: "React" },
+  { id: 3, name: "Node.js" },
+  { id: 4, name: "MongoDB" },
+  { id: 5, name: "UI/UX" },
+  { id: 6, name: "Figma" },
+  { id: 7, name: "SQL" },
+  { id: 8, name: "Azure" },
+  { id: 9, name: "API Design" },
+  { id: 10, name: "Cloud" },
 ];
 
 const JobPosts = ({ showJobForm, setShowJobForm }) => {
@@ -119,6 +51,36 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedJob, setEditedJob] = useState(null);
+  const [openJobs, setOpenJobs] = useState([]);
+  const [closedJobs, setClosedJobs] = useState([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/recruiter/jobPosts", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const posts = res.data.map((p) => {
+          const daysAgo = Math.floor(
+            (Date.now() - new Date(p.date_posted)) / (1000 * 60 * 60 * 24)
+          );
+          return {
+            ...p,
+            id: p._id,
+            rate: p.salary ? `$${p.salary}/hr` : "",
+            numApplicants: Math.floor(Math.random() * 50) + 1,
+            postedAgo: daysAgo,
+          };
+        });
+        setOpenJobs(posts.filter((p) => p.status === "Open"));
+        setClosedJobs(posts.filter((p) => p.status === "Closed"));
+      } catch (err) {
+        console.error("Error fetching posts", err);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   const handleJobClick = (job) => {
     setSelectedJob(job);
@@ -142,16 +104,21 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
     setIsEditing(false);
   };
 
-  const renderJobCard = (job) => (
+  const renderJobCard = (job, index) => (
     <Card
       key={job.id}
       className="job-card"
-      sx={{ backgroundColor: cardColors[job.id % cardColors.length] }}
+      sx={{ backgroundColor: cardColors[index % cardColors.length] }}
       onClick={() => handleJobClick(job)}
     >
       <CardContent sx={{ pb: "8px !important" }}>
         <Box
-          sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mb: 1.5,
+          }}
         >
           <Typography className="job-rate">{job.rate}</Typography>
           <Typography className={`job-status ${job.status.toLowerCase()}`}>
@@ -160,21 +127,24 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         </Box>
         <Typography className="job-title">{job.title}</Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mb: 2 }}>
-          {job.skills.map((skill, idx) => (
-            <Chip
-              key={idx}
-              label={skill}
-              variant="outlined"
-              sx={{
-                borderRadius: "16px",
-                fontWeight: 500,
-                fontSize: "0.97rem",
-                borderColor: "#d1d5db",
-                color: "#222",
-                mb: 0.5,
-              }}
-            />
-          ))}
+          {job.skills.map((skillId, idx) => {
+            const skill = dummySkills.find((s) => s.id === skillId);
+            return (
+              <Chip
+                key={idx}
+                label={skill?.name || skillId}
+                variant="outlined"
+                sx={{
+                  borderRadius: "16px",
+                  fontWeight: 500,
+                  fontSize: "0.97rem",
+                  borderColor: "#d1d5db",
+                  color: "#222",
+                  mb: 0.5,
+                }}
+              />
+            );
+          })}
         </Stack>
       </CardContent>
 
@@ -207,14 +177,33 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
   return (
     <Box className="job-posts-container" sx={{ py: 4 }}>
+      {/* Search and Filter Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+          Search Job Posts
+        </Typography>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Search by title, company, or keyword..."
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+        {/* Filter chips could go here */}
+      </Box>
       <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>
         Open Job Posts
       </Typography>
       <Divider sx={{ mb: 3 }} />
       <Grid container spacing={3} className="job-grid">
-        {openJobs.map((job) => (
+        {openJobs.map((job, index) => (
           <Grid item xs={12} sm={6} md={4} key={job.id}>
-            {renderJobCard(job)}
+            {renderJobCard(job, index)}
           </Grid>
         ))}
       </Grid>
@@ -224,63 +213,120 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       </Typography>
       <Divider sx={{ mb: 3 }} />
       <Grid container spacing={3} className="job-grid">
-        {closedJobs.map((job) => (
+        {closedJobs.map((job, index) => (
           <Grid item xs={12} sm={6} md={4} key={job.id}>
-            {renderJobCard(job)}
+            {renderJobCard(job, index)}
           </Grid>
         ))}
       </Grid>
 
-      <Dialog open={Boolean(selectedJob)} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle>{isEditing ? "Edit Job Post" : selectedJob?.title}</DialogTitle>
+      <Dialog
+        open={Boolean(selectedJob)}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {isEditing ? "Edit Job Post" : selectedJob?.title}
+        </DialogTitle>
         <DialogContent dividers>
           {isEditing ? (
             <Box display="flex" flexDirection="column" gap={2}>
-              <TextField label="Job Title" name="title" value={editedJob?.title || ""} onChange={handleChange} fullWidth />
-              <TextField label="Company" name="company" value={editedJob?.company || ""} onChange={handleChange} fullWidth />
-              <TextField label="Location" name="location" value={editedJob?.location || ""} onChange={handleChange} fullWidth />
-              <TextField label="Description" name="description" value={editedJob?.description || ""} onChange={handleChange} fullWidth multiline rows={3} />
+              <TextField
+                label="Job Title"
+                name="title"
+                value={editedJob?.title || ""}
+                onChange={handleChange}
+                fullWidth
+              />
+              <TextField
+                label="Company"
+                name="company"
+                value={editedJob?.company || ""}
+                onChange={handleChange}
+                fullWidth
+              />
+              <TextField
+                label="Location"
+                name="location"
+                value={editedJob?.location || ""}
+                onChange={handleChange}
+                fullWidth
+              />
+              <TextField
+                label="Description"
+                name="description"
+                value={editedJob?.description || ""}
+                onChange={handleChange}
+                fullWidth
+                multiline
+                rows={3}
+              />
             </Box>
           ) : (
             <>
-              <Typography variant="subtitle1"><strong>Company:</strong> {selectedJob?.company}</Typography>
-              <Typography variant="subtitle1"><strong>Location:</strong> {selectedJob?.location}</Typography>
-              <Typography variant="body1" sx={{ mt: 2 }}>{selectedJob?.description}</Typography>
+              <Typography variant="subtitle1">
+                <strong>Company:</strong> {selectedJob?.company}
+              </Typography>
+              <Typography variant="subtitle1">
+                <strong>Location:</strong> {selectedJob?.location}
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 2 }}>
+                {selectedJob?.description}
+              </Typography>
               <Box mt={2}>
-                <Typography variant="subtitle2" color={selectedJob?.status === "Open" ? "green" : "gray"}>
+                <Typography
+                  variant="subtitle2"
+                  color={selectedJob?.status === "Open" ? "green" : "gray"}
+                >
                   Status: {selectedJob?.status}
                 </Typography>
               </Box>
               <Box mt={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Skills Required:</Typography>
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mt: 1 }}>
-                  {selectedJob?.skills?.map((skill, idx) => (
-                    <Chip
-                      key={idx}
-                      label={skill}
-                      variant="outlined"
-                      sx={{
-                        borderRadius: "16px",
-                        fontWeight: 500,
-                        fontSize: "0.97rem",
-                        borderColor: "#d1d5db",
-                        color: "#222",
-                        mb: 0.5,
-                      }}
-                    />
-                  ))}
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Skills Required:
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ flexWrap: "wrap", mt: 1 }}
+                >
+                  {selectedJob?.skills?.map((skillId, idx) => {
+                    const skill = dummySkills.find((s) => s.id === skillId);
+                    return (
+                      <Chip
+                        key={idx}
+                        label={skill?.name || skillId}
+                        variant="outlined"
+                        sx={{
+                          borderRadius: "16px",
+                          fontWeight: 500,
+                          fontSize: "0.97rem",
+                          borderColor: "#d1d5db",
+                          color: "#222",
+                          mb: 0.5,
+                        }}
+                      />
+                    );
+                  })}
                 </Stack>
               </Box>
             </>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => navigate("/recruiter/job-posts/applicants")}>View Applicants</Button>
+          <Button onClick={() => navigate("/recruiter/job-posts/applicants")}>
+            View Applicants
+          </Button>
           <Button onClick={handleClose}>Cancel</Button>
           {isEditing ? (
-            <Button variant="contained" onClick={handleSave}>Save</Button>
+            <Button variant="contained" onClick={handleSave}>
+              Save
+            </Button>
           ) : (
-            <Button variant="contained" onClick={handleEditToggle}>Edit</Button>
+            <Button variant="contained" onClick={handleEditToggle}>
+              Edit
+            </Button>
           )}
         </DialogActions>
       </Dialog>

@@ -23,12 +23,12 @@ function Login() {
       localStorage.setItem('userDetails', JSON.stringify(res.data.userDetails));
 
       const roleRoutes = {
-        mentor: '/mentor-dashboard',
-        candidate: '/candidate-dashboard',
-        admin: '/admin-dashboard',
-        lead_panelist: '/panelist-dashboard',
-        recruiter: '/recruiter-dashboard',
-        business_manager: '/manager-dashboard',
+        mentor: '/mentor',
+        candidate: '/candidate',
+        admin: '/admin',
+        lead_panelist: '/panelist',
+        recruiter: '/recruiter',
+        business_manager: '/manager',
       };
 
       toast.success('Login successful!');
