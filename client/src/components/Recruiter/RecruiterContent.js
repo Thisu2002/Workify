@@ -17,7 +17,7 @@ const RecruiterContent = ({showJobForm, setShowJobForm}) => {
         <JobPosts setShowJobForm={setShowJobForm} showJobForm={showJobForm} />
       )}
       {location.pathname === "/recruiter/job-posts/applicants" && <Candidates />}
-      {location.pathname === "/recruiter/applications" && <Applications />}
+      {location.pathname === "/recruiter/candidates" && <Applications />}
       {/* {location.pathname.startsWith("/pet-owners/view-owner/") && (
             <ViewOwner />
           )} */}

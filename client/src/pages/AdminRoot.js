@@ -30,12 +30,6 @@ const menuTabs = [
     icon: <Group />,
   },
   {
-    id: "reports",
-    label: "Reports",
-    path: "/admin/reports",
-    icon: <AssignmentInd />,
-  },
-  {
     id: "analytics",
     label: "Analytics",
     path: "/admin/analytics",

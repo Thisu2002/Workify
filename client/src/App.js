@@ -10,7 +10,8 @@ import LeadPanelist from "./pages/LeadPanelist";
 
 import RecruiterRoot from "./pages/RecruiterRoot";
 import CandidateRoot from "./pages/CandidateRoot";
-import MentorRoot from "./pages/MentorRoot"; // Add this import
+import MentorRoot from "./pages/MentorRoot"; 
+import LeadPanelistRoot from "./pages/LeadPanelistRoot"; 
 
 import AdminRoot from "./pages/AdminRoot";
 
@@ -28,27 +29,35 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/lead-panelist" element={<LeadPanelist />} />
-
-        {/* Mentor Routes */}
+        
+         {/* Existing routes */}
         <Route path="/mentor" element={<MentorRoot />} />
         <Route path="/mentor/overview" element={<MentorRoot />} />
         <Route path="/mentor/sessions" element={<MentorRoot />} />
         <Route path="/mentor/requests" element={<MentorRoot />} />
         <Route path="/mentor/history" element={<MentorRoot />} />
         
-        {/* Existing routes */}
+        
+        <Route path="/lead-panelist" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/overview" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/panels" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/interviews" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/evaluations" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/feedback" element={<LeadPanelistRoot />} />
+
+       
         <Route path="/recruiter" element={<RecruiterRoot />} />
         <Route path="/recruiter/overview" element={<RecruiterRoot />} />
         <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />
         <Route path="/recruiter/job-posts/applicants" element={<RecruiterRoot />} />
-        <Route path="/recruiter/applications" element={<RecruiterRoot />} />
+        <Route path="/recruiter/candidates" element={<RecruiterRoot />} />
 
         <Route path="/candidate" element={<CandidateRoot />} />
         <Route path="/candidate/overview" element={<CandidateRoot />} />
         <Route path="/candidate/findjob" element={<CandidateRoot />} />
         <Route path="/candidate/interviews" element={<CandidateRoot />} />
         <Route path="/candidate/careeradvice" element={<CandidateRoot />} />
+        <Route path="/candidate/profile" element={<CandidateRoot />} />
 
         <Route path="/admin" element={<AdminRoot />} />
         <Route path="/admin/overview" element={<AdminRoot />} />
@@ -62,6 +71,9 @@ const App = () => {
         <Route path="/manager/registration-requests" element={<BusinessManagerRoot />} />
         <Route path="/manager/mentor-verification" element={<BusinessManagerRoot />} />
         <Route path="/manager/blacklist-requests" element={<BusinessManagerRoot />} />
+        <Route path="/manager/subscription-plans" element={<BusinessManagerRoot />} />
+        <Route path="/manager/job-postings" element={<BusinessManagerRoot />} />
+        <Route path="/manager/feedback" element={<BusinessManagerRoot />} />
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 
       </Routes>

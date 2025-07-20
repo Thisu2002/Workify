@@ -9,6 +9,7 @@ import {
   Feedback,
   Group,
   Domain,
+  Subscriptions,
   InsertChart as InsertChartIcon,
   Block as BlockIcon,
   VerifiedUser as VerifiedUserIcon,
@@ -60,14 +61,20 @@ const menuTabs = [
   {
     id: "jobPostings",
     label: "Job Postings",
-    path: "/manager/jobPostings",
+    path: "/manager/job-postings",
     icon: <WorkOutline />,
   },
   {
-    id: "reports",
-    label: "Reports",
-    path: "/manager/reports",
+    id: "feedback",
+    label: "Feedback",
+    path: "/manager/feedback",
     icon: <InsertChartIcon />,
+  },
+  {
+    id: "subscription-plans",
+    label: "Subscription Plans",
+    path: "/manager/subscription-plans",
+    icon: <Subscriptions  />,
   },
 ];
 

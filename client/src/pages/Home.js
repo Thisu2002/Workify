@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -36,6 +37,7 @@ import '../styles/Home.css';
 import logo from '../images/logo.png';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const trigger = useScrollTrigger({ threshold: 100 });
@@ -106,6 +108,14 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSignup = () => {
+    navigate('/signup');
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
   return (
     <Box className="home-page">
       {/* Navigation */}
@@ -128,10 +138,10 @@ const Home = () => {
             <Button className="nav-link">Companies</Button>
             <Button className="nav-link">Mentors</Button>
             <Button className="nav-link">About</Button>
-            <Button variant="outlined" className="nav-btn-outlined">
+            <Button variant="outlined" className="nav-btn-outlined" onClick={handleLogin}>
               Sign In
             </Button>
-            <Button variant="contained" className="nav-btn-contained">
+            <Button variant="contained" className="nav-btn-contained" onClick={handleSignup}>
               Get Started
             </Button>
           </Box>
@@ -211,6 +221,7 @@ const Home = () => {
                       size="large" 
                       className="cta-primary"
                       endIcon={<ArrowForwardIcon />}
+                      onClick={handleSignup}
                     >
                       Start Job Search
                     </Button>
@@ -383,6 +394,7 @@ const Home = () => {
                 size="large" 
                 className="cta-btn-primary"
                 endIcon={<ArrowForwardIcon />}
+                onClick={handleSignup}
               >
                 Get Started Free
               </Button>
