@@ -29,7 +29,8 @@ import {
   EventNote as InterviewIcon,
   Feedback as FeedbackIcon,
   AssignmentInd as ApplicationIcon,
-  FiberManualRecord as DotIcon
+  FiberManualRecord as DotIcon,
+  DoNotDisturbOn as RejectionIcon
 } from "@mui/icons-material";
 import { 
   Timeline, 
@@ -65,34 +66,20 @@ const newApplicants = [
     cvUrl: dummyCvUrl,
     activityLog: [
       {
-        date: "2024-01-15",
-        type: "application",
-        title: "Applied for Senior Software Engineer",
-        details: "Application submitted via company portal."
+        jobTitle: "Frontend Developer",
+        appliedDate: "2023-09-01",
+        quizScore: "85",
+        status: "Rejected",
+        interviewFeedback: "Panel feedback: 'Excellent technical skills in React, but needs more experience with large-scale state management.'",
+        rejectionReason: "Hiring for a more senior role. Candidate is promising for future junior positions."
       },
       {
-        date: "2023-09-20",
-        type: "feedback",
-        title: "Feedback Received for Frontend Developer role",
-        details: "Panel feedback: 'Excellent technical skills in React, but needs more experience with large-scale state management.'"
-      },
-      {
-        date: "2023-09-18",
-        type: "interview",
-        title: "Technical Interview for Frontend Developer",
-        details: "Panel: Jane Doe, John Smith"
-      },
-      {
-        date: "2023-09-05",
-        type: "status_change",
-        title: "Application Status Updated",
-        details: "Status changed from 'New' to 'Shortlisted' for Frontend Developer role."
-      },
-      {
-        date: "2023-09-01",
-        type: "application",
-        title: "Applied for Frontend Developer",
-        details: "Final result: Not selected for this role."
+        jobTitle: "UI/UX Designer",
+        appliedDate: "2023-05-10",
+        quizScore: "92",
+        status: "Shortlisted",
+        interviewFeedback: "Initial screening call was very positive. Good communication skills.",
+        rejectionReason: null // No rejection reason as they were shortlisted
       }
     ]
   },
@@ -229,6 +216,23 @@ const Applications = () => {
     }
   };
 
+  const getStatusChipColor = (status) => {
+    if (!status) {
+      return 'default'; 
+    }
+
+    switch (status.toLowerCase()) {
+      case 'selected':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      case 'shortlisted':
+        return 'warning';
+      default:
+        return 'primary';
+    }
+  };
+
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedApplicant(null);
@@ -245,9 +249,9 @@ const Applications = () => {
     setSelectedApplicant(null);
   };
 
-  // NEW: Handlers for opening and closing the CV modal
+  // Handlers for opening and closing the CV modal
   const handleOpenCvModal = (applicant) => {
-    setSelectedApplicant(applicant); // Set the applicant to show their name in the title
+    setSelectedApplicant(applicant); 
     setSelectedCvUrl(applicant.cvUrl);
     setCvModalOpen(true);
   };
@@ -318,10 +322,10 @@ const Applications = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     {applicant.experience}
                   </Typography>
-                  <Typography variant="body2" sx={{ display: "flex", alignItems: "center", mb: 1, color: "#111" }} >
+                  {/* <Typography variant="body2" sx={{ display: "flex", alignItems: "center", mb: 1, color: "#111" }} >
                     <QuizIcon sx={{ mr: 1 }} />
                     Quiz Score: <span style={{ fontWeight: 600, marginLeft: 6 }}>{applicant.quiz}</span>
-                  </Typography>
+                  </Typography> */}
                   <Box display="flex" gap={1}>
                     <Button 
                       variant="outlined" 
@@ -422,7 +426,7 @@ const Applications = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={activityModalOpen} onClose={handleCloseActivityModal} maxWidth="sm" fullWidth>
+      {/* <Dialog open={activityModalOpen} onClose={handleCloseActivityModal} maxWidth="sm" fullWidth>
         <DialogTitle>Activity History for {selectedApplicant?.name}</DialogTitle>
         <DialogContent dividers>
           {selectedApplicant?.activityLog && selectedApplicant.activityLog.length > 0 ? (
@@ -458,9 +462,9 @@ const Applications = () => {
             Close
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
-      {/* NEW: Modal for displaying the CV */}
+      {/* Modal for displaying the CV */}
       <Dialog open={cvModalOpen} onClose={handleCloseCvModal} maxWidth="md" fullWidth>
         <DialogTitle>CV of {selectedApplicant?.name}</DialogTitle>
         <DialogContent sx={{ height: '75vh', p: 0 }}>
@@ -479,47 +483,66 @@ const Applications = () => {
         </DialogActions>    
       </Dialog>     
 
-      <Dialog open={interviewModalOpen} onClose={handleCloseInterviewModal} maxWidth="sm" fullWidth>
-        <DialogTitle>Schedule Interview for {selectedApplicant?.name}</DialogTitle>
-        <DialogContent dividers>
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Assign Interview Panel</InputLabel>
-            <Select
-              value={selectedPanel}
-              onChange={(e) => setSelectedPanel(e.target.value)}
-              label="Assign Interview Panel"
-              >
-              {availablePanels.map((panel) => (
-                <MenuItem key={panel.id} value={panel.id}>{panel.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+      <Dialog open={activityModalOpen} onClose={handleCloseActivityModal} maxWidth="md" fullWidth>
+        <DialogTitle>Activity History for {selectedApplicant?.name}</DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: 'grey.100' }}>
+          {selectedApplicant?.activityLog && selectedApplicant.activityLog.length > 0 ? (
+            <Stack spacing={2}>
+              {selectedApplicant.activityLog.map((activity, index) => (
+                <Card key={index} sx={{ p: 2, borderRadius: 2 }}>
+                  {/* Card Header: Job Title, Date, and Status */}
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold">{activity.jobTitle}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Applied on: {activity.appliedDate}
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={activity.status} 
+                      color={getStatusChipColor(activity.status)}
+                      sx={{ fontWeight: 'bold' }}
+                    />
+                  </Box>
 
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>Choose Available Dates (minimum 3)</Typography>
-          <Stack spacing={2}>
-            {selectedDates.map((date, index) => (
-              <TextField
-                key={index}
-                type="date"
-                value={date}
-                onChange={(e) => handleDateChange(index, e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            ))}
-            <Button
-              variant="outlined"
-              onClick={handleAddDateField}
-              disabled={selectedDates.length >= 5}
-            >
-              Add Another Date
-            </Button>
-          </Stack>
+                  {/* Card Body: Details */}
+                  <Stack spacing={1.5}>
+                    <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center' }}>
+                      <QuizIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                      Quiz Score: <b style={{ marginLeft: '8px' }}>{activity.quizScore}</b>
+                    </Typography>
+
+                    {/* Conditionally render Interview Feedback */}
+                    {activity.interviewFeedback && (
+                      <Typography variant="body1" sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                        <FeedbackIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary' }} />
+                        <span><b>Interview Feedback:</b> {activity.interviewFeedback}</span>
+                      </Typography>
+                    )}
+
+                    {/* Conditionally render Rejection Reason */}
+                    {activity.status === 'Rejected' && activity.rejectionReason && (
+                      <Typography variant="body1" sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                        <RejectionIcon sx={{ mr: 1, mt: 0.5, color: 'error.main' }} />
+                        <span><b>Reason for Rejection:</b> {activity.rejectionReason}</span>
+                      </Typography>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          ) : (
+            <Typography sx={{ p: 3, textAlign: 'center' }}>
+              No past activity found for this candidate.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseInterviewModal} color="secondary" variant="outlined">Cancel</Button>
-          <Button onClick={handleConfirmInterview} color="primary" variant="contained">Send Invitation</Button>
+          <Button onClick={handleCloseActivityModal} variant="contained">
+            Close
+          </Button>
         </DialogActions>
-      </Dialog>  
+      </Dialog> 
     </Box>
   );
 };
