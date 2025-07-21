@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -27,11 +27,29 @@ const MOCK_USER = {
 };
 
 // 2. The component now accepts a `mentor` prop instead of `job`
-const ApplyForm = ({ open, onClose, mentor }) => {
+const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // 3. Replaced resume/cover letter state with state for session goals
   const [sessionGoals, setSessionGoals] = useState('');
+  
+  // Add state variables for user information - now read-only from profile
+  const [userInfo, setUserInfo] = useState({
+    name: userProfile?.name || MOCK_USER.name,
+    email: userProfile?.contact?.email || MOCK_USER.email,
+    phone: userProfile?.contact?.phone || MOCK_USER.phone
+  });
+
+  // Update user info when userProfile changes or dialog opens
+  useEffect(() => {
+    if (open && userProfile) {
+      setUserInfo({
+        name: userProfile.name || MOCK_USER.name,
+        email: userProfile.contact?.email || MOCK_USER.email,
+        phone: userProfile.contact?.phone || MOCK_USER.phone
+      });
+    }
+  }, [open, userProfile]);
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -48,7 +66,7 @@ const ApplyForm = ({ open, onClose, mentor }) => {
     console.log('Submitting Session Request:', {
       mentorId: mentor.id,
       sessionGoals: sessionGoals,
-      userName: MOCK_USER.name
+      userInfo: userInfo
     });
     setIsSubmitting(false);
     handleNext(); // Move to the success step
@@ -59,6 +77,11 @@ const ApplyForm = ({ open, onClose, mentor }) => {
     setTimeout(() => {
         setActiveStep(0);
         setSessionGoals('');
+        setUserInfo({
+          name: userProfile?.name || MOCK_USER.name,
+          email: userProfile?.contact?.email || MOCK_USER.email,
+          phone: userProfile?.contact?.phone || MOCK_USER.phone
+        });
     }, 300); // Delay to allow closing animation
     onClose();
   };
@@ -74,9 +97,31 @@ const ApplyForm = ({ open, onClose, mentor }) => {
               The mentor will use this information to contact you.
             </Typography>
             <Box sx={{ bgcolor: 'grey.100', p: 2, borderRadius: 1 }}>
-              <TextField label="Full Name" defaultValue={MOCK_USER.name} fullWidth margin="dense" InputProps={{ readOnly: true }} />
-              <TextField label="Email Address" defaultValue={MOCK_USER.email} fullWidth margin="dense" InputProps={{ readOnly: true }} />
-              <TextField label="Phone Number" defaultValue={MOCK_USER.phone} fullWidth margin="dense" InputProps={{ readOnly: true }} />
+              <TextField 
+                label="Full Name" 
+                value={userInfo.name} 
+                fullWidth 
+                margin="dense" 
+                variant="outlined"
+                InputProps={{ readOnly: true }}
+              />
+              <TextField 
+                label="Email Address" 
+                value={userInfo.email} 
+                fullWidth 
+                margin="dense" 
+                variant="outlined"
+                type="email"
+                InputProps={{ readOnly: true }}
+              />
+              <TextField 
+                label="Phone Number" 
+                value={userInfo.phone} 
+                fullWidth 
+                margin="dense" 
+                variant="outlined"
+                InputProps={{ readOnly: true }}
+              />
             </Box>
           </Box>
         );
@@ -108,7 +153,7 @@ const ApplyForm = ({ open, onClose, mentor }) => {
             </Typography>
             <Box sx={{ border: '1px solid', borderColor: 'divider', p: 2, borderRadius: 1 }}>
               <Typography gutterBottom><strong>Requesting session with:</strong> {mentor.name}</Typography>
-              <Typography gutterBottom><strong>Specialization:</strong> {mentor.specialization}</Typography>
+              <Typography gutterBottom><strong>Specialization:</strong> {mentor.specialties ? mentor.specialties.join(', ') : 'Not specified'}</Typography>
               <Typography><strong>Your Goals:</strong> {sessionGoals || 'Not provided'}</Typography>
             </Box>
           </Box>

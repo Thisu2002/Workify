@@ -50,7 +50,7 @@ const CandidateContent = () => {
         </>
       )}
       {location.pathname === "/candidate/findjob" && <FindJobs />}
-      {location.pathname === "/candidate/careeradvice" && <CareerAdvice />}
+      {location.pathname === "/candidate/careeradvice" && <CareerAdvice userProfile={mockCandidate} />}
       {location.pathname === "/candidate/interviews" && <Interviews />}
       {location.pathname === "/candidate/profile" && <CandidateProfile candidate={mockCandidate} />}
     </Box>
