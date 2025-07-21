@@ -12,7 +12,12 @@ import {
   Link,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  Card,
+  CardContent,
+  CardActions,
+  Alert,
+  LinearProgress
 } from "@mui/material";
 import {
   Timeline,
@@ -34,7 +39,12 @@ import {
   FileUpload,
   Delete,
   Edit,
+  PictureAsPdf,
+  CloudUpload,
+  Visibility,
+  GetApp,
 } from '@mui/icons-material';
+import EditProfileForm from './EditProfileForm';
 
 // --- ProfileSection Helper Component (Unchanged) ---
 const ProfileSection = ({ title, icon, children, ...props }) => (
@@ -84,20 +94,169 @@ const mockCandidate = {
 
 
 const Profile = () => {
-  const candidate = mockCandidate;
+  const [candidate, setCandidate] = useState(mockCandidate);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  
+  // Edit Profile Form State
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  
+  // CV Management State
+  const [cvs, setCvs] = useState([
+    {
+      id: 1,
+      name: "Software_Engineer_Resume_2024.pdf",
+      uploadDate: "2024-07-15",
+      size: "245 KB",
+      isDefault: true
+    },
+    {
+      id: 2, 
+      name: "Frontend_Developer_CV.pdf",
+      uploadDate: "2024-07-10",
+      size: "312 KB",
+      isDefault: false
+    }
+  ]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
   const handleUpload = () => { console.log("Upload"); handleMenuClose(); };
   const handleDelete = () => { console.log("Delete"); handleMenuClose(); };
-  const handleEditProfile = () => { console.log("Edit Profile Clicked"); };
+  const handleEditProfile = () => { 
+    setEditFormOpen(true);
+  };
+
+  // Edit Profile Form Functions
+  const handleEditFormClose = () => {
+    setEditFormOpen(false);
+  };
+
+  const handleProfileSave = (updatedData) => {
+    // Update the candidate data
+    setCandidate(prev => ({
+      ...prev,
+      name: updatedData.name,
+      about: updatedData.about,
+      contact: updatedData.contact,
+      experience: updatedData.experience,
+      education: updatedData.education
+    }));
+    
+    // Also update the mockCandidate for consistency (in real app, this would be API call)
+    Object.assign(mockCandidate, {
+      name: updatedData.name,
+      about: updatedData.about,
+      contact: updatedData.contact,
+      experience: updatedData.experience,
+      education: updatedData.education
+    });
+    
+    console.log("Profile updated:", updatedData);
+  };
+
+  // CV Management Functions
+  const handleCvUpload = (event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Check if maximum CVs reached
+      if (cvs.length >= 3) {
+        alert("Maximum 3 CVs allowed. Please delete an existing CV first.");
+        return;
+      }
+      
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        alert("Only PDF files are allowed.");
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB.");
+        return;
+      }
+      
+      // Simulate upload progress
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setIsUploading(false);
+            
+            // Add new CV to the list
+            const newCv = {
+              id: Date.now(),
+              name: file.name,
+              uploadDate: new Date().toISOString().split('T')[0],
+              size: `${Math.round(file.size / 1024)} KB`,
+              isDefault: cvs.length === 0
+            };
+            setCvs(prev => [...prev, newCv]);
+            
+            return 0;
+          }
+          return prev + 10;
+        });
+      }, 100);
+    }
+    
+    // Reset file input
+    event.target.value = '';
+  };
+
+  const handleDeleteCv = (cvId) => {
+    if (window.confirm("Are you sure you want to delete this CV?")) {
+      setCvs(prev => {
+        const updatedCvs = prev.filter(cv => cv.id !== cvId);
+        // If we deleted the default CV and there are others, make the first one default
+        if (updatedCvs.length > 0 && !updatedCvs.some(cv => cv.isDefault)) {
+          updatedCvs[0].isDefault = true;
+        }
+        return updatedCvs;
+      });
+    }
+  };
+
+  const handleSetDefault = (cvId) => {
+    setCvs(prev => prev.map(cv => ({
+      ...cv,
+      isDefault: cv.id === cvId
+    })));
+  };
+
+  const handleViewCv = (cvName) => {
+    // In a real app, this would open the PDF in a new tab or modal
+    console.log(`Viewing CV: ${cvName}`);
+    alert(`Viewing ${cvName} - In a real app, this would open the PDF`);
+  };
+
+  const handleDownloadCv = (cvName) => {
+    // In a real app, this would trigger a download
+    console.log(`Downloading CV: ${cvName}`);
+    alert(`Downloading ${cvName} - In a real app, this would download the file`);
+  };
 
   if (!candidate) return <Typography>Loading profile...</Typography>;
 
   return (
-    <Grid container spacing={3} alignItems="flex-start">
+    <>
+      {/* Edit Profile Form */}
+      <EditProfileForm 
+        open={editFormOpen}
+        onClose={handleEditFormClose}
+        profileData={candidate}
+        onSave={handleProfileSave}
+      />
+
+      <Grid container spacing={3} alignItems="flex-start">
       
       <Grid item xs={12}>
         <Paper elevation={2} sx={{ p: 3, borderRadius: 2, position: 'relative' }}>
@@ -220,16 +379,16 @@ const Profile = () => {
   </MenuItem>
 </Menu>
 
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={4}>
         <ProfileSection title="Work Experience" icon={<Work color="primary" />}>
         <IconButton
   onClick={handleEditProfile}
   sx={{
     position: 'absolute',
-    top: 16, // Adjusted for better spacing
-    right: 16, // Adjusted for better spacing
-    border: '1px solid', // Manually add the border
-    borderColor: 'divider' // Use the theme's divider color for a subtle outline
+    top: 16, 
+    right: 16, 
+    border: '1px solid', 
+    borderColor: 'divider'
   }}
 >
   <Edit />
@@ -259,16 +418,16 @@ const Profile = () => {
         </ProfileSection>
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={4}>
         <ProfileSection title="Education" icon={<School color="primary" />}>
         <IconButton
   onClick={handleEditProfile}
   sx={{
     position: 'absolute',
-    top: 16, // Adjusted for better spacing
-    right: 16, // Adjusted for better spacing
-    border: '1px solid', // Manually add the border
-    borderColor: 'divider' // Use the theme's divider color for a subtle outline
+    top: 16, 
+    right: 16, 
+    border: '1px solid', 
+    borderColor: 'divider' 
   }}
 >
   <Edit />
@@ -287,6 +446,176 @@ const Profile = () => {
         </ProfileSection>
       </Grid>
       
+      {/* CV/Resume Management Section */}
+      <Grid item xs={12} md={4}>
+        <ProfileSection title="CV & Resume" icon={<PictureAsPdf color="primary" />}>
+          <Box sx={{ mb: 3 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Upload up to 3 CVs in PDF format (max 5MB each)
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<CloudUpload />}
+                component="label"
+                disabled={cvs.length >= 3 || isUploading}
+                size="small"
+              >
+                Add CV
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf"
+                  onChange={handleCvUpload}
+                />
+              </Button>
+            </Stack>
+
+            {/* Upload Progress */}
+            {isUploading && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  Uploading... {uploadProgress}%
+                </Typography>
+                <LinearProgress variant="determinate" value={uploadProgress} />
+              </Box>
+            )}
+
+            {/* CV List */}
+            {cvs.length === 0 ? (
+              <Alert severity="info" sx={{ textAlign: 'center' }}>
+                <Typography variant="body2">
+                  No CVs uploaded yet. Add your first CV to get started!
+                </Typography>
+              </Alert>
+            ) : (
+              <Stack spacing={2}>
+                {cvs.map((cv) => (
+                  <Card variant="outlined" key={cv.id} sx={{ position: 'relative' }}>
+                    {cv.isDefault && (
+                      <Chip
+                        label="Default"
+                        color="primary"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          zIndex: 1
+                        }}
+                      />
+                    )}
+                    <CardContent sx={{ pb: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <PictureAsPdf color="error" sx={{ mr: 1, fontSize: 32 }} />
+                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontWeight: 'bold',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title={cv.name}
+                          >
+                            {cv.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {cv.size} • {cv.uploadDate}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                    <CardActions sx={{ 
+                      pt: 0, 
+                      px: 2, 
+                      pb: 2, 
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '80px', // Fixed height for CardActions
+                      justifyContent: 'space-between'
+                    }}>
+                      {/* First row: View and Download buttons */}
+                      <Box sx={{ display: 'flex', gap: 0.5, width: '100%' }}>
+                        <Button 
+                          size="small" 
+                          startIcon={<Visibility />}
+                          onClick={() => handleViewCv(cv.name)}
+                          sx={{ flex: 1 }}
+                        >
+                          View
+                        </Button>
+                        <Button 
+                          size="small" 
+                          startIcon={<GetApp />}
+                          onClick={() => handleDownloadCv(cv.name)}
+                          sx={{ flex: 1 }}
+                        >
+                          Download
+                        </Button>
+                      </Box>
+                      
+                      {/* Second row: Set Default button and Delete icon - fixed layout */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        width: '100%',
+                        height: '32px' // Fixed height for this row
+                      }}>
+                        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                          {cv.isDefault ? (
+                            <Typography 
+                              variant="caption" 
+                              color="primary" 
+                              sx={{ fontWeight: 'bold' }}
+                            >
+                              Default CV
+                            </Typography>
+                          ) : (
+                            <Button 
+                              size="small"
+                              onClick={() => handleSetDefault(cv.id)}
+                              color="primary"
+                              variant="text"
+                              sx={{ minHeight: '24px' }}
+                            >
+                              Set Default
+                            </Button>
+                          )}
+                        </Box>
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => handleDeleteCv(cv.id)}
+                          sx={{ minWidth: '32px', minHeight: '32px' }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </CardActions>
+                  </Card>
+                ))}
+              </Stack>
+            )}
+            
+            {/* Usage Stats */}
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                {cvs.length}/3 CVs uploaded
+                {cvs.length > 0 && (
+                  <>
+                    {" • "}
+                    {cvs.find(cv => cv.isDefault)?.name.split('.')[0] || 'None'} is your default CV
+                  </>
+                )}
+              </Typography>
+            </Box>
+          </Box>
+        </ProfileSection>
+      </Grid>
+      
       {/* <Grid item xs={12}>
         <ProfileSection title="Skills & Tools" icon={<StarBorder color="primary" />}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -297,6 +626,7 @@ const Profile = () => {
         </ProfileSection>
       </Grid> */}
     </Grid>
+    </>
   );
 };
 

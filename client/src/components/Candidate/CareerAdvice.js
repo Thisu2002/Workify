@@ -16,6 +16,7 @@ import {
   Star,
   ChatBubbleOutline
 } from '@mui/icons-material';
+import RequestForm from './RequestForm';
 
 // Sample Mentor Data - In a real app, this would come from an API
 const MOCK_MENTORS = [
@@ -53,8 +54,20 @@ const MOCK_MENTORS = [
   },
 ];
 
-const CareerAdvice = () => {
+const CareerAdvice = ({ userProfile }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedMentor, setSelectedMentor] = useState(null);
+  const [isRequestFormOpen, setIsRequestFormOpen] = useState(false);
+
+  const handleRequestSession = (mentor) => {
+    setSelectedMentor(mentor);
+    setIsRequestFormOpen(true);
+  };
+
+  const handleCloseRequestForm = () => {
+    setIsRequestFormOpen(false);
+    setSelectedMentor(null);
+  };
 
   const filteredMentors = MOCK_MENTORS.filter(mentor =>
     mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,6 +145,7 @@ const CareerAdvice = () => {
                 startIcon={<ChatBubbleOutline />} 
                 fullWidth
                 sx={{ mt: 'auto' }} // Pushes the button to the bottom
+                onClick={() => handleRequestSession(mentor)}
               >
                 Request a Session
               </Button>
@@ -144,6 +158,16 @@ const CareerAdvice = () => {
           <Box sx={{ textAlign: 'center', py: 5 }}>
               <Typography variant="h6" color="text.secondary">No mentors found matching your search.</Typography>
           </Box>
+      )}
+
+      {/* Request Form Dialog */}
+      {selectedMentor && (
+        <RequestForm
+          open={isRequestFormOpen}
+          onClose={handleCloseRequestForm}
+          mentor={selectedMentor}
+          userProfile={userProfile}
+        />
       )}
     </Box>
   );
