@@ -10,13 +10,15 @@ import {
   ListItemText,
   Chip,
 } from "@mui/material";
-import { AccessTime, CheckCircle, Cancel } from "@mui/icons-material";
+import { AccessTime, CheckCircle, Cancel, Autorenew } from "@mui/icons-material";
 
 const applications = [
-  { id: 1, name: "Wealth OS", position: "Frontend Developer", status: "pending" },
-  { id: 2, name: "WSO2", position: "Backend Developer", status: "accepted" },
+  { id: 1, name: "Wealth OS", position: "Frontend Developer", status: "reviewed" },
+  { id: 2, name: "WSO2", position: "Backend Developer", status: "shortlisted" },
   { id: 3, name: "Furtado", position: "UI Designer", status: "rejected" },
-  { id: 4, name: "OREL IT", position: "QA Engineer", status: "pending" },
+  { id: 4, name: "OREL IT", position: "QA Engineer", status: "ongoing" },
+  { id: 5, name: "IFS", position: "Software Engineer", status: "ongoing" },
+  { id: 6, name: "Pick Me", position: "UI/UX Designer", status: "reviewed" },
 ];
 
 const getFilteredApplications = (status) =>
@@ -49,13 +51,15 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
         '& .MuiTab-root': { fontWeight: 500, fontSize: 16 },
       }}
     >
-      <Tab icon={<AccessTime color="warning" />} iconPosition="start" label="Pending" />
-      <Tab icon={<CheckCircle color="success" />} iconPosition="start" label="Accepted" />
+      <Tab icon={<AccessTime color="warning" />} iconPosition="start" label="Reviewed" />
+      <Tab icon={<CheckCircle color="success" />} iconPosition="start" label="Shortlisted" />
+      <Tab icon={<Autorenew color="info" />} iconPosition="start" label="Ongoing" />
       <Tab icon={<Cancel color="error" />} iconPosition="start" label="Rejected" />
     </Tabs>
     <List>
-      {(trackerTab === 0 ? getFilteredApplications("pending")
-        : trackerTab === 1 ? getFilteredApplications("accepted")
+      {(trackerTab === 0 ? getFilteredApplications("reviewed")
+        : trackerTab === 1 ? getFilteredApplications("shortlisted")
+        : trackerTab === 2 ? getFilteredApplications("ongoing")
         : getFilteredApplications("rejected")
       ).map((app) => (
         <ListItem
@@ -66,6 +70,8 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
               ? 'warning.50'
               : trackerTab === 1
               ? 'success.50'
+              : trackerTab === 2
+              ? 'info.50'
               : 'error.50',
             borderRadius: 2,
             mb: 1,
@@ -79,6 +85,8 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
                   ? "warning"
                   : trackerTab === 1
                   ? "success"
+                  : trackerTab === 2
+                  ? "info"
                   : "error"
               }
               size="small"
@@ -89,7 +97,8 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
           <ListItemIcon>
             {trackerTab === 0 && <AccessTime color="warning" />}
             {trackerTab === 1 && <CheckCircle color="success" />}
-            {trackerTab === 2 && <Cancel color="error" />}
+            {trackerTab === 2 && <Autorenew color="info" />}
+            {trackerTab === 3 && <Cancel color="error" />}
           </ListItemIcon>
           <ListItemText
             primary={
@@ -106,9 +115,10 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => (
         </ListItem>
       ))}
       {(
-        (trackerTab === 0 && getFilteredApplications("pending").length === 0) ||
-        (trackerTab === 1 && getFilteredApplications("accepted").length === 0) ||
-        (trackerTab === 2 && getFilteredApplications("rejected").length === 0)
+        (trackerTab === 0 && getFilteredApplications("reviewed").length === 0) ||
+        (trackerTab === 1 && getFilteredApplications("shortlisted").length === 0) ||
+        (trackerTab === 2 && getFilteredApplications("ongoing").length === 0)||
+        (trackerTab === 3 && getFilteredApplications("rejected").length === 0)
       ) && (
         <ListItem>
           <ListItemText
