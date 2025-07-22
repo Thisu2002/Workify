@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -41,6 +41,7 @@ const Home = () => {
   const [activeFeature, setActiveFeature] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const trigger = useScrollTrigger({ threshold: 100 });
+  const jobPostsRef = useRef(null);
 
   const features = [
     {
@@ -100,6 +101,39 @@ const Home = () => {
     }
   ];
 
+  // Sample job vacancies
+  const jobVacancies = [
+    {
+      title: "Frontend Developer",
+      company: "Google",
+      location: "San Francisco, CA",
+      description: "React/JS developer for SaaS platform. 2+ years experience.",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg"
+    },
+    {
+      title: "UI/UX Designer",
+      company: "Apple",
+      location: "Remote",
+      description: "Design user interfaces for mobile/web apps. Figma/Sketch.",
+      // Use Apple logo (PNG, works well in Avatar)
+      logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
+    },
+    {
+      title: "Backend Engineer",
+      company: "Microsoft",
+      location: "New York, NY",
+      description: "Node.js/Express developer for cloud APIs. 3+ years experience.",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+    },
+    {
+      title: "Product Manager",
+      company: "Amazon",
+      location: "Austin, TX",
+      description: "Lead product teams, define roadmap, agile experience required.",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg"
+    },
+  ];
+
   useEffect(() => {
     setIsVisible(true);
     const interval = setInterval(() => {
@@ -134,7 +168,9 @@ const Home = () => {
             alignItems="center" 
             sx={{ display: { xs: 'none', md: 'flex' } }}
           >
-            <Button className="nav-link">Jobs</Button>
+            <Button className="nav-link" onClick={() => jobPostsRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+              Jobs
+            </Button>
             <Button className="nav-link">Companies</Button>
             <Button className="nav-link">Mentors</Button>
             <Button className="nav-link">About</Button>
@@ -249,6 +285,99 @@ const Home = () => {
               </Slide>
             </Grid>
           </Grid>
+        </Container>
+      </Box>
+
+      {/* Job Posts Section */}
+      <Box ref={jobPostsRef} className="job-posts-section" sx={{ py: 8, background: "#f8fafc" }}>
+        <Container maxWidth="xl">
+          <Box display="flex" flexDirection="column" alignItems="center" mb={6}>
+            <Typography variant="h2" className="section-title" textAlign="center">
+              Latest Job Vacancies
+            </Typography>
+            <Typography variant="h6" className="section-subtitle" textAlign="center">
+              Explore top opportunities and apply today
+            </Typography>
+          </Box>
+          <Grid container spacing={3} wrap="nowrap" justifyContent="center">
+            {jobVacancies.map((job, idx) => (
+              <Grid item xs={12} sm={6} md={3} key={idx} sx={{ display: 'flex' }}>
+                <Card className="job-card" elevation={3} sx={{ borderRadius: 4, width: '100%', position: 'relative', overflow: 'visible' }}>
+                  <CardContent sx={{ p: 0 }}>
+                    <Box display="flex" alignItems="center" gap={2} sx={{ px: 3, pt: 3 }}>
+                      <Avatar
+                        src={job.logo}
+                        alt={job.company + " logo"}
+                        sx={{
+                          bgcolor: "#fff",
+                          width: 48,
+                          height: 48,
+                          boxShadow: "0 4px 16px rgba(59,130,246,0.15)",
+                          border: "2px solid #e2e8f0",
+                          objectFit: "contain"
+                        }}
+                        imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
+                      />
+                      <Box>
+                        <Typography className="job-card-title" sx={{ mb: 0.5 }}>
+                          {job.title}
+                        </Typography>
+                        <Typography className="job-card-company" sx={{ mb: 0.5 }}>
+                          {job.company}
+                        </Typography>
+                        <Typography className="job-card-location" sx={{ mb: 0.5 }}>
+                          <LocationIcon sx={{ fontSize: 18, verticalAlign: 'middle', color: '#3b82f6', mr: 0.5 }} />
+                          {job.location}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ px: 3, py: 2 }}>
+                      <Typography className="job-card-description" sx={{ mb: 2 }}>
+                        {job.description}
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        size="medium"
+                        sx={{
+                          mt: 1,
+                          width: '100%',
+                          fontWeight: 700,
+                          fontSize: '1rem',
+                          borderRadius: '10px',
+                          boxShadow: '0 2px 8px rgba(59,130,246,0.12)'
+                        }}
+                      >
+                        Apply Now
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+          {/* View More Button Row */}
+          <Box display="flex" justifyContent="center" mt={4}>
+            <Button
+              variant="outlined"
+              size="large"
+              sx={{
+                px: 5,
+                py: 1.5,
+                borderRadius: 10,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#3b82f6',
+                borderColor: '#3b82f6',
+                boxShadow: '0 2px 8px rgba(59,130,246,0.08)',
+                background: '#fff',
+                textTransform: 'none',
+                transition: 'all 0.3s'
+              }}
+              onClick={() => navigate('/jobs')}
+            >
+              View More Job Vacancies
+            </Button>
+          </Box>
         </Container>
       </Box>
 
