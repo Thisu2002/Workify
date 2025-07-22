@@ -1,9 +1,6 @@
-// [Imports unchanged]
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
   Button,
   Typography,
@@ -15,7 +12,6 @@ import {
   Grid,
   Stack,
   Divider,
-  InputAdornment,
   IconButton,
   Menu,
   MenuItem,
@@ -25,9 +21,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import "../../styles/JobPosts.css";
 import PostJob from "./PostJob";
-import { useNavigate } from "react-router-dom";
 import companyLogo from "../../uploads/companyLogo.jpg";
-import { Search } from "@mui/icons-material";
 import axios from "axios";
 import toast from "react-hot-toast";
 import JobDetails from "./JobDetails";

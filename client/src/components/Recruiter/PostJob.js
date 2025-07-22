@@ -172,6 +172,7 @@ const PostJob = () => {
               onChange={handleChange}
               fullWidth
               margin="normal"
+              placeholder="e.g.Full-time, Part-time, Contract"
             />
           </Grid>
           <Grid item xs={6}>

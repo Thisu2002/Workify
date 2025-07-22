@@ -286,7 +286,7 @@ const JobDetails = ({
               </Box>
             )}
 
-            <Box display="flex" justifyContent="space-between" mt={2}>
+            <Box display="flex" justifyContent="space-between" gap={10} mt={2}>
               {job?.experience?.years !== undefined && (
                 <Box mt={2}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
