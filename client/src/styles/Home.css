@@ -826,7 +826,7 @@ html {
 }
 
 /* Job Cards */
-.job-card {
+.home-job-card {
   width: 100%;
   background: linear-gradient(135deg, #fff 80%, #e2e8f0 100%) !important;
   border-radius: 20px !important;
@@ -841,13 +841,13 @@ html {
   overflow: visible;
 }
 
-.job-card:hover {
+.home-job-card:hover {
   transform: translateY(-10px) scale(1.03);
   box-shadow: 0 16px 40px rgba(59,130,246,0.18) !important;
   border-color: #3b82f6;
 }
 
-.job-card::after {
+.home-job-card::after {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -858,11 +858,11 @@ html {
   transition: opacity 0.4s;
 }
 
-.job-card:hover::after {
+.home-job-card:hover::after {
   opacity: 1;
 }
 
-.job-card .MuiCardContent-root {
+.home-job-card .MuiCardContent-root {
   padding: 0 !important;
   display: flex;
   flex-direction: column;
@@ -870,7 +870,7 @@ html {
   gap: 0;
 }
 
-.job-card-title {
+.home-job-card-title {
   color: #0F2445 !important;
   font-weight: 700 !important;
   font-size: 1.25rem !important;
@@ -882,7 +882,7 @@ html {
   background-clip: text;
 }
 
-.job-card-company {
+.home-job-card-company {
   color: #3b82f6 !important;
   font-weight: 600 !important;
   font-size: 1rem !important;
@@ -890,7 +890,7 @@ html {
   letter-spacing: 0.01em;
 }
 
-.job-card-location {
+.home-job-card-location {
   color: #64748b !important;
   font-size: 0.95rem !important;
   font-weight: 500 !important;
@@ -900,7 +900,7 @@ html {
   gap: 6px;
 }
 
-.job-card-description {
+.home-job-card-description {
   color: #475569 !important;
   font-size: 1rem !important;
   line-height: 1.7 !important;
@@ -909,7 +909,7 @@ html {
   min-height: 48px;
 }
 
-.job-card .MuiButton-root {
+.home-job-card .MuiButton-root {
   background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
   color: #fff !important;
   font-weight: 700 !important;
@@ -921,7 +921,7 @@ html {
   transition: background 0.3s, box-shadow 0.3s;
 }
 
-.job-card .MuiButton-root:hover {
+.home-job-card .MuiButton-root:hover {
   background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
   box-shadow: 0 6px 20px rgba(59,130,246,0.18) !important;
 }

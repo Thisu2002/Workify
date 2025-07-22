@@ -1,3 +1,4 @@
+import { ArrowForward } from "@mui/icons-material";
 import {
   Dialog,
   DialogTitle,
@@ -56,8 +57,19 @@ const JobDetails = ({
   );
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" padding={20}>
-      <DialogTitle>{isEditing ? "Edit Job Post" : job?.title}</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="md"
+      padding={20}
+    >
+      <DialogTitle display="flex" justifyContent="space-between" alignItems="center">
+        {isEditing ? "Edit Job Post" : job?.title}
+        <Button endIcon={<ArrowForward />} onClick={() => navigate("/recruiter/job-posts/applicants")}>
+          View Applicants
+        </Button>
+      </DialogTitle>
       <DialogContent dividers>
         {isEditing ? (
           <Box display="flex" flexDirection="column" gap={2}>
@@ -216,41 +228,60 @@ const JobDetails = ({
 
             <Divider sx={{ my: 2 }} />
 
-            {job?.location && (
-              <Typography variant="subtitle1">
-                <strong>Location:</strong> {job.location}
-              </Typography>
-            )}
-
-            {job?.salary && (
-              <Typography variant="subtitle1" sx={{ mt: 1 }}>
-                <strong>Salary:</strong> {job.salary}
-              </Typography>
-            )}
-
-            {job?.jobType && (
-              <Typography variant="subtitle1" sx={{ mt: 1 }}>
-                <strong>Job Type:</strong> {job.jobType}
-              </Typography>
-            )}
-
-            {job?.deadline && (
-              <Typography variant="subtitle1" sx={{ mt: 1 }}>
-                <strong>Application Deadline:</strong>{" "}
-                {new Date(job.deadline).toLocaleDateString()}
-              </Typography>
-            )}
-
-            {job?.status && (
-              <Box mt={2}>
-                <Typography
-                  variant="subtitle2"
-                  color={job.status === "Open" ? "green" : "gray"}
-                >
-                  Status: {job.status}
+            <Box display="flex" alignItems="center" gap={6}>
+              {job?.location && (
+                <Typography variant="subtitle1">
+                  <strong>Location:</strong> {job.location}
                 </Typography>
-              </Box>
-            )}
+              )}
+
+              {job?.salary && (
+                <>
+                  <Divider orientation="vertical" flexItem />
+                  <Typography variant="subtitle1">
+                    <strong>Salary:</strong> {job.salary}
+                  </Typography>
+                </>
+              )}
+
+              {job?.jobType && (
+                <>
+                  <Divider orientation="vertical" flexItem />
+                  <Typography variant="subtitle1">
+                    <strong>Job Type:</strong> {job.jobType}
+                  </Typography>
+                </>
+              )}
+            </Box>
+
+            {job?.deadline &&
+              (() => {
+                const today = new Date();
+                const deadlineDate = new Date(job.deadline);
+                const timeDiff = deadlineDate - today;
+                const daysRemaining = Math.ceil(
+                  timeDiff / (1000 * 60 * 60 * 24)
+                );
+
+                let statusText = "";
+
+                if (daysRemaining < 0) {
+                  statusText = "Closed";
+                } else {
+                  statusText = `Expires in ${daysRemaining} day${
+                    daysRemaining !== 1 ? "s" : ""
+                  }`;
+                }
+
+                return (
+                  <Typography mt={2} variant="subtitle2">
+                    Application Deadline: {deadlineDate.toLocaleDateString()}{" "}
+                    <span style={{ color: "red", fontWeight: 500 }}>
+                      ({statusText})
+                    </span>
+                  </Typography>
+                );
+              })()}
 
             <Divider sx={{ my: 2 }} />
 
@@ -286,9 +317,9 @@ const JobDetails = ({
               </Box>
             )}
 
-            <Box display="flex" justifyContent="space-between" gap={10} mt={2}>
+            <Box display="flex" mt={2} gap={5}>
               {job?.experience?.years !== undefined && (
-                <Box mt={2}>
+                <Box mt={2} flex={1}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                     Experience:
                   </Typography>
@@ -308,7 +339,7 @@ const JobDetails = ({
               )}
 
               {job?.education_requirements?.length > 0 && (
-                <Box mt={2}>
+                <Box mt={2} flex={1}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                     Education Requirements:
                   </Typography>
@@ -348,22 +379,37 @@ const JobDetails = ({
           </>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={() => navigate("/recruiter/job-posts/applicants")}>
-          View Applicants
-        </Button>
-        <Button onClick={handleClose}>Cancel</Button>
-        {isEditing ? (
-          <Button variant="contained" onClick={handleSave}>
-            Save
+      <DialogActions
+        sx={{ justifyContent: "space-between", width: "100%", p: 2 }}
+      >
+        {/* Left-aligned Delete */}
+        <Box>
+          <Button
+            variant="outlined"
+            sx={{
+              color: "red !important",
+              borderColor: "red !important",
+            }}
+          >
+            Delete
           </Button>
-        ) : (
-          job?.status === "Open" && (
-            <Button variant="contained" onClick={handleEditToggle}>
-              Edit
+        </Box>
+
+        {/* Right-aligned Buttons */}
+        <Box display="flex" gap={1}>
+          <Button onClick={handleClose}>Cancel</Button>
+          {isEditing ? (
+            <Button variant="contained" onClick={handleSave}>
+              Save
             </Button>
-          )
-        )}
+          ) : (
+            job?.status === "Open" && (
+              <Button variant="contained" onClick={handleEditToggle}>
+                Edit
+              </Button>
+            )
+          )}
+        </Box>
       </DialogActions>
     </Dialog>
   );

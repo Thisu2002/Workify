@@ -302,7 +302,7 @@ const Home = () => {
           <Grid container spacing={3} wrap="nowrap" justifyContent="center">
             {jobVacancies.map((job, idx) => (
               <Grid item xs={12} sm={6} md={3} key={idx} sx={{ display: 'flex' }}>
-                <Card className="job-card" elevation={3} sx={{ borderRadius: 4, width: '100%', position: 'relative', overflow: 'visible' }}>
+                <Card className="home-job-card" elevation={3} sx={{ borderRadius: 4, width: '100%', position: 'relative', overflow: 'visible' }}>
                   <CardContent sx={{ p: 0 }}>
                     <Box display="flex" alignItems="center" gap={2} sx={{ px: 3, pt: 3 }}>
                       <Avatar
@@ -319,20 +319,20 @@ const Home = () => {
                         imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
                       />
                       <Box>
-                        <Typography className="job-card-title" sx={{ mb: 0.5 }}>
+                        <Typography className="home-job-card-title" sx={{ mb: 0.5 }}>
                           {job.title}
                         </Typography>
-                        <Typography className="job-card-company" sx={{ mb: 0.5 }}>
+                        <Typography className="home-job-card-company" sx={{ mb: 0.5 }}>
                           {job.company}
                         </Typography>
-                        <Typography className="job-card-location" sx={{ mb: 0.5 }}>
+                        <Typography className="home-job-card-location" sx={{ mb: 0.5 }}>
                           <LocationIcon sx={{ fontSize: 18, verticalAlign: 'middle', color: '#3b82f6', mr: 0.5 }} />
                           {job.location}
                         </Typography>
                       </Box>
                     </Box>
                     <Box sx={{ px: 3, py: 2 }}>
-                      <Typography className="job-card-description" sx={{ mb: 2 }}>
+                      <Typography className="home-job-card-description" sx={{ mb: 2 }}>
                         {job.description}
                       </Typography>
                       <Button

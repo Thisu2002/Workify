@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
+  DialogTitle,
+  DialogContent,
   DialogActions,
   Button,
   Typography,
@@ -12,19 +14,26 @@ import {
   Grid,
   Stack,
   Divider,
+  InputAdornment,
   IconButton,
   Menu,
   MenuItem,
   Tabs,
   Tab,
+  Pagination,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import "../../styles/JobPosts.css";
 import PostJob from "./PostJob";
+import { useNavigate } from "react-router-dom";
 import companyLogo from "../../uploads/companyLogo.jpg";
+import { Search, Clear, DateRange } from "@mui/icons-material";
 import axios from "axios";
 import toast from "react-hot-toast";
 import JobDetails from "./JobDetails";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const cardColors = [
   "#e5e3f0",
@@ -58,13 +67,20 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuJob, setMenuJob] = useState(null);
 
-  const menuOpen = Boolean(anchorEl);
-
-  // New State for Filters
+  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedExperience, setSelectedExperience] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [activeTab, setActiveTab] = useState("open");
+
+  // Pagination states
+  const [openJobsPage, setOpenJobsPage] = useState(1);
+  const [closedJobsPage, setClosedJobsPage] = useState(1);
+  const jobsPerPage = 6;
+
+  const menuOpen = Boolean(anchorEl);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -86,6 +102,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
             rate: p.salary ? `$${p.salary}/hr` : "",
             numApplicants: Math.floor(Math.random() * 50) + 1,
             postedAgo: daysAgo,
+            postedDate: new Date(p.date_posted),
           };
         });
         setOpenJobs(posts.filter((p) => p.status === "Open"));
@@ -154,8 +171,10 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
       if (newStatus === "Open") {
         setOpenJobs((prev) => [...prev, updatedJob]);
+        setOpenJobsPage(1); // Reset to first page when status changes
       } else {
         setClosedJobs((prev) => [...prev, updatedJob]);
+        setClosedJobsPage(1); // Reset to first page when status changes
       }
 
       handleMenuClose();
@@ -166,10 +185,64 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
     }
   };
 
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedSkills([]);
+    setSelectedExperience("");
+    setStartDate(null);
+    setEndDate(null);
+  };
+
+  const filterJobs = (jobs) =>
+    jobs.filter((job) => {
+      const matchesTitle = job.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSkills =
+        selectedSkills.length === 0 ||
+        selectedSkills.every((id) => job.skills.includes(id));
+      const matchesExperience = (() => {
+        if (!selectedExperience) return true;
+        const years = job.experience?.years || 0;
+        if (selectedExperience === "0-2") return years <= 2;
+        if (selectedExperience === "3-5") return years >= 3 && years <= 5;
+        if (selectedExperience === "6-10") return years >= 6 && years <= 10;
+        if (selectedExperience === "10+") return years > 10;
+        return true;
+      })();
+      const matchesDateRange = (() => {
+        if (!startDate && !endDate) return true;
+        const jobDate = job.postedDate;
+        if (startDate && endDate) {
+          return jobDate >= startDate && jobDate <= endDate;
+        }
+        if (startDate) return jobDate >= startDate;
+        if (endDate) return jobDate <= endDate;
+        return true;
+      })();
+      
+      return matchesTitle && matchesSkills && matchesExperience && matchesDateRange;
+    });
+
+  const filteredOpenJobs = filterJobs(openJobs);
+  const filteredClosedJobs = filterJobs(closedJobs);
+
+  // Pagination logic
+  const openJobsCount = filteredOpenJobs.length;
+  const closedJobsCount = filteredClosedJobs.length;
+  
+  const openJobsPaginated = filteredOpenJobs.slice(
+    (openJobsPage - 1) * jobsPerPage,
+    openJobsPage * jobsPerPage
+  );
+  
+  const closedJobsPaginated = filteredClosedJobs.slice(
+    (closedJobsPage - 1) * jobsPerPage,
+    closedJobsPage * jobsPerPage
+  );
+
   const renderJobCard = (job, index) => (
     <Card
       key={job.id}
-      className="job-card"
+      className="recruiter-job-card"
       sx={{ backgroundColor: cardColors[index % cardColors.length] }}
       onClick={() => handleJobClick(job)}
     >
@@ -196,20 +269,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
           </Box>
         </Box>
         <Typography className="job-title">{job.title}</Typography>
-        <Typography
-          className="job-description"
-          sx={{
-            color: "#555",
-            mt: -3,
-            mb: 3,
-            ml: 5,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-          }}
-        >
+        <Typography className="job-description">
           {job.description}
         </Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mb: 2 }}>
@@ -234,7 +294,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         </Stack>
       </CardContent>
 
-      <Box className="job-card-footer">
+      <Box className="recruiter-job-card-footer">
         <Box className="job-company">
           <img src={companyLogo} alt={job.company} className="job-logo" />
           <Box>
@@ -261,31 +321,8 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
     </Card>
   );
 
-  // Filtering
-  const filterJobs = (jobs) =>
-    jobs.filter((job) => {
-      const matchesTitle = job.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesSkills =
-        selectedSkills.length === 0 ||
-        selectedSkills.every((id) => job.skills.includes(id));
-      const matchesExperience = (() => {
-        if (!selectedExperience) return true;
-        const years = job.experience?.years || 0;
-        if (selectedExperience === "0-2") return years <= 2;
-        if (selectedExperience === "3-5") return years >= 3 && years <= 5;
-        if (selectedExperience === "6-10") return years >= 6 && years <= 10;
-        if (selectedExperience === "10+") return years > 10;
-        return true;
-      })();
-      return matchesTitle && matchesSkills && matchesExperience;
-    });
-
-  const filteredOpenJobs = filterJobs(openJobs);
-  const filteredClosedJobs = filterJobs(closedJobs);
-
   return (
     <Box className="job-posts-container" sx={{ py: 4 }}>
-      {/* Tabs for Open / Closed */}
       <Tabs
         value={activeTab}
         onChange={(e, newValue) => setActiveTab(newValue)}
@@ -293,62 +330,114 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         indicatorColor="primary"
         sx={{ mb: 3 }}
       >
-        <Tab label="Open Jobs" value="open" />
-        <Tab label="Closed Jobs" value="closed" />
+        <Tab label={`Open Jobs (${openJobsCount})`} value="open" />
+        <Tab label={`Closed Jobs (${closedJobsCount})`} value="closed" />
       </Tabs>
 
       {/* Filter Section */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            label="Filter by Title"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Filter by Title"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setSearchQuery("")} size="small">
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={3}>
+            <DatePicker
+              label="Posted After"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              renderInput={(params) => <TextField {...params} fullWidth />}
+              inputFormat="MM/dd/yyyy"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={3}>
+            <DatePicker
+              label="Posted Before"
+              value={endDate}
+              onChange={(newValue) => setEndDate(newValue)}
+              renderInput={(params) => <TextField {...params} fullWidth />}
+              inputFormat="MM/dd/yyyy"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Typography sx={{ fontWeight: 600, mb: 1 }}>Skills</Typography>
+            <Stack direction="column" spacing={1} maxHeight={150} flexWrap="wrap">
+              {dummySkills.map((skill) => (
+                <Chip
+                  key={skill.id}
+                  label={skill.name}
+                  variant={selectedSkills.includes(skill.id) ? "filled" : "outlined"}
+                  onClick={() => {
+                    setSelectedSkills((prev) =>
+                      prev.includes(skill.id)
+                        ? prev.filter((id) => id !== skill.id)
+                        : [...prev, skill.id]
+                    );
+                  }}
+                  clickable
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </Stack>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Typography sx={{ fontWeight: 600, mb: 1 }}>Experience</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {["0-2", "3-5", "6-10", "10+"].map((range) => (
+                <Chip
+                  key={range}
+                  label={`${range} yrs`}
+                  variant={selectedExperience === range ? "filled" : "outlined"}
+                  onClick={() => setSelectedExperience(range)}
+                  clickable
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </Stack>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <Button
+              variant="contained"
+              startIcon={<Clear />}
+              onClick={clearAllFilters}
+              fullWidth
+              sx={{ height: '40px' }}
+            >
+              Clear Filters
+            </Button>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography sx={{ fontWeight: 600, mb: 1 }}>Skills</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            {dummySkills.map((skill) => (
-              <Chip
-                key={skill.id}
-                label={skill.name}
-                variant={selectedSkills.includes(skill.id) ? "filled" : "outlined"}
-                onClick={() => {
-                  setSelectedSkills((prev) =>
-                    prev.includes(skill.id)
-                      ? prev.filter((id) => id !== skill.id)
-                      : [...prev, skill.id]
-                  );
-                }}
-                clickable
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </Stack>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography sx={{ fontWeight: 600, mb: 1 }}>Experience</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            {["0-2", "3-5", "6-10", "10+"].map((range) => (
-              <Chip
-                key={range}
-                label={`${range} yrs`}
-                variant={selectedExperience === range ? "filled" : "outlined"}
-                onClick={() => setSelectedExperience(range)}
-                clickable
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </Stack>
-        </Grid>
-      </Grid>
+      </LocalizationProvider>
 
       <Divider sx={{ mb: 3 }} />
+      
+      {/* Job Grid */}
       <Grid container spacing={3} className="job-grid">
-        {(activeTab === "open" ? filteredOpenJobs : filteredClosedJobs).map(
+        {(activeTab === "open" ? openJobsPaginated : closedJobsPaginated).map(
           (job, index) => (
             <Grid item xs={12} sm={6} md={4} key={job.id}>
               {renderJobCard(job, index)}
@@ -356,6 +445,24 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
           )
         )}
       </Grid>
+
+      {/* Pagination */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Pagination
+          count={Math.ceil(
+            (activeTab === "open" ? openJobsCount : closedJobsCount) / jobsPerPage
+          )}
+          page={activeTab === "open" ? openJobsPage : closedJobsPage}
+          onChange={(e, page) => 
+            activeTab === "open" 
+              ? setOpenJobsPage(page) 
+              : setClosedJobsPage(page)
+          }
+          color="primary"
+          showFirstButton
+          showLastButton
+        />
+      </Box>
 
       <JobDetails
         dummySkills={dummySkills}
@@ -369,13 +476,6 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         handleEditToggle={handleEditToggle}
         handleSave={handleSave}
       />
-
-      <Dialog open={Boolean(showJobForm)} fullWidth maxWidth="sm">
-        <PostJob />
-        <DialogActions>
-          <Button onClick={() => setShowJobForm(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
 
       <Menu
         anchorEl={anchorEl}
