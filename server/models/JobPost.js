@@ -1,4 +1,3 @@
-// models/JobPost.js
 const mongoose = require('mongoose');
 
 const jobPostSchema = new mongoose.Schema({
@@ -8,11 +7,9 @@ const jobPostSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
   },
   location: {
     type: String,
-    required: true
   },
   recruiter_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -20,22 +17,70 @@ const jobPostSchema = new mongoose.Schema({
     required: true
   },
   skills: {
-    type: [Number],
-    //ref: 'Skill'
+    type: [Number], // skill IDs
   },
   salary: {
     type: Number,
-    required: true
+  },
+  jobType: {
+    type: String
+  },
+  deadline: {
+    type: String
   },
   date_posted: {
     type: Date,
     default: Date.now
   },
   status: {
+    type: String,
+    enum: ['Open', 'Closed'],
+    default: 'Open'
+  },
+  education_requirements: [
+    {
+      level: {
         type: String,
-        enum: ['Open', 'Closed'],
-        default: 'Open'
+        enum: ['Diploma', 'Bachelors', 'Masters', 'PhD'],
+      },
+      field: {
+        type: String,
+      }
     }
+  ],
+  experience: {
+    years: {
+      type: Number,
+    },
+    description: {
+      type: String
+    }
+  },
+  qualifications: [
+    {
+      name: {
+        type: String,
+      },
+      required: {
+        type: Boolean,
+      }
+    }
+  ],
+  preferred_qualifications: [
+    {
+      name: {
+        type: String,
+        required: true
+      },
+      required: {
+        type: Boolean,
+        default: false
+      }
+    }
+  ],
+  comments: {
+    type: String
+  }
 });
 
 module.exports = mongoose.model('JobPost', jobPostSchema);
