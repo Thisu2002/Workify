@@ -32,23 +32,21 @@ import "../../styles/LeadPanelist.css";
 
 const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
   <Zoom in={true} style={{ transitionDelay: '200ms' }}>
-    <Card className="recruiter-stat-card">
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-          <Box>
-            <Typography variant="body2" className="stat-title">
-              {title}
-            </Typography>
-            <Typography variant="h3" className="stat-value" sx={{ color }}>
-              {value}
-            </Typography>
-            <Typography variant="caption" className="stat-change">
+    <Card className="recruiter-stat-card" sx={{ width: 220, height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+      <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
+          <Avatar sx={{ bgcolor: alpha(color, 0.15), color: color, width: 40, height: 40, mb: 1 }}>{icon}</Avatar>
+          <Typography variant="h6" className="stat-value" sx={{ color, fontWeight: 700 }}>
+            {value}
+          </Typography>
+          <Typography variant="body2" className="stat-title" color="text.secondary">
+            {title}
+          </Typography>
+          {change && (
+            <Typography variant="caption" className="stat-change" color="success.main">
               {change}
             </Typography>
-          </Box>
-          <Box className="stat-icon" sx={{ backgroundColor: alpha(color, 0.1) }}>
-            {icon}
-          </Box>
+          )}
         </Box>
       </CardContent>
     </Card>
@@ -254,7 +252,7 @@ const Overview = () => {
                   Interview Activity
                 </Typography>
                 <Button size="small" sx={{ color: "#3B5998", textTransform: "none" }}>
-                  Last 30 days
+                  Last Week
                 </Button>
               </Box>
               

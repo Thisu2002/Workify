@@ -5,6 +5,7 @@ import PanelManagement from "./PanelManagement";
 import Interviews from "./Interviews";
 import Evaluations from "./Evaluations";
 import Feedback from "./Feedback";
+import Assignments from "./Assignments";
 import { Box } from "@mui/material";
 import "../../styles/LeadPanelist.css";
 
@@ -19,6 +20,7 @@ const LeadPanelistContent = () => {
       {location.pathname === "/lead-panelist/interviews" && <Interviews />}
       {location.pathname === "/lead-panelist/evaluations" && <Evaluations />}
       {location.pathname === "/lead-panelist/feedback" && <Feedback />}
+      {location.pathname === "/lead-panelist/assignments" && <Assignments />}
     </Box>
   );
 };
