@@ -18,7 +18,7 @@ import AdminRoot from "./pages/AdminRoot";
 import BusinessManagerRoot from "./pages/BusinessManagerRoot";
 
 import JobPosts from "./components/Recruiter/JobPosts";
-
+import CandidateList from "./components/LeadPanelist/CandidateList";
 
 
 const App = () => {
@@ -44,6 +44,8 @@ const App = () => {
         <Route path="/lead-panelist/interviews" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/evaluations" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/feedback" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/assignments" element={<LeadPanelistRoot />} />
+        <Route path="/lead-panelist/candidates" element={<CandidateList />} />
 
        
         <Route path="/recruiter" element={<RecruiterRoot />} />
