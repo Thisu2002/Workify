@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
   Button,
   Typography,
@@ -25,9 +23,8 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import "../../styles/JobPosts.css";
 import PostJob from "./PostJob";
-import { useNavigate } from "react-router-dom";
 import companyLogo from "../../uploads/companyLogo.jpg";
-import { Search, Clear, DateRange } from "@mui/icons-material";
+import { Search, Clear, } from "@mui/icons-material";
 import axios from "axios";
 import toast from "react-hot-toast";
 import JobDetails from "./JobDetails";
@@ -476,6 +473,13 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         handleEditToggle={handleEditToggle}
         handleSave={handleSave}
       />
+
+      <Dialog open={Boolean(showJobForm)} fullWidth maxWidth="sm">
+        <PostJob />
+        <DialogActions>
+          <Button onClick={() => setShowJobForm(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
 
       <Menu
         anchorEl={anchorEl}
