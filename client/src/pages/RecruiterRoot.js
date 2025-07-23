@@ -40,12 +40,12 @@ const menuTabs = [
     path: "/recruiter/candidates",
     icon: <AssignmentInd />,
   },
-  {
-    id: "feedback",
-    label: "Feedback",
-    path: "/recruiter/feedback",
-    icon: <Feedback />,
-  },
+  // {
+  //   id: "feedback",
+  //   label: "Feedback",
+  //   path: "/recruiter/feedback",
+  //   icon: <Feedback />,
+  // },
 ];
 
 const RecruiterRoot = () => {
