@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios'; // For making API calls
 import {
   Box,
@@ -47,6 +47,7 @@ import {
   GetApp,
 } from '@mui/icons-material';
 import EditProfileForm from './EditProfileForm';
+import AddIcon from '@mui/icons-material/Add'; // Add this import at the top
 
 // --- ProfileSection Helper Component is unchanged ---
 const ProfileSection = ({ title, icon, children, ...props }) => (
@@ -72,7 +73,8 @@ const Profile = () => {
   const [editFormOpen, setEditFormOpen] = useState(false);
   
   // CV Management state is unchanged for now
-  const [cvs, setCvs] = useState([]); // Will eventually come from backend
+  const [cvs, setCvs] = useState([]); // Array of uploaded CVs
+  const fileInputRef = useRef();
 
   // --- NEW: useEffect to fetch profile data when component mounts ---
   useEffect(() => {
@@ -94,6 +96,7 @@ const Profile = () => {
         const { data } = await axios.get('http://localhost:5000/candidate/profile', config);
         
         setCandidate(data);
+        setCvs(data.cvs || []);
 
       } catch (err) {
         // Handle errors, e.g., token expired, server down
@@ -127,6 +130,28 @@ const Profile = () => {
       alert("Could not save profile. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle file upload
+  const handleCvUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('cv', file);
+
+    try {
+      const { data } = await axios.post(
+        'http://localhost:5000/candidate/upload-cv',
+        formData,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setCvs(data.cvs);
+    } catch (err) {
+      alert('CV upload failed: ' + (err.response?.data?.msg || err.message));
+      console.error(err); // This will log the error details in your browser console
     }
   };
 
@@ -310,18 +335,68 @@ const Profile = () => {
 
         <Grid item xs={12}>
           <ProfileSection title="Skills & Tools" icon={<StarBorder color="primary" />}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {candidate.skills.map(skill => (
-                <Chip key={skill} label={skill} color="primary" variant="outlined" />
-              ))}
-            </Box>
-          </ProfileSection>
+            <IconButton
+      onClick={() => {/* open skill add dialog or handle add skill */}}
+      sx={{
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        border: '1px solid',
+        borderColor: 'divider'
+      }}
+    >
+      <AddIcon />
+    </IconButton>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      {/* Mock skills */}
+      <Chip label="React" color="primary" variant="outlined" sx={{ borderColor: 'primary.main', color: 'primary.main' }} />
+      <Chip label="Node.js" color="primary" variant="outlined" sx={{ borderColor: 'primary.main', color: 'primary.main' }} />
+      <Chip label="Material UI" color="primary" variant="outlined" sx={{ borderColor: 'primary.main', color: 'primary.main' }} />
+      <Chip label="JavaScript" color="primary" variant="outlined" sx={{ borderColor: 'primary.main', color: 'primary.main' }} />
+      <Chip label="CSS" color="primary" variant="outlined" sx={{ borderColor: 'primary.main', color: 'primary.main' }} />
+      {/* Existing candidate skills */}
+      {candidate.skills.map(skill => (
+        <Chip key={skill} label={skill} color="primary" variant="outlined" sx={{ borderColor: 'primary.main', color: 'primary.main' }} />
+      ))}
+    </Box>
+  </ProfileSection>
         </Grid>
         
         <Grid item xs={12}>
           <ProfileSection title="CV & Resume" icon={<PictureAsPdf color="primary" />}>
-            {/* The CV Management section can remain for now, but will also need to be connected to the backend later */}
-          </ProfileSection>
+          <Button
+            variant="contained"
+            startIcon={<CloudUpload />}
+            onClick={() => fileInputRef.current.click()}
+            sx={{ mb: 2 }}
+          >
+            Upload CV/Resume
+          </Button>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+            onChange={handleCvUpload}
+          />
+          <Stack spacing={2}>
+            {cvs.length === 0 && (
+              <Typography color="text.secondary">No CVs uploaded yet.</Typography>
+            )}
+            {cvs.map((cv, idx) => (
+              <Paper key={idx} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <PictureAsPdf color="primary" />
+                <Typography sx={{ flexGrow: 1 }}>{cv.filename || cv.name}</Typography>
+                <IconButton href={cv.url} target="_blank">
+                  <Visibility />
+                </IconButton>
+                <IconButton>
+                  <Delete color="error" />
+                </IconButton>
+              </Paper>
+            ))}
+          </Stack>
+        </ProfileSection>
         </Grid>
       </Grid>
     </>

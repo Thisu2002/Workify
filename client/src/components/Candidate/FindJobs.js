@@ -171,7 +171,7 @@ const FindJobs = () => {
   }, [viewMode, searchTerm, savedJobs]);
 
   const titles = {
-    top: 'Top Matching Jobs',
+    top: 'Top job picks for you',
     explore: 'Explore All Opportunities',
     saved: 'Your Saved Jobs',
   };

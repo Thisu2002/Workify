@@ -73,7 +73,7 @@ const Overview = React.memo(() => {
           <Box display="flex" alignItems="center" gap={3}>
             <Box position="relative">
               <Avatar 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
+                src=""
                 sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
               />
               <OnlineIcon 
@@ -92,7 +92,7 @@ const Overview = React.memo(() => {
             </Box>
             <Box>
               <Typography variant="h4" className="recruiter-welcome-text">
-                Welcome back, Sajani Ranaweera
+                Welcome back, Sajani Upeksha
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 Aspiring Software Engineer • 3 years experience
