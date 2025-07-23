@@ -1267,6 +1267,7 @@ html {
   background: linear-gradient(135deg, #f8fafc 80%, #e0e7ef 100%);
   position: relative;
   overflow: hidden;
+  min-height: 500px;
 }
 .mentor-section .MuiCard-root {
   background: #fff !important;
@@ -1336,4 +1337,62 @@ html {
     border-radius: 16px !important;
     padding: 16px !important;
   }
+}
+
+.mentor-cta-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 14px 32px !important;
+  font-size: 1.15rem !important;
+  box-shadow: 0 4px 15px rgba(59,130,246,0.12) !important;
+  text-transform: none !important;
+  transition: all 0.3s !important;
+}
+.mentor-cta-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 0 6px 20px rgba(59,130,246,0.18) !important;
+  transform: translateY(-2px);
+}
+
+.mentor-cta-btn-outlined {
+  background: transparent !important;
+  color: #2563eb !important;
+  border: 2px solid #2563eb !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 14px 32px !important;
+  font-size: 1.15rem !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+  transition: all 0.3s !important;
+}
+.mentor-cta-btn-outlined:hover {
+  background: rgba(37,99,235,0.08) !important;
+  color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 4px 15px rgba(59,130,246,0.10) !important;
+  transform: translateY(-2px);
+}
+
+.mentor-cta-btn-text {
+  background: none !important;
+  border: none !important;
+  color: #1976d2 !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5em;
+  transition: color 0.2s;
+}
+.mentor-cta-btn-text:hover {
+  color: #1565c0 !important;
+  text-decoration: underline !important;
+  background: none !important;
 }

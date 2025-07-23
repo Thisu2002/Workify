@@ -164,7 +164,7 @@ const Overview = () => {
                   Session Activity
                 </Typography>
                 <Button size="small" sx={{ color: "#3B5998", textTransform: "none" }}>
-                  Last 30 days
+                  Last Week
                 </Button>
               </Box>
               {/* Legend */}

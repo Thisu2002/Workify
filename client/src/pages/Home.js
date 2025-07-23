@@ -43,6 +43,8 @@ const Home = () => {
   const trigger = useScrollTrigger({ threshold: 100 });
   const jobPostsRef = useRef(null);
   const companiesRef = useRef(null); // Add ref for companies section
+  const mentorRef = useRef(null); // Add ref for mentor section
+  const featuresRef = useRef(null); // Add ref for features section
 
   const features = [
     {
@@ -287,8 +289,8 @@ const Home = () => {
             <Button className="nav-link" onClick={() => companiesRef.current?.scrollIntoView({ behavior: 'smooth' })}>
               Companies
             </Button>
-            <Button className="nav-link">Mentors</Button>
-            <Button className="nav-link">About</Button>
+            <Button className="nav-link" onClick={() => mentorRef.current?.scrollIntoView({ behavior: 'smooth' })}>Mentors</Button>
+            <Button className="nav-link" onClick={() => featuresRef.current?.scrollIntoView({ behavior: 'smooth' })}>About</Button>
             <Button variant="outlined" className="nav-btn-outlined" onClick={handleLogin}>
               Sign In
             </Button>
@@ -442,19 +444,19 @@ const Home = () => {
                     ]
                   }
                 ].map((col, colIdx) => (
-                  <Box key={col.title} sx={{ background: '#fff', borderRadius: 3, boxShadow: '0 4px 24px rgba(15,36,69,0.08)', minWidth: 240, maxWidth: 260, p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Typography fontWeight={700} color="#0F2445" sx={{ mb: 1, fontSize: '1.1rem', borderBottom: '2px solid #e2e8f0', pb: 1 }}>{col.title}</Typography>
+                  <Box key={col.title} sx={{ background: '#fff', borderRadius: 2, boxShadow: '0 2px 12px rgba(15,36,69,0.06)', minWidth: 170, maxWidth: 190, p: 1.2, display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+                    <Typography fontWeight={700} color="#0F2445" sx={{ mb: 0.5, fontSize: '1rem', borderBottom: '2px solid #e2e8f0', pb: 0.5 }}>{col.title}</Typography>
                     {col.cards.map((card, idx) => (
-                      <Box key={card.name} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, background: '#f8fafc', borderRadius: 2, p: 1.2, boxShadow: '0 1px 4px rgba(59,130,246,0.06)' }}>
-                        <Avatar src={card.avatar} alt={card.name} sx={{ width: 38, height: 38 }} />
+                      <Box key={card.name} sx={{ display: 'flex', alignItems: 'center', gap: 1, background: '#f8fafc', borderRadius: 1.5, p: 0.7, boxShadow: '0 1px 2px rgba(59,130,246,0.04)' }}>
+                        <Avatar src={card.avatar} alt={card.name} sx={{ width: 28, height: 28 }} />
                         <Box sx={{ flex: 1 }}>
-                          <Typography fontWeight={700} fontSize="1rem" color="#0F2445">{card.name}</Typography>
-                          <Typography fontSize="0.92rem" color="#64748b">{card.role}</Typography>
-                          <Typography fontSize="0.85rem" color="#94a3b8">{card.company}</Typography>
+                          <Typography fontWeight={600} fontSize="0.95rem" color="#0F2445" sx={{ lineHeight: 1.1 }}>{card.name}</Typography>
+                          <Typography fontSize="0.82rem" color="#64748b" sx={{ lineHeight: 1 }}>{card.role}</Typography>
+                          <Typography fontSize="0.75rem" color="#94a3b8" sx={{ lineHeight: 1 }}>{card.company}</Typography>
                         </Box>
                         {card.percent && (
-                          <Box sx={{ minWidth: 36, textAlign: 'center' }}>
-                            <Box sx={{ fontWeight: 700, fontSize: '0.95rem', color: card.color }}>{card.percent}%</Box>
+                          <Box sx={{ minWidth: 28, textAlign: 'center' }}>
+                            <Box sx={{ fontWeight: 700, fontSize: '0.85rem', color: card.color }}>{card.percent}%</Box>
                           </Box>
                         )}
                       </Box>
@@ -471,21 +473,22 @@ const Home = () => {
               <Typography color="#475569" fontSize="1.18rem" sx={{ mb: 3, textAlign: { xs: 'center', md: 'left' } }}>
                 Access fresh and relevant job opportunities from trusted companies worldwide. Our platform is designed to help you find the right job, faster and easier.
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box display="flex" alignItems="flex-start" gap={1}>
                   <CheckCircleIcon sx={{ color: '#22c55e', mt: '2px' }} />
-                  <Typography fontWeight={700} color="#0F2445" component="span">Smart Job Filters:</Typography>
-                  <Typography color="#475569" component="span">Easily filter jobs by location, company, industry, and experience level to find your perfect match.</Typography>
+                  <Box>
+                    <Typography fontWeight={700} color="#0F2445" component="span">Smart Job Filters:</Typography>{' '}
+                    <Typography color="#475569" component="span">Easily filter jobs by location, company, industry, and experience level to find your perfect match.</Typography>
+                  </Box>
                 </Box>
                 <Box display="flex" alignItems="flex-start" gap={1}>
                   <CheckCircleIcon sx={{ color: '#22c55e', mt: '2px' }} />
-                  <Typography fontWeight={700} color="#0F2445" component="span">Real-Time Listings:</Typography>
-                  <Typography color="#475569" component="span">Stay updated with the latest openings—new jobs added daily from verified employers.</Typography>
+                  <Box>
+                    <Typography fontWeight={700} color="#0F2445" component="span">Real-Time Listings:</Typography>{' '}
+                    <Typography color="#475569" component="span">Stay updated with the latest openings—new jobs added daily from verified employers.</Typography>
+                  </Box>
                 </Box>
               </Box>
-              <Button variant="text" sx={{ fontWeight: 700, fontSize: '1.3rem', mt: 2 }} endIcon={<ArrowForwardIcon />}>
-                Try it For Free
-              </Button>
             </Box>
           </Box>
         </Container>
@@ -577,6 +580,66 @@ const Home = () => {
         </Container>
       </Box>
 
+      {/* Mentor Section */}
+      <Box ref={mentorRef} className="mentor-section">
+        <Container maxWidth="xl">
+          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems="center" justifyContent="center" gap={6}>
+            {/* Mentor Card */}
+            <Card sx={{ borderRadius: 4, boxShadow: 3, p: 3, maxWidth: 350, minWidth: 280, mx: { xs: 'auto', md: 0 }, position: 'relative', flex: '0 0 340px' }}>
+              <Box display="flex" alignItems="center" gap={2} mb={2}>
+                <Avatar src="https://randomuser.me/api/portraits/men/32.jpg" alt="Manson Ng" sx={{ width: 56, height: 56 }} />
+                <Box>
+                  <Typography variant="h6" fontWeight={700} color="#0F2445">Manson Ng</Typography>
+                  <Typography variant="body2" color="#64748b">Principal Software Engi...</Typography>
+                </Box>
+              </Box>
+              <Box mb={2}>
+                <Button fullWidth variant="outlined" sx={{ justifyContent: 'space-between', borderRadius: 2, mb: 1, fontWeight: 700, color: '#0F2445', borderColor: '#e2e8f0' }}>
+                  Mentorship
+                  <span style={{ color: '#22c55e', fontWeight: 700, marginLeft: 8 }}>LKR 340<span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.95em' }}>/month</span></span>
+                </Button>
+                <Button fullWidth variant="outlined" sx={{ justifyContent: 'space-between', borderRadius: 2, mb: 1, fontWeight: 700, color: '#0F2445', borderColor: '#e2e8f0' }}>
+                  Intro Session
+                  <span style={{ color: '#3b82f6', fontWeight: 700, marginLeft: 8 }}>LKR 49<span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.95em' }}>/session</span></span>
+                </Button>
+                <Button fullWidth variant="outlined" sx={{ justifyContent: 'space-between', borderRadius: 2, mb: 1, fontWeight: 700, color: '#0F2445', borderColor: '#e2e8f0' }}>
+                  CV Review
+                  <span style={{ color: '#3b82f6', fontWeight: 700, marginLeft: 8 }}>LKR 59<span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.95em' }}>/review</span></span>
+                </Button>
+                <Button fullWidth variant="outlined" sx={{ justifyContent: 'space-between', borderRadius: 2, fontWeight: 700, color: '#0F2445', borderColor: '#e2e8f0' }}>
+                  Expert Session
+                  <span style={{ color: '#3b82f6', fontWeight: 700, marginLeft: 8 }}>LKR 99<span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.95em' }}>/session</span></span>
+                </Button>
+              </Box>
+            </Card>
+            {/* Mentor Info & CTA */}
+            <Box flex={1} pl={{ md: 6 }}>
+              <Typography variant="h2" fontWeight={800} color="#0F2445" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, mb: 2 }}>
+                At your fingertips: a dedicated <br /> Interview mentor
+              </Typography>
+              <Typography color="#475569" fontSize="1.18rem" sx={{ mb: 3 }}>
+                Want to start a new dream career? Successfully build your startup? Itching to learn high-demand skills? Work smart with an online mentor by your side to offer expert advice and guidance to match your zeal. Become unstoppable using Workify.
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={4} mb={3}>
+                <Box minWidth={220}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}><CheckCircleIcon sx={{ color: '#22c55e' }} /> Thousands of mentors available</Box>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}><CheckCircleIcon sx={{ color: '#22c55e' }} /> Free trial</Box>
+                  <Box display="flex" alignItems="center" gap={1}><CheckCircleIcon sx={{ color: '#22c55e' }} /> 1-on-1 calls</Box>
+                </Box>
+                <Box minWidth={220}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}><CheckCircleIcon sx={{ color: '#22c55e' }} /> Flexible program structures</Box>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}><CheckCircleIcon sx={{ color: '#22c55e' }} /> Personal chats</Box>
+                  <Box display="flex" alignItems="center" gap={1}><CheckCircleIcon sx={{ color: '#22c55e' }} /> 97% satisfaction rate</Box>
+                </Box>
+              </Box>
+              <Button variant="text" size="large" className="mentor-cta-btn-text" endIcon={<ArrowForwardIcon />}>
+                Find a Interview mentor
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
       {/* Stats Section */}
       <Box className="stats-section">
         <Container maxWidth="lg">
@@ -616,7 +679,7 @@ const Home = () => {
       </Box>
 
       {/* Features Section */}
-      <Box className="features-section">
+      <Box ref={featuresRef} className="features-section">
         <Container maxWidth="xl">
           <Box textAlign="center" mb={8} sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="h2" className="section-title">

@@ -159,10 +159,6 @@ const History = () => {
 
                 <Box mb={2}>
                   <Typography variant="subtitle2">Candidate Feedback:</Typography>
-                  <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <Rating value={session.rating} readOnly size="small" />
-                    <Typography variant="body2">({session.rating}.0)</Typography>
-                  </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
                     "{session.feedback}"
                   </Typography>
@@ -232,10 +228,6 @@ const History = () => {
             </Typography>
             
             <Typography variant="subtitle1" fontWeight="bold">Candidate Feedback</Typography>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <Rating value={selectedSession?.rating || 0} readOnly />
-              <Typography>({selectedSession?.rating}.0/5.0)</Typography>
-            </Box>
             <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
               "{selectedSession?.feedback}"
             </Typography>
