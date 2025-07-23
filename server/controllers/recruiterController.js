@@ -28,7 +28,8 @@ exports.postJob = async (req, res) => {
     qualifications,
     preferred_qualifications,
     comments,
-    interview_rounds
+    interview_rounds,
+    quiz
   } = req.body;
 
   //console.log("Received Job Post Data:", req.body);
@@ -57,7 +58,8 @@ exports.postJob = async (req, res) => {
       preferred_qualifications,
       comments,
       recruiter_id,
-      interview_rounds, 
+      interview_rounds,
+      quiz
     });
 
     await newPost.save();

@@ -29,13 +29,13 @@ const dummySkills = [
   { id: 10, name: "Cloud" },
 ];
 
-// const panels = [
-//   { id: 1, name: "Technical Panel A" },
-//   { id: 2, name: "Technical Panel B" },
-//   { id: 3, name: "HR Panel" },
-//   { id: 4, name: "Management Panel" },
-//   { id: 5, name: "Final Interview Panel" },
-// ];
+const dummyQuizzes = [
+  "UI Developer Fundamentals Quiz",
+  "React Advanced Concepts Quiz",
+  "JavaScript Core Knowledge Quiz",
+  "Frontend Architecture Quiz",
+  "CSS & Design Systems Quiz",
+];
 
 const PostJob = () => {
   const navigate = useNavigate();
@@ -53,6 +53,7 @@ const PostJob = () => {
     requiredQualifications: "",
     preferredQualifications: "",
     additionalComments: "",
+    quiz: "",
   });
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [showInterviewSection, setShowInterviewSection] = useState(false);
@@ -60,6 +61,7 @@ const PostJob = () => {
     { roundNumber: 1, panelId: "", roundName: "" },
   ]);
   const [panels, setPanels] = useState([]);
+  const [customSkill, setCustomSkill] = useState("");
 
   useEffect(() => {
     const fetchPanels = async () => {
@@ -90,7 +92,7 @@ const PostJob = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (
-      (name === "salary" || name === "experienceYears") &&
+      (name === "experienceYears") &&
       Number(value) < 0
     ) {
       return;
@@ -119,7 +121,7 @@ const PostJob = () => {
   const addRound = () => {
     setInterviewRounds([
       ...interviewRounds,
-      { roundNumber: interviewRounds.length + 1, panelId: "", description: "" },
+      { roundNumber: interviewRounds.length + 1, panelId: "", roundName: "" },
     ]);
   };
 
@@ -200,6 +202,7 @@ const PostJob = () => {
             round_name: round.roundName,
             panel_id: round.panelId,
           })),
+          quiz: form.quiz,
         },
         {
           headers: {
@@ -223,6 +226,7 @@ const PostJob = () => {
         requiredQualifications: "",
         preferredQualifications: "",
         additionalComments: "",
+        quiz: "",
       });
       setSelectedSkills([]);
       setInterviewRounds([{ roundNumber: 1, panelId: "", roundName: "" }]);
@@ -265,16 +269,19 @@ const PostJob = () => {
             multiline
             minRows={3}
           />
-          <TextField
-            label="Location"
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-          />
-          <Grid container spacing={2}>
+          {/* Location and Job Type */}
+          <Grid container spacing={4} sx={{ width: "100%" }}>
+            <Grid item xs={6}>
+              <TextField
+                label="Location"
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                fullWidth
+                required
+                margin="normal"
+              />
+            </Grid>
             <Grid item xs={6}>
               <TextField
                 label="Job Type"
@@ -283,7 +290,22 @@ const PostJob = () => {
                 onChange={handleChange}
                 fullWidth
                 margin="normal"
-                placeholder="e.g.Full-time, Part-time, Contract"
+                placeholder="e.g. Full-time, Part-time, Contract"
+              />
+            </Grid>
+          </Grid>
+
+          {/* Salary and Deadline */}
+          <Grid container spacing={4} sx={{ width: "100%" }}>
+            <Grid item xs={6}>
+              <TextField
+                label="Salary"
+                name="salary"
+                value={form.salary}
+                onChange={handleChange}
+                fullWidth
+                required
+                margin="normal"
               />
             </Grid>
             <Grid item xs={6}>
@@ -298,17 +320,18 @@ const PostJob = () => {
               />
             </Grid>
           </Grid>
-          <Grid container spacing={2}>
+
+          {/* Field of Study and Education Level */}
+          <Grid container spacing={4} sx={{ width: "100%" }}>
             <Grid item xs={6}>
               <TextField
-                label="Salary"
-                name="salary"
-                type="number"
-                value={form.salary}
+                label="Field of Study"
+                name="educationField"
+                value={form.educationField}
                 onChange={handleChange}
                 fullWidth
-                required
                 margin="normal"
+                placeholder="e.g. Computer Science"
               />
             </Grid>
             <Grid item xs={6}>
@@ -323,16 +346,9 @@ const PostJob = () => {
               />
             </Grid>
           </Grid>
-          <TextField
-            label="Field of Study"
-            name="educationField"
-            value={form.educationField}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            placeholder="e.g. Computer Science"
-          />
-          <Grid container spacing={2}>
+
+          {/* Experience Years and Description */}
+          <Grid container spacing={4} sx={{ width: "100%" }}>
             <Grid item xs={6}>
               <TextField
                 label="Experience (Years)"
@@ -389,7 +405,7 @@ const PostJob = () => {
             <Typography variant="subtitle1" gutterBottom>
               Select Required Skills
             </Typography>
-            <Grid container spacing={1}>
+            <Grid container spacing={1} alignItems="center">
               {dummySkills.map((skill) => (
                 <Grid item key={skill.id}>
                   <Chip
@@ -403,6 +419,16 @@ const PostJob = () => {
                   />
                 </Grid>
               ))}
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Add Custom Skill"
+                  value={customSkill}
+                  onChange={(e) => setCustomSkill(e.target.value)}
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+              </Grid>
             </Grid>
           </Box>
 
@@ -444,7 +470,7 @@ const PostJob = () => {
                     fullWidth
                     required
                   />
-                  </Grid>
+                </Grid>
                 <Grid item>
                   <TextField
                     select
@@ -485,6 +511,23 @@ const PostJob = () => {
           >
             Add Another Round
           </Button>
+
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              select
+              label="Select Quiz"
+              name="quiz"
+              value={form.quiz}
+              onChange={handleChange}
+              fullWidth
+            >
+              {dummyQuizzes.map((quiz, index) => (
+                <MenuItem key={index} value={quiz}>
+                  {quiz}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
 
           <Grid container spacing={2}>
             <Grid item xs={6}>

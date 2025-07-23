@@ -24,7 +24,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import "../../styles/JobPosts.css";
 import PostJob from "./PostJob";
 import companyLogo from "../../uploads/companyLogo.jpg";
-import { Search, Clear, } from "@mui/icons-material";
+import { Search, Clear, ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import axios from "axios";
 import toast from "react-hot-toast";
 import JobDetails from "./JobDetails";
@@ -66,11 +66,11 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [selectedExperience, setSelectedExperience] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [activeTab, setActiveTab] = useState("open");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   // Pagination states
   const [openJobsPage, setOpenJobsPage] = useState(1);
@@ -96,7 +96,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
           return {
             ...p,
             id: p._id,
-            rate: p.salary ? `$${p.salary}/hr` : "",
+            rate: p.salary ? p.salary : "",
             numApplicants: Math.floor(Math.random() * 50) + 1,
             postedAgo: daysAgo,
             postedDate: new Date(p.date_posted),
@@ -168,10 +168,10 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
       if (newStatus === "Open") {
         setOpenJobs((prev) => [...prev, updatedJob]);
-        setOpenJobsPage(1); // Reset to first page when status changes
+        setOpenJobsPage(1);
       } else {
         setClosedJobs((prev) => [...prev, updatedJob]);
-        setClosedJobsPage(1); // Reset to first page when status changes
+        setClosedJobsPage(1);
       }
 
       handleMenuClose();
@@ -184,27 +184,35 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
   const clearAllFilters = () => {
     setSearchQuery("");
-    setSelectedSkills([]);
-    setSelectedExperience("");
     setStartDate(null);
     setEndDate(null);
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  const sortJobs = (jobs) => {
+    return [...jobs].sort((a, b) => {
+      let comparison = 0;
+
+      if (sortBy === "date") {
+        comparison = a.postedDate - b.postedDate;
+      } else if (sortBy === "applicants") {
+        comparison = a.numApplicants - b.numApplicants;
+      } else if (sortBy === "title") {
+        comparison = a.title.localeCompare(b.title);
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+  };
+
   const filterJobs = (jobs) =>
     jobs.filter((job) => {
-      const matchesTitle = job.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesSkills =
-        selectedSkills.length === 0 ||
-        selectedSkills.every((id) => job.skills.includes(id));
-      const matchesExperience = (() => {
-        if (!selectedExperience) return true;
-        const years = job.experience?.years || 0;
-        if (selectedExperience === "0-2") return years <= 2;
-        if (selectedExperience === "3-5") return years >= 3 && years <= 5;
-        if (selectedExperience === "6-10") return years >= 6 && years <= 10;
-        if (selectedExperience === "10+") return years > 10;
-        return true;
-      })();
+      const matchesTitle = job.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
       const matchesDateRange = (() => {
         if (!startDate && !endDate) return true;
         const jobDate = job.postedDate;
@@ -215,22 +223,22 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         if (endDate) return jobDate <= endDate;
         return true;
       })();
-      
-      return matchesTitle && matchesSkills && matchesExperience && matchesDateRange;
+
+      return matchesTitle && matchesDateRange;
     });
 
-  const filteredOpenJobs = filterJobs(openJobs);
-  const filteredClosedJobs = filterJobs(closedJobs);
+  const filteredOpenJobs = sortJobs(filterJobs(openJobs));
+  const filteredClosedJobs = sortJobs(filterJobs(closedJobs));
 
   // Pagination logic
   const openJobsCount = filteredOpenJobs.length;
   const closedJobsCount = filteredClosedJobs.length;
-  
+
   const openJobsPaginated = filteredOpenJobs.slice(
     (openJobsPage - 1) * jobsPerPage,
     openJobsPage * jobsPerPage
   );
-  
+
   const closedJobsPaginated = filteredClosedJobs.slice(
     (closedJobsPage - 1) * jobsPerPage,
     closedJobsPage * jobsPerPage
@@ -266,9 +274,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
           </Box>
         </Box>
         <Typography className="job-title">{job.title}</Typography>
-        <Typography className="job-description">
-          {job.description}
-        </Typography>
+        <Typography className="job-description">{job.description}</Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mb: 2 }}>
           {job.skills.map((skillId, idx) => {
             const skill = dummySkills.find((s) => s.id === skillId);
@@ -334,7 +340,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       {/* Filter Section */}
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Grid container spacing={2} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <TextField
               fullWidth
               variant="outlined"
@@ -357,7 +363,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
               }}
             />
           </Grid>
-          
+
           <Grid item xs={12} md={3}>
             <DatePicker
               label="Posted After"
@@ -367,7 +373,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
               inputFormat="MM/dd/yyyy"
             />
           </Grid>
-          
+
           <Grid item xs={12} md={3}>
             <DatePicker
               label="Posted Before"
@@ -377,43 +383,25 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
               inputFormat="MM/dd/yyyy"
             />
           </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Typography sx={{ fontWeight: 600, mb: 1 }}>Skills</Typography>
-            <Stack direction="column" spacing={1} maxHeight={150} flexWrap="wrap">
-              {dummySkills.map((skill) => (
-                <Chip
-                  key={skill.id}
-                  label={skill.name}
-                  variant={selectedSkills.includes(skill.id) ? "filled" : "outlined"}
-                  onClick={() => {
-                    setSelectedSkills((prev) =>
-                      prev.includes(skill.id)
-                        ? prev.filter((id) => id !== skill.id)
-                        : [...prev, skill.id]
-                    );
-                  }}
-                  clickable
-                  sx={{ mb: 1 }}
-                />
-              ))}
-            </Stack>
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Typography sx={{ fontWeight: 600, mb: 1 }}>Experience</Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {["0-2", "3-5", "6-10", "10+"].map((range) => (
-                <Chip
-                  key={range}
-                  label={`${range} yrs`}
-                  variant={selectedExperience === range ? "filled" : "outlined"}
-                  onClick={() => setSelectedExperience(range)}
-                  clickable
-                  sx={{ mb: 1 }}
-                />
-              ))}
-            </Stack>
+
+          <Grid item xs={12} md={2}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <TextField
+                select
+                label="Sort By"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                fullWidth
+                sx={{ mr: 1 }}
+              >
+                <MenuItem value="date">Date Posted</MenuItem>
+                <MenuItem value="applicants">Applicants</MenuItem>
+                <MenuItem value="title">Job Title</MenuItem>
+              </TextField>
+              <IconButton onClick={toggleSortOrder} size="small">
+                {sortOrder === "asc" ? <ArrowUpward /> : <ArrowDownward />}
+              </IconButton>
+            </Box>
           </Grid>
 
           <Grid item xs={12} md={3}>
@@ -422,7 +410,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
               startIcon={<Clear />}
               onClick={clearAllFilters}
               fullWidth
-              sx={{ height: '40px' }}
+              sx={{ height: "40px" }}
             >
               Clear Filters
             </Button>
@@ -431,7 +419,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       </LocalizationProvider>
 
       <Divider sx={{ mb: 3 }} />
-      
+
       {/* Job Grid */}
       <Grid container spacing={3} className="job-grid">
         {(activeTab === "open" ? openJobsPaginated : closedJobsPaginated).map(
@@ -444,15 +432,16 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       </Grid>
 
       {/* Pagination */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <Pagination
           count={Math.ceil(
-            (activeTab === "open" ? openJobsCount : closedJobsCount) / jobsPerPage
+            (activeTab === "open" ? openJobsCount : closedJobsCount) /
+              jobsPerPage
           )}
           page={activeTab === "open" ? openJobsPage : closedJobsPage}
-          onChange={(e, page) => 
-            activeTab === "open" 
-              ? setOpenJobsPage(page) 
+          onChange={(e, page) =>
+            activeTab === "open"
+              ? setOpenJobsPage(page)
               : setClosedJobsPage(page)
           }
           color="primary"
@@ -474,12 +463,12 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         handleSave={handleSave}
       />
 
-      <Dialog open={Boolean(showJobForm)} fullWidth maxWidth="sm">
+      <Dialog open={Boolean(showJobForm)} fullWidth maxWidth="md" padding={20}>
         <PostJob />
         <DialogActions>
           <Button onClick={() => setShowJobForm(false)}>Cancel</Button>
         </DialogActions>
-      </Dialog>
+      </Dialog>
 
       <Menu
         anchorEl={anchorEl}

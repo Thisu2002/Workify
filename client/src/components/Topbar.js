@@ -1,20 +1,33 @@
 import React, { useState } from "react";
-import { useLocation, Link as RouterLink } from "react-router-dom"; 
-import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon } from "@mui/material";
+import { useLocation, Link as RouterLink, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+} from "@mui/material";
 import { AccountCircle, Logout, Person } from "@mui/icons-material";
 import "../styles/Recruiter.css";
 
-
-const Header = ({ title, onProfileClick, onLogout }) => {
+const Header = ({ title, onProfileClick }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
   const location = useLocation();
-  const isCandidatePage = location.pathname.startsWith('/candidate');
+  const isCandidatePage = location.pathname.startsWith("/candidate");
   //const isRecruiterPage = location.pathname.startsWith('/recruiter');
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
+
+  const onLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userDetails"); // If you store user info too
+    navigate("/login"); // or "/recruiter/login" or any route
+  };
 
   return (
     <Box
@@ -41,11 +54,10 @@ const Header = ({ title, onProfileClick, onLogout }) => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-
         {isCandidatePage && (
           <MenuItem
             component={RouterLink}
-            to="/candidate/profile" 
+            to="/candidate/profile"
             onClick={handleMenuClose}
           >
             <ListItemIcon>

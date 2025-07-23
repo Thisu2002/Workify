@@ -20,7 +20,7 @@ const jobPostSchema = new mongoose.Schema({
     type: [Number], // skill IDs
   },
   salary: {
-    type: Number,
+    type: String,
   },
   jobType: {
     type: String,
@@ -95,6 +95,9 @@ const jobPostSchema = new mongoose.Schema({
       },
     },
   ],
+  quiz: {
+    type: String
+  }
 });
 
 module.exports = mongoose.model("JobPost", jobPostSchema);
