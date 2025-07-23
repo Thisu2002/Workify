@@ -110,6 +110,7 @@ const Profile = () => {
   // --- UPDATED: handleProfileSave now sends data to the backend ---
   const handleProfileSave = async (updatedData) => {
     try {
+      setLoading(true); // Show loading state while saving
       const token = localStorage.getItem('token');
       const config = { headers: { 'Authorization': `Bearer ${token}` } };
 
@@ -124,6 +125,8 @@ const Profile = () => {
       console.error("Failed to save profile:", err);
       // Optionally, show an error alert to the user here
       alert("Could not save profile. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,6 +135,16 @@ const Profile = () => {
   const handleMenuClose = () => setAnchorEl(null);
   const handleEditProfile = () => setEditFormOpen(true);
   const handleEditFormClose = () => setEditFormOpen(false);
+  const handleUpload = () => {
+    console.log("Upload action triggered.");
+    // This is where you would trigger a hidden file input to open the file selector
+    handleMenuClose(); // Close the menu after clicking
+  };
+   const handleDelete = () => {
+    console.log("Delete action triggered.");
+    // This is where you would make an API call to the backend to remove the avatarUrl
+    handleMenuClose(); // Close the menu after clicking
+  };
   
   // --- NEW: Conditional rendering for loading and error states ---
   if (loading) {
@@ -157,6 +170,41 @@ const Profile = () => {
         profileData={candidate}
         onSave={handleProfileSave}
       />
+      <Menu
+  anchorEl={anchorEl}
+  open={open}
+  onClose={handleMenuClose}
+  // These props control the menu's positioning
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+  // --- This is the new part that makes it look nicer ---
+  PaperProps={{
+    elevation: 3, // Increases the shadow
+    sx: {
+      overflow: 'visible',
+      filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))', // A softer, more modern shadow
+      mt: 1.5, // Adds a little space between the button and the menu
+      borderRadius: 2, // Rounds the corners
+      '& .MuiAvatar-root': {
+        width: 32,
+        height: 32,
+        ml: -0.5,
+        mr: 1,
+      },
+    },
+  }}
+>
+  {/* We also add a little padding to the items for more breathing room */}
+  <MenuItem onClick={handleUpload} sx={{ py: 1, px: 2, color: 'primary.main' }}>
+    <FileUpload sx={{ mr: 1.5 }} fontSize="small" />
+    Upload Photo
+  </MenuItem>
+  <Divider sx={{ my: 0.5 }} />
+  <MenuItem onClick={handleDelete} sx={{ py: 1, px: 2, color: 'error.main' }}>
+    <Delete sx={{ mr: 1.5 }} fontSize="small" />
+    Delete Photo
+  </MenuItem>
+</Menu>
 
       <Grid container spacing={3} direction="column">
         {/* Profile Header Section */}
