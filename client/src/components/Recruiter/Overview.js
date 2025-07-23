@@ -12,21 +12,13 @@ import {
   Stack,
   Button,
   Zoom,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField
 } from "@mui/material";
 import {
-  AddCircle,
-  AccessTime,
-  Star,
-  CheckCircle,
-  Add,
-  Person,
   WorkOutline,
   AssignmentInd,
   Schedule,
@@ -44,14 +36,50 @@ import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar,LineChart, Li
 import "../../styles/Recruiter.css";
 
 const Overview = ({ setActiveTab }) => {
-    const [loading, setLoading] = useState(false);
-    const [openEdit, setOpenEdit] = useState(false);
-    const [profile, setProfile] = useState({
-      name: "Acme Tech Solutions",
-      location: "Bangalore, India",
-      industry: "IT Services",
-      description: "Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry."
-    });
+  const [loading, setLoading] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selectedJobFilter, setSelectedJobFilter] = useState('All Jobs');
+
+  const jobTitles = ["All Jobs", "Full Stack Developer", "iOS Developer", "Product Designer", "Design Lead"];
+  const chartDataByJob = {
+    "All Jobs": [
+      { date: "17.07", Applications: 20, Shortlisted: 10, Rejected: 2 },
+      { date: "18.07", Applications: 35, Shortlisted: 15, Rejected: 5 },
+      { date: "19.07", Applications: 30, Shortlisted: 12, Rejected: 4 },
+      { date: "20.07", Applications: 50, Shortlisted: 25, Rejected: 8 },
+      { date: "21.07", Applications: 40, Shortlisted: 20, Rejected: 6 },
+      { date: "22.07", Applications: 40, Shortlisted: 15, Rejected: 10 },
+      { date: "23.07", Applications: 25, Shortlisted: 10, Rejected: 10 },
+    ],
+    "Full Stack Developer": [
+      { date: "17.07", Applications: 8, Shortlisted: 4, Rejected: 1 },
+      { date: "18.07", Applications: 12, Shortlisted: 6, Rejected: 2 },
+      { date: "19.07", Applications: 10, Shortlisted: 5, Rejected: 1 },
+      { date: "20.07", Applications: 18, Shortlisted: 9, Rejected: 3 },
+      { date: "21.07", Applications: 15, Shortlisted: 7, Rejected: 2 },
+      { date: "22.07", Applications: 14, Shortlisted: 6, Rejected: 4 },
+      { date: "23.07", Applications: 9, Shortlisted: 4, Rejected: 3 },
+    ],
+    "iOS Developer": [
+      { date: "17.07", Applications: 5, Shortlisted: 2, Rejected: 0 },
+      { date: "18.07", Applications: 8, Shortlisted: 4, Rejected: 1 },
+      { date: "19.07", Applications: 7, Shortlisted: 3, Rejected: 1 },
+      { date: "20.07", Applications: 12, Shortlisted: 6, Rejected: 2 },
+      { date: "21.07", Applications: 10, Shortlisted: 5, Rejected: 1 },
+      { date: "22.07", Applications: 10, Shortlisted: 4, Rejected: 3 },
+      { date: "23.07", Applications: 6, Shortlisted: 2, Rejected: 2 },
+    ],
+    // Add similar mock data for "Product Designer" and "Design Lead" if needed
+    "Product Designer": [/* ... data ... */],
+    "Design Lead": [/* ... data ... */],
+  };
+
+  const [profile, setProfile] = useState({
+    name: "CreateTech Solutions",
+    location: "Colombo 10, Sri Lanka",
+    industry: "Software Development",
+    description: "Leading provider of innovative tech solutions for businesses worldwide. 500+ employees, 10+ years in the industry."
+  });
     // const navigate = useNavigate();
 
       const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
@@ -144,7 +172,7 @@ const Overview = ({ setActiveTab }) => {
                       icon={<WorkOutline />}
                       title="Job Posts"
                       value="28"
-                      change="+5 this month"
+                      change="Open"
                     />
                   </Grid>
                   <Grid item>
@@ -161,7 +189,7 @@ const Overview = ({ setActiveTab }) => {
                       icon={<Schedule />}
                       title="Interviews"
                       value="14"
-                      change="Ongoing"
+                      change="Scheduled"
                       color="#10b981"
                     />
                   </Grid>
@@ -180,9 +208,25 @@ const Overview = ({ setActiveTab }) => {
                   Top Active Jobs
                 </Typography>
                 <Button size="small" sx={{ color: "#3B5998", textTransform: "none" }}>
-                  Last 30 days
+                  Last 7 days
                 </Button>
               </Box>
+              <Box display="flex" justifyContent="space-between" mb={2}>
+                    <FormControl size="small" sx={{ minWidth: 180 }}>
+                    <InputLabel>Filter by Job</InputLabel>
+                    <Select
+                        value={selectedJobFilter}
+                        label="Filter by Job"
+                        onChange={(e) => setSelectedJobFilter(e.target.value)}
+                      >
+                      {jobTitles.map((title) => (
+                        <MenuItem key={title} value={title}>
+                          {title}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
               {/* Legend */}
               <Stack direction="row" spacing={2} mb={2}>
                 <Box display="flex" alignItems="center">
@@ -200,13 +244,7 @@ const Overview = ({ setActiveTab }) => {
               </Stack>
               {/* Line Chart */}
               <ResponsiveContainer width="100%" height={140}>
-                <LineChart data={[
-                  { date: "Mon", Applications: 20, Shortlisted: 10, Rejected: 2 },
-                  { date: "Tue", Applications: 35, Shortlisted: 15, Rejected: 5 },
-                  { date: "Wed", Applications: 30, Shortlisted: 12, Rejected: 4 },
-                  { date: "Thu", Applications: 50, Shortlisted: 25, Rejected: 8 },
-                  { date: "Fri", Applications: 40, Shortlisted: 20, Rejected: 6 },
-                ]}>
+                <LineChart data={chartDataByJob[selectedJobFilter]}>
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
@@ -223,18 +261,18 @@ const Overview = ({ setActiveTab }) => {
                   <Typography variant="subtitle2" color="text.secondary">Applications</Typography>
                 </Box>
                 {[
-                  { title: "Full Stack Developer", applications: 203, shortlisted: true },
-                  { title: "iOS Developer", applications: 121, shortlisted: true },
-                  { title: "Product Designer", applications: 95, shortlisted: false },
-                  { title: "Design Lead", applications: 76, shortlisted: false },
+                  { title: "Full Stack Developer", applications: 30, shortlisted: true },
+                  { title: "iOS Developer", applications: 27, shortlisted: true },
+                  { title: "Product Designer", applications: 25, shortlisted: false },
+                  { title: "Design Lead", applications: 20, shortlisted: false },
                 ].map((job, idx) => (
                   <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" py={1} borderBottom={idx < 3 ? "1px solid #f0f0f0" : "none"}>
                     <Typography variant="body1">{job.title}</Typography>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="body1" fontWeight="bold">{job.applications}</Typography>
-                      {job.shortlisted && (
+                      {/* {job.shortlisted && (
                         <Chip label="L" size="small" sx={{ bgcolor: "#e6f7fa", color: "#3B5998", fontWeight: 700, fontSize: 12 }} />
-                      )}
+                      )} */}
                     </Box>
                   </Box>
                 ))}
@@ -301,28 +339,28 @@ const Overview = ({ setActiveTab }) => {
                 <Stack spacing={2}>
                   {[
                     {
-                      name: "Douglas Ray",
+                      name: "Kasun Herath",
                       job: "Applied for iOS Developer",
-                      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+                      avatar: ""
                     },
                     {
-                      name: "Elizabeth Martin",
+                      name: "Shalitha Fonseka",
                       job: "Applied for Full Stack Developer",
-                      avatar: "https://randomuser.me/api/portraits/women/44.jpg"
+                      avatar: ""
                     },
                     {
-                      name: "Emma Wade",
+                      name: "Deesha Perera",
                       job: "Applied for Product Designer",
-                      avatar: "https://randomuser.me/api/portraits/women/68.jpg"
+                      avatar: ""
                     },
                     {
-                      name: "Teresa Reyes",
+                      name: "Nuwani Fernando",
                       job: "Applied for Design Lead",
-                      avatar: "https://randomuser.me/api/portraits/women/65.jpg"
+                      avatar: ""
                     },
                   ].map((applicant, idx) => (
                     <Box key={idx} display="flex" alignItems="center" gap={2}>
-                      <Avatar src={applicant.avatar} sx={{ width: 32, height: 32 }} />
+                      <Avatar sx={{ width: 32, height: 32 }} />
                       <Box>
                         <Typography variant="body2" fontWeight="bold">{applicant.name}</Typography>
                         <Typography variant="caption" color="text.secondary">{applicant.job}</Typography>
@@ -338,7 +376,7 @@ const Overview = ({ setActiveTab }) => {
 
           {/* Company Profile Card */}
           <Paper className="content-card company-profile" elevation={2} style={{ flex: 1, minWidth: 0 }}>
-            <Box display="flex" flexDirection="column" alignItems="center" p={5}  sx={{ flex: 1, height: "100%" }} >
+            <Box display="flex" flexDirection="column" alignItems="center" p={5}  sx={{ flex: 1, height: "100%", minHeight: 100}} >
               <Avatar
                 src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=120&h=120&fit=crop"
                 sx={{ width: 80, height: 80, mb: 2 }}
@@ -372,12 +410,11 @@ const Overview = ({ setActiveTab }) => {
 
         <Box className="content-second-row" display="flex" flexDirection="row" gap={3} mt={3}>
           {/* Statistic Chart Card */}
-          <Paper className="content-card stats-card" elevation={2} style={{ flex: 1 }}>
+          {/* <Paper className="content-card stats-card" elevation={2} style={{ flex: 1 }}>
             <Box display="flex" flexDirection="column" alignItems="center" p={3}>
               <Typography variant="h6" fontWeight="bold" mb={2}>
                 Application Statistics
               </Typography>
-              {/* Example Bar Chart using recharts */}
               <ResponsiveContainer width="100%" height={150}>
                 <BarChart
                   data={[
@@ -395,21 +432,20 @@ const Overview = ({ setActiveTab }) => {
                 </BarChart>
               </ResponsiveContainer>
             </Box>
-          </Paper>
+          </Paper> */}
 
           {/* Calendar Card */}
-          <Paper className="content-card calendar-card" elevation={2} style={{ flex: 1 }}>
+          {/* <Paper className="content-card calendar-card" elevation={2} style={{ flex: 1 }}>
             <Box display="flex" flexDirection="column" alignItems="center" p={3}>
               <Typography variant="h6" fontWeight="bold" mb={2}>
                 Calendar
               </Typography>
-              {/* Placeholder for Calendar */}
               <CalendarMonthIcon sx={{ fontSize: 60, color: "#3B5998", mb: 2 }} />
               <Typography variant="body2" color="text.secondary">
                 Upcoming interviews and events will appear here.
               </Typography>
             </Box>
-          </Paper>
+          </Paper> */}
         </Box>
       </Box>
 
