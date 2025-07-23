@@ -56,16 +56,16 @@ const upcomingInterviews = [
 const pastInterviews = [
   {
     id: 3,
-    jobTitle: 'React Native Developer',
-    companyName: 'MobileFirst Co.',
-    date: '2025-07-28',
+    jobTitle: 'QA Engineer',
+    companyName: 'Orel IT',
+    date: '2025-07-20',
     outcome: 'Advanced to Next Round'
   },
   {
     id: 4,
-    jobTitle: 'Junior QA Engineer',
-    companyName: 'BugFinders Ltd.',
-    date: '2025-07-22',
+    jobTitle: 'UI Engineer',
+    companyName: 'Furtado',
+    date: '2025-07-02',
     outcome: 'No Longer in Consideration'
   },
 ];

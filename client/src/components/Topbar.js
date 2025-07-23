@@ -8,7 +8,10 @@ import {
   MenuItem,
   ListItemIcon,
 } from "@mui/material";
+import { useLocation, Link as RouterLink } from "react-router-dom"; 
+import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, Stack } from "@mui/material";
 import { AccountCircle, Logout, Person } from "@mui/icons-material";
+import NotificationDropdown from "./NotificationDropdown";
 import "../styles/Recruiter.css";
 
 const Header = ({ title, onProfileClick }) => {
@@ -39,14 +42,21 @@ const Header = ({ title, onProfileClick }) => {
       <Typography variant="h5" fontWeight="bold" className="page-title">
         {title}
       </Typography>
-      <IconButton
-        className="profile-icon-btn"
-        size="large"
-        sx={{ ml: 2 }}
-        onClick={handleMenuOpen}
-      >
-        <AccountCircle sx={{ fontSize: 38 }} />
-      </IconButton>
+      
+      <Stack direction="row" spacing={1} alignItems="center">
+        {/* Notification Button - Only for Candidates */}
+        {isCandidatePage && <NotificationDropdown />}
+        
+        {/* Profile Button */}
+        <IconButton
+          className="profile-icon-btn"
+          size="large"
+          sx={{ ml: 2 }}
+          onClick={handleMenuOpen}
+        >
+          <AccountCircle sx={{ fontSize: 38 }} />
+        </IconButton>
+      </Stack>
       <Menu
         anchorEl={anchorEl}
         open={open}
