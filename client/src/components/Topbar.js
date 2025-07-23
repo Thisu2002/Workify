@@ -17,6 +17,11 @@ const Header = ({ title, onProfileClick, onLogout }) => {
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
+//const handleLogout = () => {
+  //  onLogout();
+   // handleMenuClose();
+  //};
+
   return (
     <Box
       className="recruiter-header"
