@@ -406,6 +406,7 @@ const Home = () => {
       {/* Job Posts Section */}
       <Box ref={jobPostsRef} className="job-posts-section" sx={{ py: 8, background: "#f8fafc" }}>
         <Container maxWidth="xl">
+
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', justifyContent: 'center', minHeight: '520px', gap: { xs: 6, md: 0 } }}>
             {/* Left: Kanban Board */}
             <Box sx={{ flex: 1.2, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>

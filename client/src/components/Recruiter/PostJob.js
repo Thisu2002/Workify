@@ -29,7 +29,16 @@ const PostJob = () => {
     title: "",
     description: "",
     location: "",
-    salary: ""
+    salary: "",
+    jobType: "",
+    deadline: "",
+    educationLevel: "",
+    educationField: "",
+    experienceYears: "",
+    experienceDescription: "",
+    requiredQualifications: "",
+    preferredQualifications: "",
+    additionalComments: ""
   });
   const [selectedSkills, setSelectedSkills] = useState([]);
 
@@ -56,8 +65,38 @@ const PostJob = () => {
       const response = await axios.post(
         "http://localhost:5000/recruiter/postJob",
         {
-          ...form,
-          skills: selectedSkills
+          title: form.title,
+          description: form.description,
+          location: form.location,
+          salary: form.salary,
+          jobType: form.jobType,
+          deadline: form.deadline,
+          skills: selectedSkills,
+          education_requirements: [
+            {
+              level: form.educationLevel,
+              field: form.educationField
+            }
+          ],
+          experience: {
+            years: parseInt(form.experienceYears) || 0,
+            description: form.experienceDescription
+          },
+          qualifications: form.requiredQualifications
+            .split(",")
+            .filter(Boolean)
+            .map((q) => ({
+              name: q.trim(),
+              required: true
+            })),
+          preferred_qualifications: form.preferredQualifications
+            .split(",")
+            .filter(Boolean)
+            .map((q) => ({
+              name: q.trim(),
+              required: false
+            })),
+          comments: form.additionalComments
         },
         {
           headers: {
@@ -67,11 +106,23 @@ const PostJob = () => {
       );
 
       toast.success(response.data.message || "Job posted successfully!");
-      setForm({ title: "", description: "", location: "", salary: "" });
+      setForm({
+        title: "",
+        description: "",
+        location: "",
+        salary: "",
+        jobType: "",
+        deadline: "",
+        educationLevel: "",
+        educationField: "",
+        experienceYears: "",
+        experienceDescription: "",
+        requiredQualifications: "",
+        preferredQualifications: "",
+        additionalComments: ""
+      });
       setSelectedSkills([]);
-      //navigate to the job posts page
       window.location.href = "/recruiter/job-posts";
-    
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to post job");
     }
@@ -112,17 +163,117 @@ const PostJob = () => {
           required
           margin="normal"
         />
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              label="Job Type"
+              name="jobType"
+              value={form.jobType}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              placeholder="e.g.Full-time, Part-time, Contract"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Application Deadline"
+              name="deadline"
+              value={form.deadline}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              placeholder="MM/DD/YYYY"
+            />
+          </Grid>
+        </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              label="Salary"
+              name="salary"
+              type="number"
+              value={form.salary}
+              onChange={handleChange}
+              fullWidth
+              required
+              margin="normal"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Education Level"
+              name="educationLevel"
+              value={form.educationLevel}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              placeholder="e.g. Bachelors, Masters"
+            />
+          </Grid>
+        </Grid>
         <TextField
-          label="Salary"
-          name="salary"
-          type="number"
-          value={form.salary}
+          label="Field of Study"
+          name="educationField"
+          value={form.educationField}
           onChange={handleChange}
           fullWidth
-          required
           margin="normal"
+          placeholder="e.g. Computer Science"
         />
-
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              label="Experience (Years)"
+              name="experienceYears"
+              type="number"
+              value={form.experienceYears}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Experience Description"
+              name="experienceDescription"
+              value={form.experienceDescription}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+            />
+          </Grid>
+        </Grid>
+        <TextField
+          label="Required Qualifications (comma-separated)"
+          name="requiredQualifications"
+          value={form.requiredQualifications}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          multiline
+          minRows={2}
+        />
+        <TextField
+          label="Preferred Qualifications (comma-separated)"
+          name="preferredQualifications"
+          value={form.preferredQualifications}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          multiline
+          minRows={2}
+        />
+        <TextField
+          label="Additional Comments"
+          name="additionalComments"
+          value={form.additionalComments}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          multiline
+          minRows={2}
+        />
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle1" gutterBottom>
             Select Required Skills

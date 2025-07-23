@@ -14,32 +14,66 @@ exports.getJobPosts = async (req, res) => {
 }
 
 exports.postJob = async (req, res) => {
-  const { title, description, location, skills, salary } = req.body;
+  const {
+    title,
+    description,
+    location,
+    salary,
+    jobType,
+    deadline,
+    skills,
+    education_requirements,
+    experience,
+    qualifications,
+    preferred_qualifications,
+    comments,
+  } = req.body;
 
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Unauthorized: No token provided' });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
 
-    const token = authHeader.split(' ')[1];
-
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiter_id = decoded.id;
-    
+
     const newPost = new Post({
       title,
       description,
       location,
-      skills,
       salary,
-      recruiter_id
+      jobType,
+      deadline,
+      skills,
+      education_requirements,
+      experience,
+      qualifications,
+      preferred_qualifications,
+      comments,
+      recruiter_id,
     });
 
     await newPost.save();
 
-    res.status(201).json({ message: 'Job Posted Successfully' });
+    res.status(201).json({ message: "Job Posted Successfully" });
   } catch (err) {
-    res.status(500).json({ message: 'Job Posting Failed', error: err.message });
+    res.status(500).json({ message: "Job Posting Failed", error: err.message });
+  }
+};
+
+exports.changeJobStatus = async (req, res) => {
+  const {jobId, status} = req.body;
+  try {
+    const post = await Post.findById(jobId);
+    if (!post) {
+      return res.status(404).json({ message: 'Job post not found' });
+    }
+    post.status = status;
+    await post.save();
+    res.status(200).json({ message: 'Job status updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating job status', error: err.message });
   }
 };
