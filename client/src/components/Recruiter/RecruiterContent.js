@@ -4,6 +4,8 @@ import JobPosts from "./JobPosts";
 import Applications from "./Applications"; 
 import { Box } from "@mui/material";
 import Candidates from "./Candidates";
+import Interviews from "./Interviews";
+
 import "../../styles/Recruiter.css";
 
 const RecruiterContent = ({showJobForm, setShowJobForm}) => {
@@ -18,6 +20,8 @@ const RecruiterContent = ({showJobForm, setShowJobForm}) => {
       )}
       {location.pathname === "/recruiter/job-posts/applicants" && <Candidates />}
       {location.pathname === "/recruiter/candidates" && <Applications />}
+      {location.pathname === "/recruiter/interviews" && <Interviews />}
+
       {/* {location.pathname.startsWith("/pet-owners/view-owner/") && (
             <ViewOwner />
           )} */}
