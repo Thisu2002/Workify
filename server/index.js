@@ -11,6 +11,7 @@ app.use(express.json());
 
 app.use('/auth', require('./routes/auth'));
 app.use('/recruiter', require('./routes/recruiter'));
+app.use('/candidate', require('./routes/candidate')); 
 //app.use('/user', require('./routes/user')); // Assuming you have a user route
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
