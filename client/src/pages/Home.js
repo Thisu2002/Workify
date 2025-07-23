@@ -42,6 +42,7 @@ const Home = () => {
   const [isVisible, setIsVisible] = useState(false);
   const trigger = useScrollTrigger({ threshold: 100 });
   const jobPostsRef = useRef(null);
+  const companiesRef = useRef(null); // Add ref for companies section
 
   const features = [
     {
@@ -134,6 +135,118 @@ const Home = () => {
     },
   ];
 
+  // Sample companies data
+  const companies = [
+    {
+      name: "Google",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
+      industry: "Technology",
+      description: "Innovating the future with AI, cloud, and search.",
+      featured: true,
+      website: "https://careers.google.com/",
+      jobs: 120
+    },
+    {
+      name: "Apple",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+      industry: "Consumer Electronics",
+      description: "Designing world-class devices and experiences.",
+      featured: false,
+      website: "https://jobs.apple.com/",
+      jobs: 80
+    },
+    {
+      name: "Microsoft",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
+      industry: "Software & Cloud",
+      description: "Empowering every person and organization on the planet.",
+      featured: false, // remove featured
+      website: "https://careers.microsoft.com/",
+      jobs: 100
+    },
+    {
+      name: "Amazon",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
+      industry: "E-commerce & Cloud",
+      description: "Delivering everything, everywhere, with innovation.",
+      featured: true, // add featured label to Amazon
+      website: "https://www.amazon.jobs/",
+      jobs: 95
+    },
+    {
+      name: "Meta",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png",
+      industry: "Social Media & VR",
+      description: "Building the future of social connection.",
+      featured: false, // remove featured label from Meta
+      website: "https://www.metacareers.com/",
+      jobs: 70
+    },
+    {
+      name: "Tesla",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png",
+      industry: "Automotive & Energy",
+      description: "Accelerating the world's transition to sustainable energy.",
+      featured: false,
+      website: "https://www.tesla.com/careers",
+      jobs: 60
+    },
+    {
+      name: "Netflix",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
+      industry: "Entertainment",
+      description: "Streaming the best stories worldwide.",
+      featured: false,
+      website: "https://jobs.netflix.com/",
+      jobs: 40
+    },
+    {
+      name: "IBM",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg",
+      industry: "IT & Consulting",
+      description: "Solving complex problems with technology.",
+      featured: false,
+      website: "https://www.ibm.com/employment/",
+      jobs: 50
+    },
+    {
+      name: "Oracle",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg",
+      industry: "Database & Cloud",
+      description: "Integrated cloud applications and platform services.",
+      featured: true, // add featured
+      website: "https://www.oracle.com/corporate/careers/",
+      jobs: 45
+    },
+    {
+      name: "Spotify",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg",
+      industry: "Music Streaming",
+      description: "Listening is everything.",
+      featured: false,
+      website: "https://www.spotifyjobs.com/",
+      jobs: 30
+    },
+    {
+      name: "PayPal",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg",
+      industry: "Fintech & Payments",
+      description: "Making payments simple and secure.",
+      featured: false,
+      website: "https://www.paypal.com/jobs",
+      jobs: 28
+    },
+    {
+      name: "LinkedIn",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
+      industry: "Professional Networking",
+      description: "Connect the world’s professionals.",
+      featured: false,
+      website: "https://careers.linkedin.com/",
+      jobs: 35
+    }
+  ];
+
   useEffect(() => {
     setIsVisible(true);
     const interval = setInterval(() => {
@@ -171,7 +284,9 @@ const Home = () => {
             <Button className="nav-link" onClick={() => jobPostsRef.current?.scrollIntoView({ behavior: 'smooth' })}>
               Jobs
             </Button>
-            <Button className="nav-link">Companies</Button>
+            <Button className="nav-link" onClick={() => companiesRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+              Companies
+            </Button>
             <Button className="nav-link">Mentors</Button>
             <Button className="nav-link">About</Button>
             <Button variant="outlined" className="nav-btn-outlined" onClick={handleLogin}>
@@ -291,92 +406,173 @@ const Home = () => {
       {/* Job Posts Section */}
       <Box ref={jobPostsRef} className="job-posts-section" sx={{ py: 8, background: "#f8fafc" }}>
         <Container maxWidth="xl">
-          <Box display="flex" flexDirection="column" alignItems="center" mb={6}>
-            <Typography variant="h2" className="section-title" textAlign="center">
-              Latest Job Vacancies
-            </Typography>
-            <Typography variant="h6" className="section-subtitle" textAlign="center">
-              Explore top opportunities and apply today
-            </Typography>
-          </Box>
-          <Grid container spacing={3} wrap="nowrap" justifyContent="center">
-            {jobVacancies.map((job, idx) => (
-              <Grid item xs={12} sm={6} md={3} key={idx} sx={{ display: 'flex' }}>
-                <Card className="home-job-card" elevation={3} sx={{ borderRadius: 4, width: '100%', position: 'relative', overflow: 'visible' }}>
-                  <CardContent sx={{ p: 0 }}>
-                    <Box display="flex" alignItems="center" gap={2} sx={{ px: 3, pt: 3 }}>
-                      <Avatar
-                        src={job.logo}
-                        alt={job.company + " logo"}
-                        sx={{
-                          bgcolor: "#fff",
-                          width: 48,
-                          height: 48,
-                          boxShadow: "0 4px 16px rgba(59,130,246,0.15)",
-                          border: "2px solid #e2e8f0",
-                          objectFit: "contain"
-                        }}
-                        imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
-                      />
-                      <Box>
-                        <Typography className="home-job-card-title" sx={{ mb: 0.5 }}>
-                          {job.title}
-                        </Typography>
-                        <Typography className="home-job-card-company" sx={{ mb: 0.5 }}>
-                          {job.company}
-                        </Typography>
-                        <Typography className="home-job-card-location" sx={{ mb: 0.5 }}>
-                          <LocationIcon sx={{ fontSize: 18, verticalAlign: 'middle', color: '#3b82f6', mr: 0.5 }} />
-                          {job.location}
-                        </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', justifyContent: 'center', minHeight: '520px', gap: { xs: 6, md: 0 } }}>
+            {/* Left: Kanban Board */}
+            <Box sx={{ flex: 1.2, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+              <Box sx={{ display: 'flex', gap: 3, background: 'transparent', p: 2 }}>
+                {/* Kanban Columns */}
+                {[
+                  {
+                    title: 'Applied',
+                    cards: [
+                      { name: 'Ronald Richards', role: 'Mobile Developer', company: '@Hello Ince', percent: 80, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
+                      { name: 'Kathryn Murphy', role: 'Product Designer', company: '@Shop Fun', percent: 50, color: '#fbbf24', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
+                      { name: 'Ralph Edwards', role: 'Graphic Designer', company: '@Job Match', percent: 40, color: '#f87171', avatar: 'https://randomuser.me/api/portraits/men/45.jpg' },
+                      { name: 'Esther Howard', role: 'IT Support', company: '@MagicPayment', percent: 90, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/women/68.jpg' },
+                    ]
+                  },
+                  {
+                    title: 'Shortlisted',
+                    cards: [
+                      { name: 'Marvin McKinney', role: 'UX/UI Designer', company: '@Zipper', percent: 80, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/men/36.jpg' },
+                      { name: 'Dianne Russell', role: 'Network engineer', company: '@Manbun', percent: 70, color: '#fbbf24', avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
+                      { name: 'Courtney Henry', role: 'Computer programmer', company: '@Mango', percent: 100, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/women/43.jpg' },
+                      { name: 'Jacob Jones', role: 'Java Developer', company: '', percent: null, color: '', avatar: 'https://randomuser.me/api/portraits/men/41.jpg' },
+                    ]
+                  },
+                  {
+                    title: 'Phone Screening',
+                    cards: [
+                      { name: 'Guy Hawkins', role: 'Support specialist', company: '@Microsite', percent: 100, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/men/38.jpg' },
+                      { name: 'Bessie Cooper', role: 'QA tester', company: '@Astra', percent: 90, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/women/50.jpg' },
+                      { name: 'Jane Cooper', role: 'Graphic Designer', company: '@DrKong', percent: 93, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/women/52.jpg' },
+                      { name: 'Jenny Wilson', role: 'Computer programmer', company: '@Mango', percent: 89, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/women/54.jpg' },
+                      { name: 'Eleanor Pena', role: 'Graphic Designer', company: '@Mango', percent: 89, color: '#22c55e', avatar: 'https://randomuser.me/api/portraits/women/55.jpg' },
+                    ]
+                  }
+                ].map((col, colIdx) => (
+                  <Box key={col.title} sx={{ background: '#fff', borderRadius: 3, boxShadow: '0 4px 24px rgba(15,36,69,0.08)', minWidth: 240, maxWidth: 260, p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Typography fontWeight={700} color="#0F2445" sx={{ mb: 1, fontSize: '1.1rem', borderBottom: '2px solid #e2e8f0', pb: 1 }}>{col.title}</Typography>
+                    {col.cards.map((card, idx) => (
+                      <Box key={card.name} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, background: '#f8fafc', borderRadius: 2, p: 1.2, boxShadow: '0 1px 4px rgba(59,130,246,0.06)' }}>
+                        <Avatar src={card.avatar} alt={card.name} sx={{ width: 38, height: 38 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography fontWeight={700} fontSize="1rem" color="#0F2445">{card.name}</Typography>
+                          <Typography fontSize="0.92rem" color="#64748b">{card.role}</Typography>
+                          <Typography fontSize="0.85rem" color="#94a3b8">{card.company}</Typography>
+                        </Box>
+                        {card.percent && (
+                          <Box sx={{ minWidth: 36, textAlign: 'center' }}>
+                            <Box sx={{ fontWeight: 700, fontSize: '0.95rem', color: card.color }}>{card.percent}%</Box>
+                          </Box>
+                        )}
                       </Box>
-                    </Box>
-                    <Box sx={{ px: 3, py: 2 }}>
-                      <Typography className="home-job-card-description" sx={{ mb: 2 }}>
-                        {job.description}
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        size="medium"
-                        sx={{
-                          mt: 1,
-                          width: '100%',
-                          fontWeight: 700,
-                          fontSize: '1rem',
-                          borderRadius: '10px',
-                          boxShadow: '0 2px 8px rgba(59,130,246,0.12)'
-                        }}
-                      >
-                        Apply Now
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-          {/* View More Button Row */}
-          <Box display="flex" justifyContent="center" mt={4}>
-            <Button
-              variant="outlined"
-              size="large"
+                    ))}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+            {/* Right: Headline, Description, Features, CTA */}
+            <Box sx={{ flex: 1, pl: { md: 8, xs: 0 }, pr: { md: 2, xs: 0 }, display: 'flex', flexDirection: 'column', alignItems: { xs: 'center', md: 'flex-start' }, justifyContent: 'center' }}>
+              <Typography variant="h2" fontWeight={800} color="#0F2445" sx={{ fontSize: { xs: '2rem', md: '2.8rem' }, mb: 2, textAlign: { xs: 'center', md: 'left' } }}>
+                Thousands of Jobs from Top Employers
+              </Typography>
+              <Typography color="#475569" fontSize="1.18rem" sx={{ mb: 3, textAlign: { xs: 'center', md: 'left' } }}>
+                Access fresh and relevant job opportunities from trusted companies worldwide. Our platform is designed to help you find the right job, faster and easier.
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                <Box display="flex" alignItems="flex-start" gap={1}>
+                  <CheckCircleIcon sx={{ color: '#22c55e', mt: '2px' }} />
+                  <Typography fontWeight={700} color="#0F2445" component="span">Smart Job Filters:</Typography>
+                  <Typography color="#475569" component="span">Easily filter jobs by location, company, industry, and experience level to find your perfect match.</Typography>
+                </Box>
+                <Box display="flex" alignItems="flex-start" gap={1}>
+                  <CheckCircleIcon sx={{ color: '#22c55e', mt: '2px' }} />
+                  <Typography fontWeight={700} color="#0F2445" component="span">Real-Time Listings:</Typography>
+                  <Typography color="#475569" component="span">Stay updated with the latest openings—new jobs added daily from verified employers.</Typography>
+                </Box>
+              </Box>
+              <Button variant="text" sx={{ fontWeight: 700, fontSize: '1.3rem', mt: 2 }} endIcon={<ArrowForwardIcon />}>
+                Try it For Free
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Companies List Section */}
+      <Box ref={companiesRef} className="companies-section" sx={{ py: 8, background: "#eef2f7" }}>
+        <Container maxWidth="xl">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '500px',
+              width: '100%',
+              gap: { xs: 6, md: 0 }
+            }}
+          >
+            {/* Left: Headline & Description */}
+            <Box
               sx={{
-                px: 5,
-                py: 1.5,
-                borderRadius: 10,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: '#3b82f6',
-                borderColor: '#3b82f6',
-                boxShadow: '0 2px 8px rgba(59,130,246,0.08)',
-                background: '#fff',
-                textTransform: 'none',
-                transition: 'all 0.3s'
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: { xs: 'center', md: 'flex-start' },
+                pr: { md: 6 },
+                mb: { xs: 6, md: 0 },
+                pl: { md: 8, xs: 2 }
               }}
-              onClick={() => navigate('/jobs')}
             >
-              View More Job Vacancies
-            </Button>
+              <Typography variant="h2" className="section-title" textAlign={{ xs: 'center', md: 'left' }}>
+                Trusted by 1,000+ Top Companies
+              </Typography>
+              <Typography variant="h6" className="section-subtitle" textAlign={{ xs: 'center', md: 'left' }} mt={2} mb={3}>
+                Join a growing network of leading local and global employers.<br />
+                Our platform features job listings from 1,000+ verified companies, including industry giants, innovative startups, and trusted local businesses. From tech to hospitality, connect with reputable employers actively hiring across all major sectors.
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <CheckCircleIcon sx={{ color: '#22c55e' }} />
+                <Typography fontWeight={700} color="#0F2445" component="span">Verified Employers:</Typography>
+                <Typography color="#475569" component="span">Work with companies known for strong employer branding and high employee satisfaction.</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <CheckCircleIcon sx={{ color: '#22c55e' }} />
+                <Typography fontWeight={700} color="#0F2445" component="span">Diverse Industries:</Typography>
+                <Typography color="#475569" component="span">Find opportunities across IT, healthcare, finance, retail, logistics, and more—all in one place.</Typography>
+              </Box>
+              <Button variant="text" sx={{ mt: 4, fontWeight: 700, fontSize: '1.2rem' }} endIcon={<ArrowForwardIcon />}>
+                Try it For Free
+              </Button>
+            </Box>
+            {/* Right: Radial Logos */}
+            <Box
+              sx={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%'
+              }}
+            >
+              <Box className="companies-radial-wrapper" sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box className="companies-radial">
+                  {/* Central logo */}
+                  <Box className="companies-radial-center">
+                    <Box className="companies-radial-center-logo">M</Box>
+                  </Box>
+                  {/* Radial company logos */}
+                  {companies.slice(0, 12).map((company, idx) => (
+                    <Box
+                      key={company.name}
+                      className={`companies-radial-logo companies-radial-logo-${idx}`}
+                      title={company.name}
+                    >
+                      <Avatar
+                        src={company.logo}
+                        alt={company.name + ' logo'}
+                        sx={{ width: 56, height: 56, bgcolor: '#fff', boxShadow: '0 2px 8px rgba(59,130,246,0.10)', border: '2px solid #e2e8f0', objectFit: 'contain' }}
+                        imgProps={{ style: { objectFit: 'contain', background: '#fff' } }}
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Container>
       </Box>
@@ -545,7 +741,12 @@ const Home = () => {
           <Grid container spacing={4} justifyContent="space-between" alignItems="flex-start">
             <Grid item xs={12} md={4}>
               <Box display="flex" alignItems="center" gap={1}>
-                <img src={logo} alt="Workify" className="footer-logo-img" />
+                <img
+                  src={logo}
+                  alt="Workify"
+                  className="footer-logo-img"
+                  style={{ filter: "none", height: "70px", width: "auto" }}
+                />
                 <Typography variant="h5" className="footer-logo" gutterBottom>
                   Workify
                 </Typography>
@@ -553,16 +754,56 @@ const Home = () => {
               <Typography variant="body2" className="footer-description">
                 Connecting talent with opportunity through intelligent matching and expert mentorship.
               </Typography>
-              
-              {/* Social Media Icons */}
               <Box display="flex" gap={2} mt={3}>
-                <IconButton className="social-icon" aria-label="Facebook">
+                <IconButton
+                  className="social-icon"
+                  aria-label="Facebook"
+                  sx={{
+                    background: "linear-gradient(135deg, #1877f2 0%, #3b5998 100%)",
+                    color: "#fff",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    boxShadow: "0 2px 8px rgba(24,119,242,0.15)",
+                    "&:hover": {
+                      transform: "scale(1.15) rotate(-8deg)",
+                      boxShadow: "0 6px 18px rgba(24,119,242,0.25)",
+                      background: "linear-gradient(135deg, #3b5998 0%, #1877f2 100%)"
+                    }
+                  }}
+                >
                   <FacebookIcon />
                 </IconButton>
-                <IconButton className="social-icon" aria-label="Twitter">
+                <IconButton
+                  className="social-icon"
+                  aria-label="Twitter"
+                  sx={{
+                    background: "linear-gradient(135deg, #1da1f2 0%, #0f2445 100%)",
+                    color: "#fff",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    boxShadow: "0 2px 8px rgba(29,161,242,0.15)",
+                    "&:hover": {
+                      transform: "scale(1.15) rotate(8deg)",
+                      boxShadow: "0 6px 18px rgba(29,161,242,0.25)",
+                      background: "linear-gradient(135deg, #0f2445 0%, #1da1f2 100%)"
+                    }
+                  }}
+                >
                   <TwitterIcon />
                 </IconButton>
-                <IconButton className="social-icon" aria-label="Instagram">
+                <IconButton
+                  className="social-icon"
+                  aria-label="Instagram"
+                  sx={{
+                    background: "linear-gradient(135deg, #fd1d1d 0%, #fcb045 50%, #833ab4 100%)",
+                    color: "#fff",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    boxShadow: "0 2px 8px rgba(253,29,29,0.15)",
+                    "&:hover": {
+                      transform: "scale(1.15) rotate(-8deg)",
+                      boxShadow: "0 6px 18px rgba(253,29,29,0.25)",
+                      background: "linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%)"
+                    }
+                  }}
+                >
                   <InstagramIcon />
                 </IconButton>
               </Box>
@@ -570,7 +811,22 @@ const Home = () => {
             <Grid item xs={12} md={8}>
               <Grid container spacing={4} justifyContent="flex-start">
                 <Grid item xs={6} sm={3} md={3} display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h6" className="footer-heading" gutterBottom style={{ color: '#ffffff !important' }}>
+                  <Typography
+                    variant="h6"
+                    className="footer-heading"
+                    gutterBottom
+                    sx={{
+                      color: "#fff !important",
+                      background: "linear-gradient(90deg, #4a90e2 0%, #64b5f6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      fontWeight: 700,
+                      fontSize: "1.2rem",
+                      letterSpacing: "0.02em",
+                      mb: "20px"
+                    }}
+                  >
                     Job Seekers
                   </Typography>
                   <Box className="footer-links">
@@ -580,7 +836,22 @@ const Home = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3} md={3} display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h6" className="footer-heading" gutterBottom style={{ color: '#ffffff !important' }}>
+                  <Typography
+                    variant="h6"
+                    className="footer-heading"
+                    gutterBottom
+                    sx={{
+                      color: "#fff !important",
+                      background: "linear-gradient(90deg, #4a90e2 0%, #64b5f6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      fontWeight: 700,
+                      fontSize: "1.2rem",
+                      letterSpacing: "0.02em",
+                      mb: "20px"
+                    }}
+                  >
                     Employers
                   </Typography>
                   <Box className="footer-links">
@@ -590,7 +861,22 @@ const Home = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3} md={3} display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h6" className="footer-heading" gutterBottom style={{ color: '#ffffff !important' }}>
+                  <Typography
+                    variant="h6"
+                    className="footer-heading"
+                    gutterBottom
+                    sx={{
+                      color: "#fff !important",
+                      background: "linear-gradient(90deg, #4a90e2 0%, #64b5f6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      fontWeight: 700,
+                      fontSize: "1.2rem",
+                      letterSpacing: "0.02em",
+                      mb: "20px"
+                    }}
+                  >
                     Mentors
                   </Typography>
                   <Box className="footer-links">
@@ -600,7 +886,22 @@ const Home = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3} md={3} display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h6" className="footer-heading" gutterBottom style={{ color: '#ffffff !important' }}>
+                  <Typography
+                    variant="h6"
+                    className="footer-heading"
+                    gutterBottom
+                    sx={{
+                      color: "#fff !important",
+                      background: "linear-gradient(90deg, #4a90e2 0%, #64b5f6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      fontWeight: 700,
+                      fontSize: "1.2rem",
+                      letterSpacing: "0.02em",
+                      mb: "20px"
+                    }}
+                  >
                     Company
                   </Typography>
                   <Box className="footer-links">
@@ -622,6 +923,5 @@ const Home = () => {
     </Box>
   );
 };
-
 
 export default Home;
