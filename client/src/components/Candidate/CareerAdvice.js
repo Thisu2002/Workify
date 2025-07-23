@@ -224,14 +224,14 @@ const CareerAdvice = ({ userProfile }) => {
       <Box sx={{ mb: 4 }}>
          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {showScheduledOnly ? 'Your Scheduled Sessions' : 'Connect with Industry Mentors'}
+                {showScheduledOnly ? 'Your Sessions' : 'Connect with Industry Mentors'}
             </Typography>
             <Button
                 variant="contained"
                 onClick={handleToggleShowScheduled}
                 sx={{ backgroundColor: '#0a2048', color: '#ffffff', '&:hover': { backgroundColor: '#1a3668' } }}
             >
-                {showScheduledOnly ? 'All Mentors' : 'Scheduled Sessions'}
+                {showScheduledOnly ? 'All Mentors' : 'My Sessions'}
             </Button>
         </Box>
       </Box>

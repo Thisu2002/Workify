@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import {
   Dialog,
   DialogTitle,
@@ -26,114 +26,139 @@ import {
   School
 } from '@mui/icons-material';
 
-// Tab Panel Component (Unchanged)
+// TabPanel component is unchanged...
 function TabPanel({ children, value, index, ...other }) {
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`profile-tabpanel-${index}`}
-      aria-labelledby={`profile-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ py: 3 }}>
-          {children}
-        </Box>
-      )}
+    <div hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
     </div>
   );
 }
 
 const EditProfileForm = ({ open, onClose, profileData, onSave }) => {
   const [currentTab, setCurrentTab] = useState(0);
-  // All state and handler functions are unchanged from your version
-  const [formData, setFormData] = useState({
-    name: profileData?.name || "",
-    about: profileData?.about || "",
-    email: profileData?.contact?.email || "",
-    phone: profileData?.contact?.phone || "",
-    location: profileData?.contact?.location || "",
-    age: profileData?.contact?.age?.replace(' years', '') || "",
-    experience: profileData?.experience || [{ title: "", company: "", dates: "", description: "" }],
-    education: profileData?.education || [{ degree: "", school: "", dates: "" }]
-  });
+  const [formData, setFormData] = useState({ ...profileData });
+
+  // === NEW: useEffect to sync form state with props ===
+  // This is crucial. It resets the form's state whenever the dialog is opened
+  // or the profileData from the parent component changes.
+  useEffect(() => {
+    if (open && profileData) {
+      setFormData({
+        name: profileData.name || '',
+        about: profileData.about || '',
+        contact: {
+          email: profileData.contact?.email || '',
+          phone: profileData.contact?.phone || '',
+          location: profileData.contact?.location || '',
+          age: profileData.contact?.age?.replace(' years', '') || ''
+        },
+        // Ensure that experience and education are arrays, even if empty
+        experience: profileData.experience && profileData.experience.length > 0 ? profileData.experience : [{ title: "", company: "", dates: "", description: "" }],
+        education: profileData.education && profileData.education.length > 0 ? profileData.education : [{ degree: "", school: "", dates: "" }],
+        // Add other fields from your model here
+        avatarUrl: profileData.avatarUrl || '',
+        skills: profileData.skills || [],
+      });
+    }
+  }, [profileData, open]); // Re-run this effect when the dialog opens or data changes
 
   const handleTabChange = (event, newValue) => setCurrentTab(newValue);
-  const handleBasicInfoChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
-  const handleExperienceChange = (index, field, value) => setFormData(prev => ({ ...prev, experience: prev.experience.map((exp, i) => i === index ? { ...exp, [field]: value } : exp) }));
-  const handleEducationChange = (index, field, value) => setFormData(prev => ({ ...prev, education: prev.education.map((edu, i) => i === index ? { ...edu, [field]: value } : edu) }));
-  const addExperience = () => setFormData(prev => ({ ...prev, experience: [...prev.experience, { title: "", company: "", dates: "", description: "" }] }));
-  const removeExperience = (index) => { if (formData.experience.length > 1) setFormData(prev => ({ ...prev, experience: prev.experience.filter((_, i) => i !== index) })); };
-  const addEducation = () => setFormData(prev => ({ ...prev, education: [...prev.education, { degree: "", school: "", dates: "" }] }));
-  const removeEducation = (index) => { if (formData.education.length > 1) setFormData(prev => ({ ...prev, education: prev.education.filter((_, i) => i !== index) })); };
+  
+  // A single handler for all basic and contact info
+  const handleInfoChange = (e) => {
+    const { name, value } = e.target;
+    if (['email', 'phone', 'location', 'age'].includes(name)) {
+      setFormData(prev => ({ ...prev, contact: { ...prev.contact, [name]: value } }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleExperienceChange = (index, field, value) => {
+    const newExperience = [...formData.experience];
+    newExperience[index][field] = value;
+    setFormData(prev => ({ ...prev, experience: newExperience }));
+  };
+  
+  const addExperience = () => {
+    setFormData(prev => ({ ...prev, experience: [...prev.experience, { title: "", company: "", dates: "", description: "" }] }));
+  };
+
+  const removeExperience = (index) => {
+    if (formData.experience.length > 1) {
+      setFormData(prev => ({ ...prev, experience: prev.experience.filter((_, i) => i !== index) }));
+    }
+  };
+
+  const handleEducationChange = (index, field, value) => {
+    const newEducation = [...formData.education];
+    newEducation[index][field] = value;
+    setFormData(prev => ({ ...prev, education: newEducation }));
+  };
+  
+  const addEducation = () => {
+    setFormData(prev => ({ ...prev, education: [...prev.education, { degree: "", school: "", dates: "" }] }));
+  };
+  
+  const removeEducation = (index) => {
+    if (formData.education.length > 1) {
+      setFormData(prev => ({ ...prev, education: prev.education.filter((_, i) => i !== index) }));
+    }
+  };
 
   const handleSave = () => {
+    // Re-format the data for the backend
     const updatedData = {
-      name: formData.name,
-      about: formData.about,
-      contact: { email: formData.email, phone: formData.phone, location: formData.location, age: formData.age ? `${formData.age} years` : "" },
-      experience: formData.experience,
-      education: formData.education
+      ...formData,
+      contact: {
+        ...formData.contact,
+        age: formData.contact.age ? `${formData.contact.age} years` : ''
+      }
     };
-    onSave(updatedData);
-    onClose();
+    onSave(updatedData); // Pass the final data up to the Profile component
   };
+  
   const handleClose = () => onClose();
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose}
-      maxWidth="lg"
-      fullWidth
-      // === CRITICAL FIX 1: Enforce a flex column layout on the dialog itself ===
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          height: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-        }
-      }}
-    >
-      {/* HEADER SECTION: This part will not scroll */}
+    <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 2, height: '90vh', display: 'flex', flexDirection: 'column' } }}>
+      {/* HEADER: No changes here */}
       <Box sx={{ flexShrink: 0 }}>
         <DialogTitle sx={{ pb: 1, backgroundColor: 'background.paper' }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>Edit Profile</Typography>
-            <IconButton onClick={handleClose} size="small"><Close /></IconButton>
-          </Stack>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>Edit Profile</Typography>
+                <IconButton onClick={handleClose} size="small"><Close /></IconButton>
+            </Stack>
         </DialogTitle>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: 'background.paper' }}>
-          <Tabs value={currentTab} onChange={handleTabChange} variant="fullWidth">
-            <Tab icon={<Person />} label="Basic Info" />
-            <Tab icon={<Work />} label="Experience" />
-            <Tab icon={<School />} label="Education" />
-          </Tabs>
+            <Tabs value={currentTab} onChange={handleTabChange} variant="fullWidth">
+                <Tab icon={<Person />} label="Basic Info" />
+                <Tab icon={<Work />} label="Experience" />
+                <Tab icon={<School />} label="Education" />
+            </Tabs>
         </Box>
       </Box>
 
-      {/* === CRITICAL FIX 2: Make DialogContent the flexible, scrolling area === */}
+      {/* CONTENT: Updated to use simplified handler */}
       <DialogContent sx={{ p: 0, flex: '1 1 auto', overflowY: 'auto' }}>
-        {/* Basic Info Tab */}
         <TabPanel value={currentTab} index={0}>
           <Box sx={{ px: 3 }}>
             <Stack spacing={3}>
               <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>Personal Information</Typography>
                 <Grid container spacing={3}>
-                  <Grid item xs={12}><TextField fullWidth label="Full Name" value={formData.name} onChange={(e) => handleBasicInfoChange('name', e.target.value)} required/></Grid>
-                  <Grid item xs={12}><TextField fullWidth label="About / Bio" value={formData.about} onChange={(e) => handleBasicInfoChange('about', e.target.value)} multiline rows={3} helperText="Tell us about yourself..."/></Grid>
+                  <Grid item xs={12}><TextField name="name" label="Full Name" value={formData.name} onChange={handleInfoChange} fullWidth required/></Grid>
+                  <Grid item xs={12}><TextField name="about" label="About / Bio" value={formData.about} onChange={handleInfoChange} multiline rows={3} fullWidth/></Grid>
                 </Grid>
               </Paper>
               <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>Contact Information</Typography>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6}><TextField fullWidth label="Email Address" value={formData.email} onChange={(e) => handleBasicInfoChange('email', e.target.value)} type="email" required/></Grid>
-                  <Grid item xs={12} sm={6}><TextField fullWidth label="Phone Number" value={formData.phone} onChange={(e) => handleBasicInfoChange('phone', e.target.value)} helperText="Include country code"/></Grid>
-                  <Grid item xs={12} sm={6}><TextField fullWidth label="Location" value={formData.location} onChange={(e) => handleBasicInfoChange('location', e.target.value)} helperText="City, Country"/></Grid>
-                  <Grid item xs={12} sm={6}><TextField fullWidth label="Age" value={formData.age} onChange={(e) => handleBasicInfoChange('age', e.target.value)} type="number" helperText="Enter age in years"/></Grid>
+                  <Grid item xs={12} sm={6}><TextField name="email" label="Email Address" value={formData.contact?.email} onChange={handleInfoChange} type="email" fullWidth required/></Grid>
+                  <Grid item xs={12} sm={6}><TextField name="phone" label="Phone Number" value={formData.contact?.phone} onChange={handleInfoChange} fullWidth /></Grid>
+                  <Grid item xs={12} sm={6}><TextField name="location" label="Location" value={formData.contact?.location} onChange={handleInfoChange} fullWidth /></Grid>
+                  <Grid item xs={12} sm={6}><TextField name="age" label="Age" value={formData.contact?.age} onChange={handleInfoChange} type="number" fullWidth /></Grid>
                 </Grid>
               </Paper>
             </Stack>
@@ -319,7 +344,6 @@ const EditProfileForm = ({ open, onClose, profileData, onSave }) => {
         </TabPanel>
       </DialogContent>
 
-      {/* FOOTER SECTION: This part will not scroll */}
       <Box sx={{ flexShrink: 0 }}>
         <Divider />
         <DialogActions sx={{ p: 2, backgroundColor: 'background.paper' }}>
