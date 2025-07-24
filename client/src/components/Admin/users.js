@@ -5,30 +5,30 @@ import "../../styles/users.css";
 // In a real application, you would fetch this data from an API.
 const allUsers = {
     recruiters: [
-        { id: 1, name: 'Eleanor Vance', position: 'Senior Recruiter', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/women/1.jpg', email: 'eleanor@example.com', phone: '123-456-7890' },
-        { id: 2, name: 'James Holden', position: 'Talent Acquisition', company: 'Tech Solutions', image: 'https://randomuser.me/api/portraits/men/2.jpg', email: 'james@example.com', phone: '123-456-7890' },
-        { id: 3, name: 'Amos Burton', position: 'HR Manager', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/men/3.jpg', email: 'amos@example.com', phone: '123-456-7890' },
-        { id: 4, name: 'Carla Monroe', position: 'Recruiting Lead', company: 'Data Systems', image: 'https://randomuser.me/api/portraits/women/4.jpg', email: 'carla@example.com', phone: '123-456-7890' },
+        { id: 1, name: 'Gaveshika Peiris', position: 'Senior Recruiter', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/women/1.jpg', email: 'eleanor@example.com', phone: '123-456-7890' },
+        { id: 2, name: 'Sandaruwani Peiris', position: 'Talent Acquisition', company: 'Tech Solutions', image: 'https://randomuser.me/api/portraits/men/2.jpg', email: 'james@example.com', phone: '123-456-7890' },
+        { id: 3, name: 'Thisuli Perera', position: 'HR Manager', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/men/3.jpg', email: 'amos@example.com', phone: '123-456-7890' },
+        { id: 4, name: 'Raveesha Samarasekara', position: 'Recruiting Lead', company: 'Data Systems', image: 'https://randomuser.me/api/portraits/women/4.jpg', email: 'carla@example.com', phone: '123-456-7890' },
     ],
     candidates: [
-        { id: 5, name: 'Naomi Nagata', position: 'Software Engineer', image: 'https://randomuser.me/api/portraits/women/5.jpg', email: 'naomi@example.com', skills: ['React', 'Node.js', 'GraphQL'] },
-        { id: 6, name: 'Alex Kamal', position: 'Product Manager', image: 'https://randomuser.me/api/portraits/men/6.jpg', email: 'alex@example.com', skills: ['Agile', 'Scrum', 'JIRA'] },
+        { id: 5, name: 'Sajani Upeksha', position: 'Software Engineer', image: 'https://randomuser.me/api/portraits/women/5.jpg', email: 'naomi@example.com', skills: ['React', 'Node.js', 'GraphQL'] },
+        { id: 6, name: 'Pamali Vageesha', position: 'Product Manager', image: 'https://randomuser.me/api/portraits/men/6.jpg', email: 'alex@example.com', skills: ['Agile', 'Scrum', 'JIRA'] },
     ],
     mentors: [
-        { id: 7, name: 'Chrisjen Avasarala', position: 'Lead Developer', image: 'https://randomuser.me/api/portraits/women/7.jpg', email: 'chrisjen@example.com', expertise: ['System Design', 'Architecture'] },
+        { id: 7, name: 'Mahima Fernando', position: 'Lead Developer', image: 'https://randomuser.me/api/portraits/women/7.jpg', email: 'chrisjen@example.com', expertise: ['System Design', 'Architecture'] },
     ],
     'business-managers': [
-        { id: 8, name: 'Sadavir Errinwright', position: 'Business Director', image: 'https://randomuser.me/api/portraits/men/8.jpg' },
+        { id: 8, name: 'Sandavi Arumapura', position: 'Business Director', image: 'https://randomuser.me/api/portraits/men/8.jpg' },
     ],
     'blocked-candidates': [
-        { id: 9, name: 'Jules-Pierre Mao', position: 'UI/UX Designer', image: 'https://randomuser.me/api/portraits/men/9.jpg', email: 'jp@example.com', reason: 'Failed to meet deadlines' },
+        { id: 9, name: 'Nimsith Alwis', position: 'UI/UX Designer', image: 'https://randomuser.me/api/portraits/men/9.jpg', email: 'jp@example.com', reason: 'Failed to meet deadlines' },
     ],
 };
 
 // --- User Card Component ---
 const UserCard = ({ user, onClick }) => (
     <div className="user-card" onClick={() => onClick(user)}>
-        <img src={user.image} alt={user.name} className="user-profile-pic" />
+        <img src={""} alt={""} className="user-profile-pic" />
         <h3 className="user-name">{user.name}</h3>
         <p className="user-position">{user.position}</p>
     </div>
@@ -47,7 +47,7 @@ const UserDetailsModal = ({ user, onClose }) => {
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal-content" onClick={handleModalContentClick}>
                 <button className="close-modal-btn" onClick={onClose}>×</button>
-                <img src={user.image} alt={user.name} className="modal-user-pic" />
+                <img src={""} alt={""} className="modal-user-pic" />
                 <h2 className="modal-user-name">{user.name}</h2>
                 <p className="modal-user-position">{user.position}</p>
                 {user.company && <p><strong>Company:</strong> {user.company}</p>}

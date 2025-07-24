@@ -124,7 +124,7 @@ const Overview = ({ setActiveTab }) => {
               <Box display="flex" alignItems="center" gap={3}>
                 <Box position="relative">
                   <Avatar 
-                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
+                    // src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
                     sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
                   />
                   <OnlineIcon 
