@@ -34,9 +34,9 @@ const totalUsers = 1200;
 
 // Sample users with lastActive field
 const users = [
-  { name: "James Miller", role: "Recruiter", avatar: "https://randomuser.me/api/portraits/men/75.jpg", lastActive: "2025-07-14T09:30:00" },
+  { name: "Gaveshika Peiris", role: "Recruiter", avatar: "https://randomuser.me/api/portraits/men/75.jpg", lastActive: "2025-07-14T09:30:00" },
   { name: "Priya Sharma", role: "Mentor", avatar: "https://randomuser.me/api/portraits/women/65.jpg", lastActive: "2025-07-14T08:45:00" },
-  { name: "Alex Lee", role: "Lead Panelist", avatar: "https://randomuser.me/api/portraits/men/32.jpg", lastActive: "2025-07-13T17:20:00" }
+  { name: "Rasha Peiris", role: "Lead Panelist", avatar: "https://randomuser.me/api/portraits/men/32.jpg", lastActive: "2025-07-13T17:20:00" }
 ];
 
 // Sort and get the 10 most recently active users
@@ -100,7 +100,7 @@ const Overview = () => {
           <Box display="flex" alignItems="center" gap={3}>
             <Box position="relative">
               <Avatar 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
+                src=""
                 sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
               />
               <OnlineIcon 
@@ -119,10 +119,10 @@ const Overview = () => {
             </Box>
             <Box  sx={{ minHeight: '200px' }}>
               <Typography variant="h4" className="admin-welcome-text"  sx={{ mt: 6 }}>
-                Welcome back,<br />Admin!
+                Welcome back,<br />Gaveshika!
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
-                Hiring Manager • 3 years experience
+                Technical Manager • 3 years experience
               </Typography>
             </Box>
             {/* Admin Stat Card */}
@@ -163,7 +163,7 @@ const Overview = () => {
             <React.Fragment key={idx}>
               <ListItem>
                 <ListItemAvatar>
-                  <Avatar src={user.avatar} />
+                  <Avatar src={""} />
                 </ListItemAvatar>
                 <ListItemText
                   primary={user.name}

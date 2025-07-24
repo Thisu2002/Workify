@@ -6,7 +6,7 @@ import '../../styles/MentorVerification.css'; // Import the corresponding CSS
 const MOCK_MENTORS = [
   { 
     id: 1, 
-    name: 'Dr. Evelyn Reed', 
+    name: 'Ravibanu peiris', 
     field: 'Data Science', 
     experience: '12 years at Google', 
     bio: 'Expert in machine learning, AI, and big data analytics.', 
@@ -16,7 +16,7 @@ const MOCK_MENTORS = [
   },
   { 
     id: 2, 
-    name: 'Marcus Chen', 
+    name: 'Piyum Perera', 
     field: 'Software Engineering', 
     experience: '8 years at Meta', 
     bio: 'Full-stack developer with a focus on scalable web applications.', 
@@ -26,7 +26,7 @@ const MOCK_MENTORS = [
   },
   { 
     id: 3, 
-    name: 'Aisha Khan', 
+    name: 'Mahima Fernando', 
     field: 'UX/UI Design', 
     experience: '10 years at Adobe', 
     bio: 'Specializes in user-centered design and intuitive interfaces.', 
@@ -83,7 +83,7 @@ function MentorVerification() {
               role="button" 
               tabIndex={0}
             >
-              <img src={mentor.imageUrl} alt={`${mentor.name}`} className="mentor-item-avatar" />
+              <img src={""} alt={""} className="mentor-item-avatar" />
               <div className="mentor-item-info">
                 <h3>{mentor.name}</h3>
                 <p>{mentor.field}</p>
@@ -101,7 +101,7 @@ function MentorVerification() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             {/* UPDATED: Added image to the modal header */}
             <div className="modal-header">
-              <img src={selectedMentor.imageUrl} alt={`${selectedMentor.name}`} className="modal-avatar" />
+              <img src={""} alt={""} className="modal-avatar" />
               <h2>Mentor Details</h2>
               <button onClick={handleCloseModal} className="close-button">×</button>
             </div>

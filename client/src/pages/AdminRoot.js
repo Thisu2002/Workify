@@ -35,12 +35,12 @@ const menuTabs = [
     path: "/admin/analytics",
     icon: <Schedule />,
   },
-  {
-    id: "feedback",
-    label: "Feedback",
-    path: "/admin/feedback",
-    icon: <Feedback />,
-  },
+  // {
+  //   id: "feedback",
+  //   label: "Feedback",
+  //   path: "/admin/feedback",
+  //   icon: <Feedback />,
+  // },
 ];
 
 const AdminRoot = () => {

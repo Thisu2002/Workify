@@ -44,7 +44,7 @@ const ManagerFeedback = () => {
           <div key={item.id} className="feedback-item">
             <div className="feedback-item-header">
               <div className="feedback-pfp-wrapper">
-                <img src={item.profilePic} alt={`Profile of ${item.name}`} className="feedback-pfp" />
+                <img src={""} alt={""} className="feedback-pfp" />
               </div>
               <div className="feedback-author-info">
                 <p className="author-name">{item.name}</p>

@@ -15,9 +15,9 @@ import '../../styles/SubscriptionPlans.css'; // Ensure this path is correct
 
 // Sample data (same as before)
 const initialPlans = [
-  { id: 1, name: 'Basic Plan', price: '49', features: ['5 Job Postings','Access to Candidate Database','Basic Company Profile'], subscribers: 128, enabled: true },
-  { id: 2, name: 'Pro Plan', price: '99', features: ['Unlimited Job Postings','Advanced Candidate Search','Featured Company Profile', 'Email Support'], subscribers: 342, enabled: true },
-  { id: 3, name: 'Enterprise Plan', price: '199', features: ['All Pro Plan Features','Dedicated Account Manager','API Access','24/7 Phone Support'], subscribers: 78, enabled: false },
+  { id: 1, name: 'Basic Plan', price: '49', features: ['5 Job Postings','Basic Company Profile'], subscribers: 128, enabled: true },
+  { id: 2, name: 'Pro Plan', price: '99', features: ['30 Job Postings','','Featured Company Profile', 'Email Support'], subscribers: 342, enabled: true },
+  { id: 3, name: 'Enterprise Plan', price: '199', features: ['Únlimited job Postings', 'Data Analysis every month','24/7 Phone Support'], subscribers: 78, enabled: false },
 ];
 
 const newPlanInitialState = { name: '', price: '', features: '' };
