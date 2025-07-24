@@ -13,6 +13,10 @@ import {
   Autocomplete,
   Divider,
 } from "@mui/material";
+import axios from "axios";
+import { useEffect } from "react";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 const JobDetails = ({
@@ -28,6 +32,34 @@ const JobDetails = ({
   handleSave,
 }) => {
   const navigate = useNavigate();
+  const [panels, setPanels] = useState([]);
+
+  useEffect(() => {
+    const fetchPanels = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "http://localhost:5000/recruiter/fetchPanels",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const mapped = res.data.map((panel) => ({
+          id: panel._id,
+          name: panel.name,
+        }));
+        setPanels(mapped);
+        console.log(mapped);
+      } catch (err) {
+        toast.error(err.res?.data?.error || "Failed to fetch panels");
+        console.error(err);
+      }
+    };
+
+    fetchPanels();
+  }, []);
 
   // Helpers
   const renderEducationRequirements = (eduReqs) =>
@@ -235,7 +267,7 @@ const JobDetails = ({
 
             <Divider sx={{ my: 2 }} />
 
-            <Box display="flex" alignItems="center" gap={6}>
+            <Box display="flex" alignItems="center" gap={3}>
               {job?.location && (
                 <Typography variant="subtitle1">
                   <strong>Location:</strong> {job.location}
@@ -383,6 +415,29 @@ const JobDetails = ({
                 <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
                   {job.comments}
                 </Typography>
+              </Box>
+            )}
+
+            {job?.interview_rounds?.length > 0 && (
+              <Box mt={2}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Interview Process:
+                </Typography>
+                {job.interview_rounds.map((round, idx) => (
+                  <Box key={idx} mt={1}>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      Round {round.round_number}: {round.round_name}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", ml: 1 }}
+                    >
+                      Panel:{" "}
+                      {panels?.find((panel) => panel.id === round.panel_id)
+                        ?.name || `Panel ID: ${round.panel_id}`}
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
             )}
           </>

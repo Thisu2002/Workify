@@ -41,7 +41,6 @@ const jobPostSchema = new mongoose.Schema({
     {
       level: {
         type: String,
-        enum: ["Diploma", "Bachelors", "Masters", "PhD"],
       },
       field: {
         type: String,
