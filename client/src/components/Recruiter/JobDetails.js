@@ -64,9 +64,16 @@ const JobDetails = ({
       maxWidth="md"
       padding={20}
     >
-      <DialogTitle display="flex" justifyContent="space-between" alignItems="center">
+      <DialogTitle
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
         {isEditing ? "Edit Job Post" : job?.title}
-        <Button endIcon={<ArrowForward />} onClick={() => navigate("/recruiter/job-posts/applicants")}>
+        <Button
+          endIcon={<ArrowForward />}
+          onClick={() => navigate("/recruiter/job-posts/applicants")}
+        >
           View Applicants
         </Button>
       </DialogTitle>
@@ -348,23 +355,25 @@ const JobDetails = ({
               )}
             </Box>
 
-            {job?.qualifications?.length > 0 && (
-              <Box mt={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Qualifications:
-                </Typography>
-                {renderQualifications(job.qualifications)}
-              </Box>
-            )}
+            <Box display="flex" mt={2} gap={10}>
+              {job?.qualifications?.length > 0 && (
+                <Box mt={2}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Qualifications:
+                  </Typography>
+                  {renderQualifications(job.qualifications)}
+                </Box>
+              )}
 
-            {job?.preferred_qualifications?.length > 0 && (
-              <Box mt={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Preferred Qualifications:
-                </Typography>
-                {renderQualifications(job.preferred_qualifications)}
-              </Box>
-            )}
+              {job?.preferred_qualifications?.length > 0 && (
+                <Box mt={2}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Preferred Qualifications:
+                  </Typography>
+                  {renderQualifications(job.preferred_qualifications)}
+                </Box>
+              )}
+            </Box>
 
             {job?.comments && (
               <Box mt={2}>

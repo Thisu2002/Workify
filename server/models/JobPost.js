@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const jobPostSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   description: {
     type: String,
@@ -13,48 +13,48 @@ const jobPostSchema = new mongoose.Schema({
   },
   recruiter_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Recruiter',
-    required: true
+    ref: "Recruiter",
+    required: true,
   },
   skills: {
     type: [Number], // skill IDs
   },
   salary: {
-    type: Number,
+    type: String,
   },
   jobType: {
-    type: String
+    type: String,
   },
   deadline: {
-    type: String
+    type: String,
   },
   date_posted: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   status: {
     type: String,
-    enum: ['Open', 'Closed'],
-    default: 'Open'
+    enum: ["Open", "Closed"],
+    default: "Open",
   },
   education_requirements: [
     {
       level: {
         type: String,
-        enum: ['Diploma', 'Bachelors', 'Masters', 'PhD'],
+        enum: ["Diploma", "Bachelors", "Masters", "PhD"],
       },
       field: {
         type: String,
-      }
-    }
+      },
+    },
   ],
   experience: {
     years: {
       type: Number,
     },
     description: {
-      type: String
-    }
+      type: String,
+    },
   },
   qualifications: [
     {
@@ -63,24 +63,41 @@ const jobPostSchema = new mongoose.Schema({
       },
       required: {
         type: Boolean,
-      }
-    }
+      },
+    },
   ],
   preferred_qualifications: [
     {
       name: {
         type: String,
-        required: true
+        required: true,
       },
       required: {
         type: Boolean,
-        default: false
-      }
-    }
+        default: false,
+      },
+    },
   ],
   comments: {
+    type: String,
+  },
+  interview_rounds: [
+    {
+      round_number: {
+        type: Number,
+      },
+      round_name: {
+        type: String,
+      },
+      panel_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Panel",
+      },
+    },
+  ],
+  quiz: {
     type: String
   }
 });
 
-module.exports = mongoose.model('JobPost', jobPostSchema);
+module.exports = mongoose.model("JobPost", jobPostSchema);

@@ -7,6 +7,7 @@ import {
   Assessment,
   Schedule,
   Feedback,
+  Assignment,
 } from "@mui/icons-material";
 
 import Sidebar from "../components/Sidebar";
@@ -28,22 +29,28 @@ const menuTabs = [
     icon: <Group />,
   },
   {
+    id: "assignments",
+    label: "Assignments",
+    path: "/lead-panelist/assignments",
+    icon: <Assignment />,
+  },
+  {
     id: "interviews",
     label: "Interviews",
     path: "/lead-panelist/interviews",
     icon: <Schedule />,
   },
   {
-    id: "evaluations",
-    label: "Evaluations",
-    path: "/lead-panelist/evaluations",
-    icon: <Assessment />,
-  },
-  {
     id: "feedback",
     label: "Feedback",
     path: "/lead-panelist/feedback",
     icon: <Feedback />,
+  },
+  {
+    id: "evaluations",
+    label: "Evaluations",
+    path: "/lead-panelist/evaluations",
+    icon: <Assessment />,
   },
 ];
 

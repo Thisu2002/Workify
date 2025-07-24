@@ -1,5 +1,6 @@
 const Post = require('../models/JobPost');
 const jwt = require('jsonwebtoken');
+const Panel = require('../models/Panel');
 
 exports.getJobPosts = async (req, res) => {
     try {
@@ -27,7 +28,11 @@ exports.postJob = async (req, res) => {
     qualifications,
     preferred_qualifications,
     comments,
+    interview_rounds,
+    quiz
   } = req.body;
+
+  //console.log("Received Job Post Data:", req.body);
 
   try {
     const authHeader = req.headers.authorization;
@@ -53,6 +58,8 @@ exports.postJob = async (req, res) => {
       preferred_qualifications,
       comments,
       recruiter_id,
+      interview_rounds,
+      quiz
     });
 
     await newPost.save();
@@ -75,5 +82,14 @@ exports.changeJobStatus = async (req, res) => {
     res.status(200).json({ message: 'Job status updated successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Error updating job status', error: err.message });
+  }
+};
+
+exports.fetchPanels = async (req, res) => {
+  try {
+    const panels = await Panel.find().select('_id name');
+    res.status(200).json(panels);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching panels', error: err.message });
   }
 };

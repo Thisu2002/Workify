@@ -3,7 +3,7 @@ import {
   Box, Typography, Chip, Card, CardContent,
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
   Grid, Avatar, Stack, TextField, InputAdornment, Paper,
-  IconButton, Menu, MenuItem, Tab, Tabs
+  IconButton, Menu, MenuItem, Tab, Tabs, Select, MenuItem as MuiMenuItem
 } from '@mui/material';
 import {
   PersonAdd, Schedule, Message, Search, FilterList,
@@ -15,6 +15,16 @@ const PanelManagement = () => {
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [currentTab, setCurrentTab] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Create Panel modal state
+  const [openCreate, setOpenCreate] = useState(false);
+  const [panelName, setPanelName] = useState("");
+  const [specializations, setSpecializations] = useState("");
+  const [status, setStatus] = useState("active");
+  const [members, setMembers] = useState([]);
+  const [memberName, setMemberName] = useState("");
+  const [memberRole, setMemberRole] = useState("");
+  const [memberAvatar, setMemberAvatar] = useState("");
 
   const metrics = {
     totalPanels: 8,
@@ -75,18 +85,26 @@ const PanelManagement = () => {
 
   // Stats cards component
   const StatsCard = ({ icon, title, value, change }) => (
-    <Paper elevation={0} sx={{ p: 2, border: '1px solid #e0e0e0' }}>
-      <Stack direction="row" spacing={2} alignItems="center">
-        <Avatar sx={{ bgcolor: 'primary.light' }}>{icon}</Avatar>
-        <Box>
-          <Typography variant="h6">{value}</Typography>
-          <Typography variant="body2" color="text.secondary">{title}</Typography>
-          {change && (
-            <Typography variant="caption" color="success.main">
-              {change}
-            </Typography>
-          )}
-        </Box>
+    <Paper elevation={0} sx={{
+      width: 220,
+      height: 150,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: '1px solid #e0e0e0',
+      borderRadius: 2,
+      boxSizing: 'border-box',
+      p: 0
+    }}>
+      <Stack spacing={1} alignItems="center" justifyContent="center" width="100%">
+        <Avatar sx={{ bgcolor: 'primary.light', width: 40, height: 40 }}>{icon}</Avatar>
+        <Typography variant="h6">{value}</Typography>
+        <Typography variant="body2" color="text.secondary">{title}</Typography>
+        {change && (
+          <Typography variant="caption" color="success.main">
+            {change}
+          </Typography>
+        )}
       </Stack>
     </Paper>
   );
@@ -100,10 +118,98 @@ const PanelManagement = () => {
           variant="contained"
           startIcon={<PersonAdd />}
           sx={{ backgroundColor: '#3B5998' }}
+          onClick={() => setOpenCreate(true)}
         >
           Create New Panel
         </Button>
       </Box>
+
+      {/* Create Panel Modal */}
+      <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Create New Panel</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Panel Name"
+            value={panelName}
+            onChange={e => setPanelName(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Specializations (comma separated)"
+            value={specializations}
+            onChange={e => setSpecializations(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <Box mt={2} mb={2}>
+            <Typography variant="subtitle2" mb={1}>Status</Typography>
+            <Select
+              value={status}
+              onChange={e => setStatus(e.target.value)}
+              fullWidth
+            >
+              <MuiMenuItem value="active">Active</MuiMenuItem>
+              <MuiMenuItem value="inactive">Inactive</MuiMenuItem>
+            </Select>
+          </Box>
+          <Box mt={2} mb={1}>
+            <Typography variant="subtitle2">Add Members</Typography>
+            <Stack direction="row" spacing={1} mb={1}>
+              <TextField
+                label="Name"
+                value={memberName}
+                onChange={e => setMemberName(e.target.value)}
+                size="small"
+              />
+              <TextField
+                label="Role"
+                value={memberRole}
+                onChange={e => setMemberRole(e.target.value)}
+                size="small"
+              />
+              <TextField
+                label="Avatar URL"
+                value={memberAvatar}
+                onChange={e => setMemberAvatar(e.target.value)}
+                size="small"
+              />
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  if (memberName && memberRole) {
+                    setMembers([...members, { name: memberName, role: memberRole, avatar: memberAvatar }]);
+                    setMemberName("");
+                    setMemberRole("");
+                    setMemberAvatar("");
+                  }
+                }}
+                sx={{ minWidth: 100 }}
+              >
+                Add Member
+              </Button>
+            </Stack>
+            <Stack spacing={1}>
+              {members.map((m, idx) => (
+                <Box key={idx} display="flex" alignItems="center" gap={2}>
+                  <Avatar src={m.avatar} sx={{ width: 32, height: 32 }} />
+                  <Typography>{m.name} ({m.role})</Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCreate(false)} color="secondary">Cancel</Button>
+          <Button onClick={() => {
+            setOpenCreate(false);
+            setPanelName("");
+            setSpecializations("");
+            setStatus("active");
+            setMembers([]);
+          }} variant="contained" sx={{ backgroundColor: '#3B5998' }}>Create</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Stats Section */}
       <Grid container spacing={3} mb={4}>

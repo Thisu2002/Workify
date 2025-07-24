@@ -10,6 +10,7 @@ import {
   Step,
   StepLabel,
   Slide,
+  Button,
 } from "@mui/material";
 import {
   CalendarMonth,
@@ -17,6 +18,9 @@ import {
   MoreVert,
   CheckCircle,
   Close as CloseIcon,
+  ArrowForward,
+  History,
+  Description,
 } from "@mui/icons-material";
 
 const CandidateDetails = ({ candidate, onClose }) => {
@@ -59,9 +63,27 @@ const CandidateDetails = ({ candidate, onClose }) => {
               variant="outlined"
               sx={{ fontWeight: 500, fontSize: 15, px: 1.5, py: 0.5 }}
             />
-            <IconButton><Email /></IconButton>
-            <IconButton><CalendarMonth /></IconButton>
-            <IconButton><MoreVert /></IconButton>
+            <IconButton
+              sx={{
+                backgroundColor: "#f0f0f0",
+                "&:hover": { backgroundColor: "#e0e0e0" },
+              }}
+            >
+              <History />
+            </IconButton>
+            <Button
+              variant="outlined"
+              startIcon={<Description />}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                borderColor: "#0f2445",
+                color: "#0f2445",
+                "&:hover": { borderColor: "#222" },
+              }}
+            >
+              View CV
+            </Button>
           </Box>
         </Box>
 
@@ -131,6 +153,20 @@ const CandidateDetails = ({ candidate, onClose }) => {
             </Stepper>
           </Box>
         </Box>
+        <Button
+                variant="contained"
+                endIcon={<ArrowForward />}
+                sx={{
+                  mt: 3,
+                  width: "fit-content",
+                  textTransform: "none",
+                  borderRadius: 2,
+                  backgroundColor: "#0f2445",
+                  "&:hover": { backgroundColor: "#222" },
+                }}
+              >
+                Move to Next Stage
+              </Button>
       </Box>
     </Slide>
   );
