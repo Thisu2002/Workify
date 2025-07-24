@@ -46,7 +46,7 @@ const Overview = ({ setActiveTab }) => {
     const [loading, setLoading] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [profile, setProfile] = useState({
-      name: "Jane Silva",
+      name: "Sandaruwani Silva",
       position: "Senior Business Manager",
       industry: "IT and Business Services, workify",
       description: "10+ years of experience in strategic business operations, growth planning, and client success. Based in USA."
@@ -95,7 +95,7 @@ const Overview = ({ setActiveTab }) => {
           <Box display="flex" alignItems="center" gap={3}>
             <Box position="relative">
               <Avatar 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face"
+                src=""
                 sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
               />
               <OnlineIcon 
@@ -114,10 +114,10 @@ const Overview = ({ setActiveTab }) => {
             </Box>
             <Box>
               <Typography variant="h4" className="manager-welcome-text">
-                Welcome back, Manager!
+                Welcome back, Sandaruwani!
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
-                Hiring Manager • 3 years experience
+                Business Manager • 3 years experience
               </Typography>
               <Box display="flex" gap={1} mt={1}>
                 <Chip 
@@ -174,7 +174,7 @@ const Overview = ({ setActiveTab }) => {
           <Paper className="manager-content-card manager-profile" elevation={2}>
             <Box display="flex" flexDirection="column" alignItems="center" p={3}>
                 <Avatar
-                    src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop"
+                    src=""
                     sx={{ width: 80, height: 80, mb: 2 }}
                 />
                 <Typography variant="h6" fontWeight="bold">

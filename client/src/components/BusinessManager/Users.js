@@ -5,22 +5,22 @@ import "../../styles/users.css";
 // This is now the initial state; the component will manage changes.
 const initialUsers = {
     recruiters: [
-        { id: 1, name: 'Eleanor Vance', position: 'Senior Recruiter', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/women/1.jpg', email: 'eleanor@example.com', phone: '123-456-7890' },
-        { id: 2, name: 'James Holden', position: 'Talent Acquisition', company: 'Tech Solutions', image: 'https://randomuser.me/api/portraits/men/2.jpg', email: 'james@example.com', phone: '123-456-7890' },
-        { id: 3, name: 'Amos Burton', position: 'HR Manager', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/men/3.jpg', email: 'amos@example.com', phone: '123-456-7890' },
-        { id: 4, name: 'Carla Monroe', position: 'Recruiting Lead', company: 'Data Systems', image: 'https://randomuser.me/api/portraits/women/4.jpg', email: 'carla@example.com', phone: '123-456-7890' },
+        { id: 1, name: 'Gaveshika Peirs', position: 'Senior Recruiter', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/women/1.jpg', email: 'eleanor@example.com', phone: '123-456-7890' },
+        { id: 2, name: 'Sandaruwani Perera', position: 'Talent Acquisition', company: 'Tech Solutions', image: 'https://randomuser.me/api/portraits/men/2.jpg', email: 'james@example.com', phone: '123-456-7890' },
+        { id: 3, name: 'Rasha samarasekara', position: 'HR Manager', company: 'Innovate Inc.', image: 'https://randomuser.me/api/portraits/men/3.jpg', email: 'amos@example.com', phone: '123-456-7890' },
+        { id: 4, name: 'Thisuli Liyanarachchi', position: 'Recruiting Lead', company: 'Data Systems', image: 'https://randomuser.me/api/portraits/women/4.jpg', email: 'carla@example.com', phone: '123-456-7890' },
     ],
     candidates: [
-        { id: 5, name: 'Naomi Nagata', position: 'Software Engineer', image: 'https://randomuser.me/api/portraits/women/5.jpg', email: 'naomi@example.com', skills: ['React', 'Node.js', 'GraphQL'] },
-        { id: 6, name: 'Alex Kamal', position: 'Product Manager', image: 'https://randomuser.me/api/portraits/men/6.jpg', email: 'alex@example.com', skills: ['Agile', 'Scrum', 'JIRA'] },
+        { id: 5, name: 'Sajani Perera', position: 'Software Engineer', image: 'https://randomuser.me/api/portraits/women/5.jpg', email: 'naomi@example.com', skills: ['React', 'Node.js', 'GraphQL'] },
+        { id: 6, name: 'Kasunshya peiris', position: 'Product Manager', image: 'https://randomuser.me/api/portraits/men/6.jpg', email: 'alex@example.com', skills: ['Agile', 'Scrum', 'JIRA'] },
     ],
     mentors: [
-        { id: 7, name: 'Chrisjen Avasarala', position: 'Lead Developer', image: 'https://randomuser.me/api/portraits/women/7.jpg', email: 'chrisjen@example.com', expertise: ['System Design', 'Architecture'] },
+        { id: 7, name: 'Pamali vageesha', position: 'Lead Developer', image: 'https://randomuser.me/api/portraits/women/7.jpg', email: 'chrisjen@example.com', expertise: ['System Design', 'Architecture'] },
     ],
     'blocked-candidates': [
         {
             id: 9,
-            name: 'Jules-Pierre Mao',
+            name: 'Tiara Fernando',
             position: 'UI/UX Designer',
             image: 'https://randomuser.me/api/portraits/men/9.jpg',
             email: 'jp@example.com',
@@ -34,7 +34,7 @@ const initialUsers = {
 // --- User Card Component ---
 const UserCard = ({ user, onClick }) => (
     <div className="user-card" onClick={() => onClick(user)}>
-        <img src={user.image} alt={user.name} className="user-profile-pic" />
+        <img src={""} alt={""} className="user-profile-pic" />
         <h3 className="user-name">{user.name}</h3>
         <p className="user-position">{user.position}</p>
     </div>
@@ -60,7 +60,7 @@ const UserDetailsModal = ({ user, onClose, onUnblock }) => {
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal-content" onClick={handleModalContentClick}>
                 <button className="close-modal-btn" onClick={onClose}>×</button>
-                <img src={user.image} alt={user.name} className="modal-user-pic" />
+                <img src={""} alt={""} className="modal-user-pic" />
                 <h2 className="modal-user-name">{user.name}</h2>
                 <p className="modal-user-position">{user.position}</p>
 
