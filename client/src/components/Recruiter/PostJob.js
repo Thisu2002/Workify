@@ -27,6 +27,7 @@ const dummySkills = [
   { id: 8, name: "Azure" },
   { id: 9, name: "API Design" },
   { id: 10, name: "Cloud" },
+  { id: 11, name: "AWS" },
 ];
 
 const dummyQuizzes = [
@@ -80,6 +81,7 @@ const PostJob = () => {
           name: panel.name,
         }));
         setPanels(mapped);
+        console.log(mapped);
       } catch (err) {
         toast.error(err.res?.data?.error || "Failed to fetch panels");
         console.error(err);
@@ -91,10 +93,7 @@ const PostJob = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (
-      (name === "experienceYears") &&
-      Number(value) < 0
-    ) {
+    if (name === "experienceYears" && Number(value) < 0) {
       return;
     }
     setForm({ ...form, [name]: value });
@@ -231,7 +230,9 @@ const PostJob = () => {
       setSelectedSkills([]);
       setInterviewRounds([{ roundNumber: 1, panelId: "", roundName: "" }]);
       setShowInterviewSection(false);
-      navigate("/recruiter/job-posts");
+      setTimeout(() => {
+        navigate("/recruiter/job-posts");
+      }, 1000);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to post job");
     }
