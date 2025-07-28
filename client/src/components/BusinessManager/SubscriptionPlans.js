@@ -15,9 +15,9 @@ import '../../styles/SubscriptionPlans.css'; // Ensure this path is correct
 
 // Sample data (same as before)
 const initialPlans = [
-  { id: 1, name: 'Basic Plan', price: '49', features: ['5 Job Postings','Basic Company Profile'], subscribers: 128, enabled: true },
-  { id: 2, name: 'Pro Plan', price: '99', features: ['30 Job Postings','','Featured Company Profile', 'Email Support'], subscribers: 342, enabled: true },
-  { id: 3, name: 'Enterprise Plan', price: '199', features: ['Únlimited job Postings', 'Data Analysis every month','24/7 Phone Support'], subscribers: 78, enabled: false },
+  { id: 1, name: 'Basic Plan', price: '10 000', features: ['5 Job Postings','Basic Company Profile'], subscribers: 128, enabled: true },
+  { id: 2, name: 'Pro Plan', price: '15 000', features: ['30 Job Postings','','Featured Company Profile', 'Email Support'], subscribers: 342, enabled: true },
+  { id: 3, name: 'Enterprise Plan', price: '20 000', features: ['Únlimited job Postings', 'Data Analysis every month','24/7 Phone Support'], subscribers: 78, enabled: false },
 ];
 
 const newPlanInitialState = { name: '', price: '', features: '' };
@@ -84,13 +84,13 @@ const SubscriptionPlans = () => {
       
       <div className="plans-grid">
         {plans.map((plan) => (
-          <Card className={`plan-card ${!plan.enabled ? 'disabled' : ''}`} key={plan.id}>
+          <Card className={`plan-card LKR{!plan.enabled ? 'disabled' : ''}`} key={plan.id}>
             <CardContent className="plan-card-content">
               <Typography variant="h5" component="h3" className="plan-title">
                 {plan.name}
               </Typography>
               <div className="plan-price">
-                ${plan.price}
+                LKR {plan.price}
                 <span className="period">/month</span>
               </div>
               <ul className="plan-features">
@@ -106,7 +106,7 @@ const SubscriptionPlans = () => {
               <Button variant="contained" className="edit-btn" onClick={() => handleEditModalOpen(plan)}>
                 Edit Plan
               </Button>
-              <Button variant="outlined" onClick={() => alert(`Viewing companies for ${plan.name}`)}>
+              <Button variant="outlined" onClick={() => alert(`Viewing companies for LKR{plan.name}`)}>
                 View Companies
               </Button>
               <Button
@@ -144,7 +144,7 @@ const SubscriptionPlans = () => {
           <Typography variant="h5" className="modal-header">Add New Subscription Plan</Typography>
           <Box component="form">
             <TextField fullWidth label="Plan Name" name="name" value={newPlan.name} onChange={handleAddChange} margin="normal" />
-            <TextField fullWidth label="Price ($)" name="price" type="number" value={newPlan.price} onChange={handleAddChange} margin="normal" />
+            <TextField fullWidth label="Price (LKR)" name="price" type="number" value={newPlan.price} onChange={handleAddChange} margin="normal" />
             <TextField fullWidth label="Features (comma-separated)" name="features" multiline rows={3} value={newPlan.features} onChange={handleAddChange} margin="normal" />
             <div className="modal-actions">
               <Button variant="outlined" onClick={handleAddModalClose}>Cancel</Button>

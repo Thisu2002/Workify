@@ -42,7 +42,6 @@ const App = () => {
         <Route path="/lead-panelist/overview" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/panels" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/interviews" element={<LeadPanelistRoot />} />
-        <Route path="/lead-panelist/evaluations" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/feedback" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/assignments" element={<LeadPanelistRoot />} />
         <Route path="/lead-panelist/candidates" element={<CandidateList />} />

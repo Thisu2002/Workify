@@ -464,7 +464,8 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       />
 
       <Dialog open={Boolean(showJobForm)} fullWidth maxWidth="md" padding={20}>
-        <PostJob />
+        <PostJob setShowJobForm={setShowJobForm}
+        />
         <DialogActions>
           <Button onClick={() => setShowJobForm(false)}>Cancel</Button>
         </DialogActions>

@@ -26,7 +26,7 @@ function Login() {
         mentor: '/mentor',
         candidate: '/candidate',
         admin: '/admin',
-        lead_panelist: '/panelist',
+        lead_panelist: '/lead-panelist',
         recruiter: '/recruiter',
         business_manager: '/manager',
       };
