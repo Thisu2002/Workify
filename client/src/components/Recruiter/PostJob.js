@@ -38,7 +38,7 @@ const dummyQuizzes = [
   "CSS & Design Systems Quiz",
 ];
 
-const PostJob = () => {
+const PostJob = ({setShowJobForm}) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
@@ -230,9 +230,9 @@ const PostJob = () => {
       setSelectedSkills([]);
       setInterviewRounds([{ roundNumber: 1, panelId: "", roundName: "" }]);
       setShowInterviewSection(false);
-      setTimeout(() => {
-        navigate("/recruiter/job-posts");
-      }, 1000);
+      setShowJobForm(false);
+      navigate("/recruiter/job-posts");
+      window.location.reload();
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to post job");
     }
@@ -440,7 +440,7 @@ const PostJob = () => {
             fullWidth
             sx={{ mt: 3 }}
           >
-            Continue to Interview Setup
+            Continue
           </Button>
         </Box>
       ) : (

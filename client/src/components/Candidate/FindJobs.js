@@ -33,15 +33,15 @@ import ApplyForm from './ApplyForm';
 const jobPostings = [
   {
     id: 1,
-    title: 'Senior React Developer',
+    title: 'Software Engineer',
     company: 'WealthOS',
     logo: 'https://via.placeholder.com/40?text=W',
     location: 'Colombo',
     type: 'Full-time',
     model: 'Remote',
     salary: 'LKR 100,000 - 150,000 per month',
-    postedDate: '5d ago',
-    description: 'Join our team to build next-generation web applications with React and TypeScript. You will be responsible for developing and implementing user interface components using React.js concepts and workflows such as Redux, Flux, and Webpack.',
+    postedDate: 'Today',
+    description: 'Join our engineering team to build scalable web applications for international clients. Opportunity to work with cutting-edge technologies in a fast-paced environment.',
     responsibilities: ['Developing new user-facing features', 'Building reusable components', 'Translating designs into high-quality code'],
     qualifications: ['5+ years of React experience', 'Strong proficiency in JavaScript & CSS', 'Experience with RESTful APIs']
   },

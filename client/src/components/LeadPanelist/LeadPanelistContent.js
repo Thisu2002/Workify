@@ -18,7 +18,6 @@ const LeadPanelistContent = () => {
       {location.pathname === "/lead-panelist/overview" && <Overview />}
       {location.pathname === "/lead-panelist/panels" && <PanelManagement />}
       {location.pathname === "/lead-panelist/interviews" && <Interviews />}
-      {location.pathname === "/lead-panelist/evaluations" && <Evaluations />}
       {location.pathname === "/lead-panelist/feedback" && <Feedback />}
       {location.pathname === "/lead-panelist/assignments" && <Assignments />}
     </Box>

@@ -46,12 +46,7 @@ const menuTabs = [
     path: "/lead-panelist/feedback",
     icon: <Feedback />,
   },
-  {
-    id: "evaluations",
-    label: "Evaluations",
-    path: "/lead-panelist/evaluations",
-    icon: <Assessment />,
-  },
+ 
 ];
 
 const LeadPanelistRoot = () => {
