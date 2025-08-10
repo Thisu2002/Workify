@@ -240,7 +240,7 @@ const FindJobs = () => {
       <Box>
         {displayedJobs.length > 0 ? (
           displayedJobs.map((job) => (
-            <Paper key={job.id} elevation={2} sx={{ mb: 2, p: 2.5, borderRadius: 2, transition: 'box-shadow 0.3s', '&:hover': { boxShadow: 6 } }}>
+            <Paper key={job.id} elevation={2} sx={{ mb: 2, p: 2.5, borderRadius: 2, transition: 'box-shadow 0.3s,transform 0.2s','&:hover': { boxShadow: 6, transform: 'translateY(-4px)' } }}>
               {/* Job Card content remains the same */}
               <Grid container spacing={2} alignItems="center">
                 <Grid item><Avatar src={job.logo} sx={{ width: 50, height: 50 }} /></Grid>
