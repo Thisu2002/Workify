@@ -2,12 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
 connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/auth', require('./routes/auth'));
 app.use('/recruiter', require('./routes/recruiter'));

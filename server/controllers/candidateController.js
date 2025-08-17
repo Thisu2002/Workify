@@ -57,3 +57,52 @@ exports.updateProfile = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+// UPDATE this function
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ msg: 'No file uploaded.' });
+    }
+
+    // The URL path we will save and send to the frontend
+    // It will look like: /uploads/avatars/1634567890123-my-avatar.png
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    // Update the candidate's profile
+    await Candidate.findByIdAndUpdate(req.user.id, { $set: { avatarUrl } });
+
+    res.json({
+      msg: 'Avatar uploaded successfully',
+      avatarUrl: avatarUrl, // Send the relative path back
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// UPDATE this function to delete the file from the server
+exports.deleteAvatar = async (req, res) => {
+    try {
+        const candidate = await Candidate.findById(req.user.id);
+        const oldAvatarUrl = candidate.avatarUrl;
+
+        // Remove the reference from our DB
+        await Candidate.findByIdAndUpdate(req.user.id, { $set: { avatarUrl: '' } });
+
+        // If there was an old avatar, delete the file from the file system
+        if (oldAvatarUrl) {
+            // Construct the full path to the file
+            const filePath = path.join(__dirname, '..', oldAvatarUrl);
+            fs.unlink(filePath, (err) => {
+                if (err) console.error("Error deleting file:", err);
+            });
+        }
+        
+        res.json({ msg: 'Avatar deleted successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};

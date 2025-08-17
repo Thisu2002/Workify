@@ -75,6 +75,7 @@ const Profile = () => {
   // CV Management state is unchanged for now
   const [cvs, setCvs] = useState([]); // Array of uploaded CVs
   const fileInputRef = useRef();
+  const avatarInputRef = useRef(null);
 
   // --- NEW: useEffect to fetch profile data when component mounts ---
   useEffect(() => {
@@ -155,20 +156,67 @@ const Profile = () => {
     }
   };
 
-  // Other UI handlers remain the same
+  // --- NEW: Avatar upload handler ---
+    // --- NEW: Avatar upload handler ---
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const { data } = await axios.post(
+        'http://localhost:5000/candidate/upload-avatar',
+        formData,
+        { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data' // Good practice to add this header
+          } 
+        }
+      );
+      // ** THIS IS THE IMPORTANT FIX **
+      // This line updates the UI instantly with the new photo URL from the backend
+      setCandidate(prev => ({ ...prev, avatarUrl: data.avatarUrl }));
+
+    } catch (err) {
+      alert('Avatar upload failed: ' + (err.response?.data?.msg || err.message));
+      console.error(err);
+    }
+  };
+
+    // UI handlers
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
   const handleEditProfile = () => setEditFormOpen(true);
   const handleEditFormClose = () => setEditFormOpen(false);
-  const handleUpload = () => {
-    console.log("Upload action triggered.");
-    // This is where you would trigger a hidden file input to open the file selector
-    handleMenuClose(); // Close the menu after clicking
+
+  // This function programmatically "clicks" the hidden file input
+  const handleTriggerUpload = () => {
+    avatarInputRef.current.click();
+    handleMenuClose();
   };
-   const handleDelete = () => {
-    console.log("Delete action triggered.");
-    // This is where you would make an API call to the backend to remove the avatarUrl
-    handleMenuClose(); // Close the menu after clicking
+
+  // This function handles the actual deletion by calling the backend
+  const handleDeleteAvatar = async () => {
+    if (!window.confirm("Are you sure you want to delete your profile photo?")) {
+        return;
+    }
+    try {
+        const token = localStorage.getItem('token');
+        // NOTE: Your delete route needs to be created in the backend first
+        await axios.delete('http://localhost:5000/candidate/delete-avatar', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        // Update state to remove the avatar URL and instantly refresh the UI
+        setCandidate(prev => ({ ...prev, avatarUrl: '' }));
+    } catch (err) {
+         alert('Could not delete photo: ' + (err.response?.data?.msg || err.message));
+    } finally {
+        handleMenuClose();
+    }
   };
   
   // --- NEW: Conditional rendering for loading and error states ---
@@ -195,37 +243,29 @@ const Profile = () => {
         profileData={candidate}
         onSave={handleProfileSave}
       />
+      <input
+      type="file"
+      ref={avatarInputRef}
+      onChange={handleAvatarUpload}
+      style={{ display: 'none' }}
+      accept="image/png, image/jpeg, image/jpg" // Good practice to accept only images
+    />
       <Menu
   anchorEl={anchorEl}
   open={open}
   onClose={handleMenuClose}
-  // These props control the menu's positioning
-  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-  // --- This is the new part that makes it look nicer ---
-  PaperProps={{
-    elevation: 3, // Increases the shadow
-    sx: {
-      overflow: 'visible',
-      filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))', // A softer, more modern shadow
-      mt: 1.5, // Adds a little space between the button and the menu
-      borderRadius: 2, // Rounds the corners
-      '& .MuiAvatar-root': {
-        width: 32,
-        height: 32,
-        ml: -0.5,
-        mr: 1,
-      },
-    },
-  }}
+  // ... (rest of your menu props are fine)
 >
-  {/* We also add a little padding to the items for more breathing room */}
-  <MenuItem onClick={handleUpload} sx={{ py: 1, px: 2, color: 'primary.main' }}>
+  {/* This now calls the function that opens the file dialog */}
+  <MenuItem onClick={handleTriggerUpload} sx={{ py: 1, px: 2, color: 'primary.main' }}>
     <FileUpload sx={{ mr: 1.5 }} fontSize="small" />
     Upload Photo
   </MenuItem>
+
   <Divider sx={{ my: 0.5 }} />
-  <MenuItem onClick={handleDelete} sx={{ py: 1, px: 2, color: 'error.main' }}>
+  
+  {/* This now calls the function that deletes the photo */}
+  <MenuItem onClick={handleDeleteAvatar} sx={{ py: 1, px: 2, color: 'error.main' }}>
     <Delete sx={{ mr: 1.5 }} fontSize="small" />
     Delete Photo
   </MenuItem>
@@ -241,7 +281,7 @@ const Profile = () => {
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2, md: 4 }} alignItems="center">
               <Box sx={{ position: 'relative', display: 'inline-block' }}>
                 <Box sx={{ borderRadius: '50%', border: '4px solid', borderColor: 'primary.main', p: '5px', display: 'inline-flex' }}>
-                  <Avatar src={candidate.avatarUrl} alt={candidate.name} sx={{ width: {xs: 120, md: 150}, height: {xs: 120, md: 150} }} />
+                  <Avatar src={`http://localhost:5000${candidate.avatarUrl}`}  alt={candidate.name} sx={{ width: {xs: 120, md: 150}, height: {xs: 120, md: 150} }} />
                 </Box>
                 <IconButton onClick={handleMenuOpen} sx={{ position: 'absolute', bottom: 5, right: 5, backgroundColor: 'rgba(255, 255, 255, 0.9)', '&:hover': { backgroundColor: 'white' } }}>
                   <PhotoCamera sx={{ fontSize: 20 }} />
