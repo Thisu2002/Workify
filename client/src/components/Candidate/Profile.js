@@ -281,7 +281,13 @@ const Profile = () => {
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2, md: 4 }} alignItems="center">
               <Box sx={{ position: 'relative', display: 'inline-block' }}>
                 <Box sx={{ borderRadius: '50%', border: '4px solid', borderColor: 'primary.main', p: '5px', display: 'inline-flex' }}>
-                  <Avatar src={`http://localhost:5000${candidate.avatarUrl}`}  alt={candidate.name} sx={{ width: {xs: 120, md: 150}, height: {xs: 120, md: 150} }} />
+                  <Avatar
+  src={candidate.avatarUrl ? `http://localhost:5000${candidate.avatarUrl}` : undefined}
+  alt={candidate.name}
+  sx={{ width: {xs: 120, md: 150}, height: {xs: 120, md: 150} }}
+>
+  {!candidate.avatarUrl && candidate.name[0]}
+</Avatar>
                 </Box>
                 <IconButton onClick={handleMenuOpen} sx={{ position: 'absolute', bottom: 5, right: 5, backgroundColor: 'rgba(255, 255, 255, 0.9)', '&:hover': { backgroundColor: 'white' } }}>
                   <PhotoCamera sx={{ fontSize: 20 }} />

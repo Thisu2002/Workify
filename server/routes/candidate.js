@@ -24,4 +24,11 @@ router.post(
   candidateController.uploadAvatar
 );
 
+router.delete('/delete-avatar', authMiddleware, async (req, res) => {
+  // Your logic to delete the avatar file and update the user profile
+  // Example:
+  // await Candidate.findByIdAndUpdate(req.user.id, { avatarUrl: '' });
+  res.json({ msg: 'Avatar deleted' });
+});
+
 module.exports = router;
