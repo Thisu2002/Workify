@@ -218,7 +218,27 @@ const Profile = () => {
         handleMenuClose();
     }
   };
-  
+
+
+const handleCvDelete = async (cvId) => {
+    if (!window.confirm("Are you sure you want to delete this CV?")) {
+        return;
+    }
+    try {
+        const token = localStorage.getItem('token');
+        const { data } = await axios.delete(
+            `http://localhost:5000/candidate/cv/${cvId}`, 
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        // The backend sends back the new list, so we just update our state
+        setCvs(data.cvs);
+        alert('CV deleted successfully.');
+    } catch (err) {
+        alert('Could not delete CV: ' + (err.response?.data?.msg || err.message));
+        console.error(err);
+    }
+};
+
   // --- NEW: Conditional rendering for loading and error states ---
   if (loading) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}><CircularProgress /></Box>;
@@ -429,14 +449,14 @@ const Profile = () => {
             {cvs.length === 0 && (
               <Typography color="text.secondary">No CVs uploaded yet.</Typography>
             )}
-            {cvs.map((cv, idx) => (
-              <Paper key={idx} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+            {cvs.map((cv) => (
+              <Paper key={cv._id} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <PictureAsPdf color="primary" />
                 <Typography sx={{ flexGrow: 1 }}>{cv.filename || cv.name}</Typography>
-                <IconButton href={cv.url} target="_blank">
+                <IconButton component="a" href={`http://localhost:5000${cv.url}`} target="_blank" rel="noopener noreferrer">
                   <Visibility />
                 </IconButton>
-                <IconButton>
+                <IconButton onClick={() => handleCvDelete(cv._id)} color="error">
                   <Delete color="error" />
                 </IconButton>
               </Paper>

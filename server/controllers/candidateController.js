@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Candidate = require('../models/Candidate');
+const path = require('path');
+const fs = require('fs');
 
 // IMPORTANT: Use "exports.getProfile", not "export function" or "export default"
 exports.getProfile = async (req, res) => {
@@ -31,6 +33,7 @@ exports.getProfile = async (req, res) => {
       experience: candidateProfile.experience,
       education: candidateProfile.education,
       avatarUrl: candidateProfile.avatarUrl,
+      cvs: candidateProfile.cvs, 
     };
     res.json(response);
   } catch (err) {
@@ -101,6 +104,72 @@ exports.deleteAvatar = async (req, res) => {
         }
         
         res.json({ msg: 'Avatar deleted successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.handleCvUpload = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ msg: 'No file uploaded.' });
+    }
+
+    const candidate = await Candidate.findById(req.user.id);
+    if (!candidate) {
+      return res.status(404).json({ msg: 'Candidate profile not found.' });
+    }
+    
+    const newCv = {
+      filename: req.file.originalname,
+      url: `/uploads/cvs/${req.file.filename}` 
+    };
+
+    candidate.cvs.unshift(newCv);
+    await candidate.save();
+
+    // Send back the complete, updated list of CVs
+    res.json({
+      msg: 'CV uploaded successfully',
+      cvs: candidate.cvs
+    });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+exports.handleCvDelete = async (req, res) => {
+    try {
+        const candidate = await Candidate.findById(req.user.id);
+
+        // Find the cv to be deleted
+        const cvToDelete = candidate.cvs.find(
+            (cv) => cv._id.toString() === req.params.cv_id
+        );
+
+        if (!cvToDelete) {
+            return res.status(404).json({ msg: 'CV not found' });
+        }
+
+        // Delete the file from the filesystem
+        const filePath = path.join(__dirname, '..', cvToDelete.url);
+        fs.unlink(filePath, (err) => {
+            if (err) console.error(`Error deleting file: ${filePath}`, err);
+        });
+
+        // Remove the CV from the array in the database
+        candidate.cvs = candidate.cvs.filter(
+            (cv) => cv._id.toString() !== req.params.cv_id
+        );
+
+        await candidate.save();
+
+        // Return the updated list of CVs
+        res.json({ msg: 'CV removed', cvs: candidate.cvs });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

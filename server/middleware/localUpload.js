@@ -37,8 +37,42 @@ function checkFileType(file, cb) {
   }
 }
 
+const cvDir = 'uploads/cvs';
+
+if (!fs.existsSync(cvDir)) {
+    fs.mkdirSync(cvDir, { recursive: true });
+}
+
+const cvStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, cvDir); // Save to the 'uploads/cvs' folder
+  },
+  filename: (req, file, cb) => {
+    const uniquePrefix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniquePrefix + '-' + file.originalname.replace(/\s+/g, '_'));
+  }
+});
+
+// File filter to accept only common document types
+const cvFileFilter = (req, file, cb) => {
+  const allowedTypes = /pdf|doc|docx/;
+  const mimetype = allowedTypes.test(file.mimetype);
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  }
+  cb('Error: File type not supported. Only PDF, DOC, and DOCX are allowed.');
+};
+
+const uploadCv = multer({
+  storage: cvStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+  fileFilter: cvFileFilter
+});
+
 // Init upload
-const localUpload = multer({
+const uploadAvatar = multer({
   storage: storage,
   limits: { fileSize: 2000000 }, // Limit file size to 2MB
   fileFilter: (req, file, cb) => {
@@ -46,4 +80,7 @@ const localUpload = multer({
   },
 });
 
-module.exports = localUpload;
+module.exports = {
+  uploadAvatar,
+  uploadCv
+};

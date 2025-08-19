@@ -14,15 +14,16 @@ router.get('/profile', authMiddleware, getProfile);
 // @access  Private
 router.put('/profile', authMiddleware, updateProfile);
 
-const localUpload = require('../middleware/localUpload');
+const { uploadAvatar, uploadCv } = require('../middleware/localUpload');
 const candidateController = require('../controllers/candidateController');
 
 router.post(
   '/upload-avatar',
   authMiddleware,
-  localUpload.single('avatar'),
+  uploadAvatar.single('avatar'),
   candidateController.uploadAvatar
 );
+router.post('/upload-cv', authMiddleware, uploadCv.single('cv'),candidateController.handleCvUpload);
 
 router.delete('/delete-avatar', authMiddleware, async (req, res) => {
   // Your logic to delete the avatar file and update the user profile
@@ -30,5 +31,7 @@ router.delete('/delete-avatar', authMiddleware, async (req, res) => {
   // await Candidate.findByIdAndUpdate(req.user.id, { avatarUrl: '' });
   res.json({ msg: 'Avatar deleted' });
 });
+
+router.delete('/cv/:cv_id', authMiddleware, candidateController.handleCvDelete);
 
 module.exports = router;
