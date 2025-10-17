@@ -18,6 +18,8 @@ app.use('/candidate', require('./routes/candidate'));
 const jobRoutes = require('./routes/jobs'); 
 app.use('/api/jobs', jobRoutes); 
 
+app.use('/api/mentoring', require('./routes/mentoring'));
+
 //app.use('/user', require('./routes/user')); // Assuming you have a user route
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
