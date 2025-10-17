@@ -351,9 +351,9 @@ const CandidateAnalytics = () => (
             </ResponsiveContainer>
         </ChartCard>
         
-        <ChartCard title="Profile Completion Rate">
+        {/* <ChartCard title="Profile Completion Rate">
             <Gauge value={78} label="Profiles Fully Completed" maxValue={"100%"} />
-        </ChartCard>
+        </ChartCard> */}
         
         <ChartCard title="Application & Engagement Metrics" filterFields={[{name: 'date_range', type: 'date', placeholder: ''}]}>
             <ResponsiveContainer width="100%" height={300}>

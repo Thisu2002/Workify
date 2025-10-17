@@ -34,7 +34,7 @@ const initialUsers = {
 // --- User Card Component ---
 const UserCard = ({ user, onClick }) => (
     <div className="user-card" onClick={() => onClick(user)}>
-        <img src={user.image} alt={user.name} className="user-profile-pic" />
+        <img src={""} alt={""} className="user-profile-pic" />
         <h3 className="user-name">{user.name}</h3>
         <p className="user-position">{user.position}</p>
     </div>
@@ -60,7 +60,7 @@ const UserDetailsModal = ({ user, onClose, onUnblock }) => {
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal-content" onClick={handleModalContentClick}>
                 <button className="close-modal-btn" onClick={onClose}>×</button>
-                <img src={user.image} alt={user.name} className="modal-user-pic" />
+                <img src={""} alt={""} className="modal-user-pic" />
                 <h2 className="modal-user-name">{user.name}</h2>
                 <p className="modal-user-position">{user.position}</p>
 

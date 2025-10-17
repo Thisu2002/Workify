@@ -83,7 +83,7 @@ function MentorVerification() {
               role="button" 
               tabIndex={0}
             >
-              <img src={mentor.imageUrl} alt={`${mentor.name}`} className="mentor-item-avatar" />
+              <img src={""} alt={`${""}`} className="mentor-item-avatar" />
               <div className="mentor-item-info">
                 <h3>{mentor.name}</h3>
                 <p>{mentor.field}</p>
