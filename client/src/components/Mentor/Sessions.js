@@ -35,11 +35,21 @@ import {
   Notes as NotesIcon,
   Category as CategoryIcon
 } from "@mui/icons-material";
+import axios from 'axios';
+import { useSnackbar } from 'notistack';
 import "../../styles/Recruiter.css";
 
 const Sessions = ({ showSessionForm, setShowSessionForm }) => {
   const [selectedSession, setSelectedSession] = useState(null);
-  
+  const { enqueueSnackbar } = useSnackbar();
+  const [formData, setFormData] = useState({
+    session_type: '',
+    candidate_email: '',
+    date_time: '',
+    duration: '60',
+    notes: ''
+  });
+
   const activeSessions = [
     {
       id: 1,
@@ -150,6 +160,56 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
     </Grid>
   );
   
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      console.log('Submitting form data:', formData); // Debug log
+      
+      const token = localStorage.getItem('token');
+      console.log('Token:', token); // Debug log
+
+      // Validate form data
+      if (!formData.session_type || !formData.candidate_email || !formData.date_time) {
+        enqueueSnackbar('Please fill all required fields', { variant: 'error' });
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:5000/api/mentoring/sessions', 
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Response:', response.data); // Debug log
+
+      if (response.data.success) {
+        enqueueSnackbar('Session scheduled successfully!', { variant: 'success' });
+        setShowSessionForm(false);
+        setFormData({ // Reset form
+          session_type: '',
+          candidate_email: '',
+          date_time: '',
+          duration: '60',
+          notes: ''
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error); // Debug log
+      enqueueSnackbar(error.response?.data?.message || 'Error scheduling session', { variant: 'error' });
+    }
+  };
+
   const CreateSessionForm = () => (
     <Box>
       <DialogTitle sx={{ 
@@ -187,7 +247,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             </Typography>
             <FormControl fullWidth size="small">
               <Select 
-                defaultValue=""
+                name="session_type"
+                value={formData.session_type}
+                onChange={handleInputChange}
                 displayEmpty
                 sx={{ 
                   height: 38,
@@ -227,6 +289,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             </Typography>
             <TextField 
               fullWidth
+              name="candidate_email"
+              value={formData.candidate_email}
+              onChange={handleInputChange}
               size="small"
               placeholder="candidate@example.com"
               sx={{ 
@@ -259,6 +324,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
               </Typography>
               <TextField 
                 type="datetime-local" 
+                name="date_time"
+                value={formData.date_time}
+                onChange={handleInputChange}
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
@@ -291,6 +359,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
               </Typography>
               <FormControl fullWidth size="small">
                 <Select 
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleInputChange}
                   defaultValue="60"
                   sx={{ 
                     height: 38,
@@ -329,6 +400,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             </Typography>
             <TextField 
               fullWidth
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
               multiline
               rows={2}
               size="small"
@@ -435,7 +509,7 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
           bgcolor: '#fafafa'
         }}>
           <Button 
-            onClick={() => setShowSessionForm(false)} 
+            onClick={() => setShowSessionForm(false)}
             variant="outlined"
             sx={{ 
               height: 40,
@@ -454,7 +528,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             Cancel
           </Button>
           <Button 
-            variant="contained" 
+            variant="contained"
+            onClick={() => handleSubmit()}
+            disabled={!formData.session_type || !formData.candidate_email || !formData.date_time}
             sx={{ 
               height: 40,
               borderRadius: 1,
