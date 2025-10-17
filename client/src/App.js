@@ -74,7 +74,7 @@ const App = () => {
         <Route path="/manager/mentor-verification" element={<BusinessManagerRoot />} />
         <Route path="/manager/blacklist-requests" element={<BusinessManagerRoot />} />
         <Route path="/manager/subscription-plans" element={<BusinessManagerRoot />} />
-        <Route path="/manager/job-postings" element={<BusinessManagerRoot />} />
+        <Route path="/manager/jobPosts" element={<BusinessManagerRoot />} />
         <Route path="/manager/feedback" element={<BusinessManagerRoot />} />
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 

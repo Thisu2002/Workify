@@ -23,7 +23,7 @@ const ManagerContent = ({showJobForm, setShowJobForm}) => {
       {location.pathname === "/manager/mentor-verification" && <MentorVerification />}
       {location.pathname === "/manager/blacklist-requests" && <BlacklistRequest />}
       {location.pathname === "/manager/subscription-plans" && <SubscriptionPlans />}
-      {location.pathname === "/manager/job-postings" && <JobPostings />}
+      {location.pathname === "/manager/jobPosts" && <JobPostings />}
       {location.pathname === "/manager/feedback" && <ManagerFeedback />}
       {/* {location.pathname === "/admin/analytics" && <Analytics />} */}
       {/* {location.pathname.startsWith("/pet-owners/view-owner/") && (
