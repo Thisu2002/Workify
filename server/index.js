@@ -14,6 +14,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/auth', require('./routes/auth'));
 app.use('/recruiter', require('./routes/recruiter'));
 app.use('/candidate', require('./routes/candidate')); 
+app.use('/manager', require('./routes/business_manager'));
 
 const jobRoutes = require('./routes/jobs'); 
 app.use('/api/jobs', jobRoutes); 
