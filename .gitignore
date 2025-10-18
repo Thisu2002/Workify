@@ -4,3 +4,9 @@ server/.env
 .conns
 .github/
 .vscode/
+CODESPACE-DEVELOPMENT.md
+update-api-urls.js
+update-api-urls.sh
+use-codespace-url.sh
+use-localhost-url.sh
+API_ENDPOINTS_CANDIDATES.md

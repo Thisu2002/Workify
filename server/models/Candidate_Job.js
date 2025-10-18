@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const candidateJobSchema = new mongoose.Schema({
-    candidate_id: {
+  candidate_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Candidate",
     required: true,
@@ -64,8 +64,16 @@ const candidateJobSchema = new mongoose.Schema({
     type: Number,
   },
   quiz_score: {
-    type: Number
-  }
+    type: Number,
+  },
+  round_status: [
+    {
+      round_number: { type: Number },
+      round_result: { type: String },
+      round_feedback: { type: String },
+    },
+  ],
+  current_status: { type: String, default: "new" },
 });
 
 module.exports = mongoose.model("Candidate_Job", candidateJobSchema);
