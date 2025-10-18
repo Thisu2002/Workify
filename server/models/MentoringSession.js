@@ -1,43 +1,74 @@
 const mongoose = require("mongoose");
 
-const mentoringSessionSchema = new mongoose.Schema({
-  mentor_id: {
+const MentoringSessionSchema = new mongoose.Schema({
+  candidateId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Recruiter",
+    ref: "User",
+  },
+  mentorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
-  session_type: {
+  candidateName: {
     type: String,
-    required: true,
-    enum: [
-      "cv-review",
-      "mock-interview",
-      "career-guidance",
-      "technical-mentoring",
-    ],
+  },
+  candidateAvatar: {
+    type: String,
+    default: "",
   },
   candidate_email: {
     type: String,
     required: true,
   },
-  date_time: {
-    type: Date,
+  requestType: {
+    type: String,
+  },
+  session_type: {
+    type: String,
     required: true,
   },
-  duration: {
-    type: Number,
-    required: true,
+  urgency: {
+    type: String,
+    enum: ["low", "medium", "high"],
+    default: "medium",
   },
-  notes: String,
   status: {
     type: String,
-    enum: ["Scheduled", "Completed", "Cancelled"],
-    default: "Scheduled",
+    enum: ["pending", "scheduled", "completed", "cancelled"],
+    default: "pending",
   },
-}, {
-  timestamps: true,
-});
+  message: {
+    type: String,
+    default: "",
+  },
+  skills: [{
+    type: String,
+  }],
+  field: {
+    type: String,
+    default: "General Mentoring",
+  },
+  experience: {
+    type: String,
+  },
+  requestDate: {
+    type: Date,
+    default: Date.now,
+  },
+  scheduledDate: {
+    type: Date,
+  },
+  date_time: {
+    type: String,
+  },
+  duration: {
+    type: Number, // in minutes
+    default: 60,
+  },
+  notes: {
+    type: String,
+  },
+}, { timestamps: true });
 
-// Export the model - this pattern should work
-const MentoringSession = mongoose.model('MentoringSession', mentoringSessionSchema);
-module.exports = MentoringSession;
+module.exports = mongoose.model("MentoringSession", MentoringSessionSchema);
