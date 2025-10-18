@@ -1,0 +1,130 @@
+const Post = require('../models/JobPost');
+const Company = require('../models/Company');
+const User = require('../models/User');
+const Recruiter = require('../models/Recruiter');
+const Candidate = require('../models/Candidate');
+
+console.log('managerController loaded'); // debug
+
+// Get job posts with selected fields only
+exports.getJobPosts = async (req, res) => {
+  try {
+    const posts = await Post.find({})
+      .select({
+        _id: 1,
+        title: 1,
+        description: 1,
+        location: 1,
+        salary: 1,
+        jobType: 1,
+        deadline: 1,
+        education_requirements: 1,
+        date_posted: 1,
+        status: 1,
+      })
+      .sort({ date_posted: -1 })
+      .lean();
+
+    console.log('managerController.getJobPosts -> found', posts.length, 'posts');
+    res.status(200).json(posts);
+  } catch (err) {
+    console.error('getJobPosts error:', err);
+    res.status(500).json({
+      message: 'Error fetching job posts',
+      error: err.message,
+    });
+  }
+};
+
+exports.getCompanies = async (req, res) => {
+  try {
+    const companies = await Company.find({})
+      .select({
+        _id: 1,
+        name: 1,
+        location: 1,
+        description: 1,
+        website: 1,
+      })
+      .lean();
+
+    console.log('managerController.getCompanies -> found', companies.length, 'companies');
+    res.status(200).json(companies);
+  } catch (err) {
+    console.error('getCompanies error:', err);
+    res.status(500).json({
+      message: 'Error fetching companies',
+      error: err.message,
+    });
+  }
+};
+
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).lean();
+
+    // 1️⃣ RECRUITERS
+    const recruiters = await Promise.all(
+      users
+        .filter((u) => u.user_roles.includes('recruiter'))
+        .map(async (u) => {
+          const recruiter = await Recruiter.findById(u._id).lean();
+          let companyName = '';
+          if (recruiter && recruiter.company_id) {
+            const company = await Company.findById(recruiter.company_id).lean();
+            companyName = company ? company.name : '';
+          }
+          return {
+            id: u._id,
+            name: `${u.firstName} ${u.lastName}`,
+            email: u.email,
+            position: 'Recruiter',
+            company: companyName,
+            phone: u.contactNumber || '',
+            image: recruiter?.avatarUrl || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+          };
+        })
+    );
+
+    // 2️⃣ CANDIDATES
+    const candidates = await Promise.all(
+      users
+        .filter((u) => u.user_roles.includes('candidate'))
+        .map(async (u) => {
+          const candidate = await Candidate.findById(u._id).lean();
+          return {
+            id: u._id,
+            name: `${u.firstName} ${u.lastName}`,
+            email: u.email,
+            position: 'Candidate',
+            skills: candidate?.skills || [],
+            image: candidate?.avatarUrl || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
+          };
+        })
+    );
+
+    // 3️⃣ MENTORS
+    const mentors = users
+      .filter((u) => u.user_roles.includes('mentor'))
+      .map((u) => ({
+        id: u._id,
+        name: `${u.firstName} ${u.lastName}`,
+        email: u.email,
+        position: 'Mentor',
+        image: 'https://cdn-icons-png.flaticon.com/512/1995/1995574.png',
+      }));
+
+    // 4️⃣ BLOCKED CANDIDATES (if you want to manage separately)
+    const blockedCandidates = []; // For now empty; can integrate later
+
+    res.status(200).json({
+      recruiters,
+      candidates,
+      mentors,
+      'blocked-candidates': blockedCandidates,
+    });
+  } catch (err) {
+    console.error('getUsers error:', err);
+    res.status(500).json({ message: 'Error fetching users', error: err.message });
+  }
+};

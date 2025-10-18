@@ -30,9 +30,11 @@ const JobDetails = ({
   handleChange,
   handleEditToggle,
   handleSave,
+  handleDelete,
 }) => {
   const navigate = useNavigate();
   const [panels, setPanels] = useState([]);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
     const fetchPanels = async () => {
@@ -51,7 +53,7 @@ const JobDetails = ({
           name: panel.name,
         }));
         setPanels(mapped);
-        console.log(mapped);
+        //console.log(mapped);
       } catch (err) {
         toast.error(err.res?.data?.error || "Failed to fetch panels");
         console.error(err);
@@ -89,6 +91,7 @@ const JobDetails = ({
   );
 
   return (
+    <>
     <Dialog
       open={open}
       onClose={handleClose}
@@ -104,7 +107,7 @@ const JobDetails = ({
         {isEditing ? "Edit Job Post" : job?.title}
         <Button
           endIcon={<ArrowForward />}
-          onClick={() => navigate("/recruiter/job-posts/applicants")}
+          onClick={() => navigate(`/recruiter/job-posts/applicants/${job?._id}`)}
         >
           View Applicants
         </Button>
@@ -454,6 +457,7 @@ const JobDetails = ({
               color: "red !important",
               borderColor: "red !important",
             }}
+            onClick={() => setConfirmDeleteOpen(true)}
           >
             Delete
           </Button>
@@ -476,6 +480,29 @@ const JobDetails = ({
         </Box>
       </DialogActions>
     </Dialog>
+
+    {/*  CONFIRM DELETE POPUP */}
+      <Dialog open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this job post?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              setConfirmDeleteOpen(false);
+              //console.log("Deleting Job Post with ID:", job._id);
+              if (handleDelete) handleDelete(job._id); //  trigger parent callback
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

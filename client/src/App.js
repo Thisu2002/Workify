@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { SnackbarProvider } from 'notistack';
 import './App.css';
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -21,7 +22,7 @@ import JobPosts from "./components/Recruiter/JobPosts";
 import CandidateList from "./components/LeadPanelist/CandidateList";
 
 
-const App = () => {
+function App() {
   return (
     <Router>
       <Toaster />
@@ -50,7 +51,7 @@ const App = () => {
         <Route path="/recruiter" element={<RecruiterRoot />} />
         <Route path="/recruiter/overview" element={<RecruiterRoot />} />
         <Route path="/recruiter/job-posts" element={<RecruiterRoot />} />
-        <Route path="/recruiter/job-posts/applicants" element={<RecruiterRoot />} />
+        <Route path="/recruiter/job-posts/applicants/:jobId" element={<RecruiterRoot />} />
         <Route path="/recruiter/candidates" element={<RecruiterRoot />} />
         <Route path="/recruiter/interviews" element={<RecruiterRoot />} />
 
@@ -74,13 +75,13 @@ const App = () => {
         <Route path="/manager/mentor-verification" element={<BusinessManagerRoot />} />
         <Route path="/manager/blacklist-requests" element={<BusinessManagerRoot />} />
         <Route path="/manager/subscription-plans" element={<BusinessManagerRoot />} />
-        <Route path="/manager/job-postings" element={<BusinessManagerRoot />} />
+        <Route path="/manager/jobPosts" element={<BusinessManagerRoot />} />
         <Route path="/manager/feedback" element={<BusinessManagerRoot />} />
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 
       </Routes>
     </Router> 
   );
-};
+}
 
 export default App;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -7,9 +7,7 @@ import {
   Avatar,
   Chip,
   Button,
-  Grid,
-  LinearProgress,
-  Stack,
+  Slide,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,137 +17,342 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
-  Divider,
-  Paper
+  Grid,
+  CircularProgress
 } from "@mui/material";
 import {
   VideoCall as VideoCallIcon,
   Message as MessageIcon,
   Cancel as CancelIcon,
   Schedule as ScheduleIcon,
-  Add as AddIcon,
-  Person as PersonIcon,
-  AccessTime as AccessTimeIcon,
-  Event as EventIcon,
-  Notes as NotesIcon,
-  Category as CategoryIcon
+  Check as CompleteIcon,
+  VideoCameraFront as VideoIcon,
+  CalendarToday as CalendarIcon
 } from "@mui/icons-material";
+import axios from 'axios';
+import { useSnackbar } from 'notistack';
 import "../../styles/Recruiter.css";
 
 const Sessions = ({ showSessionForm, setShowSessionForm }) => {
   const [selectedSession, setSelectedSession] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
+  const [formData, setFormData] = useState({
+    session_type: '',
+    candidate_email: '',
+    date_time: '',
+    duration: '60',
+    notes: ''
+  });
   
-  const activeSessions = [
-    {
-      id: 1,
-      candidateName: "Emaya Liyanage",
-      candidateAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      sessionType: "CV Review",
-      scheduledTime: "2024-01-16 14:00",
-      duration: "60 min",
-      status: "upcoming",
-      progress: 0
-    },
-    {
-      id: 2,
-      candidateName: "Danushka Perera",
-      candidateAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      sessionType: "Mock Interview",
-      scheduledTime: "2024-01-16 16:30",
-      duration: "90 min",
-      status: "in-progress",
-      progress: 45
-    },
-    {
-      id: 3,
-      candidateName: "Sarah Johnson",
-      candidateAvatar: "https://randomuser.me/api/portraits/women/68.jpg",
-      sessionType: "Career Guidance",
-      scheduledTime: "2024-01-17 10:00",
-      duration: "45 min",
-      status: "upcoming",
-      progress: 0
-    },
-    {
-      id: 4,
-      candidateName: "Michael Smith",
-      candidateAvatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      sessionType: "Technical Mentoring",
-      scheduledTime: "2024-01-17 13:30",
-      duration: "60 min",
-      status: "upcoming",
-      progress: 0
+  // State for fetched sessions
+  const [mentorSessions, setMentorSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [completionNote, setCompletionNote] = useState('');
+
+  // Fetch scheduled sessions
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+
+      console.log('🔄 Fetching scheduled mentoring sessions...');
+      
+      const response = await axios.get('http://localhost:5000/api/mentoring/sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          status: 'scheduled'
+        }
+      });
+
+      console.log('📥 Sessions received:', response.data);
+
+      if (response.data.success) {
+        // Clear any existing data first
+        setMentorSessions([]);
+        
+        // Set the data from the API
+        if (Array.isArray(response.data.data)) {
+          setMentorSessions(response.data.data);
+        } else {
+          console.error('Expected array but got:', typeof response.data.data);
+          setError('Invalid data format received from server');
+        }
+      } else {
+        setError(response.data.message || 'Failed to load sessions');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching sessions:', error);
+      setError(error.response?.data?.message || 'Failed to load sessions');
+      enqueueSnackbar('Failed to load sessions', { variant: 'error' });
+    } finally {
+      setLoading(false);
     }
-  ];
-  
-  const SessionCard = ({ session }) => (
-    <Grid item xs={12} md={6}>
-      <Card className="session-card-modern">
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  // Refresh sessions after creating a new one
+  const handleSessionCreated = () => {
+    fetchSessions();
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // Validate form data
+      if (!formData.session_type || !formData.candidate_email || !formData.date_time) {
+        enqueueSnackbar('Please fill all required fields', { variant: 'error' });
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        enqueueSnackbar('Authentication required. Please log in again.', { variant: 'error' });
+        return;
+      }
+
+      console.log('Submitting session with data:', formData);
+      
+      const response = await axios.post(
+        'http://localhost:5000/api/mentoring/sessions', 
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        enqueueSnackbar('Session scheduled successfully!', { variant: 'success' });
+        setShowSessionForm(false);
+        // Reset form
+        setFormData({
+          session_type: '',
+          candidate_email: '',
+          date_time: '',
+          duration: '60',
+          notes: ''
+        });
+        // Refresh sessions list
+        handleSessionCreated();
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      
+      const errorMessage = 
+        error.response?.data?.message || 
+        'Could not schedule session. Please try again later.';
+      
+      enqueueSnackbar(errorMessage, { variant: 'error' });
+    }
+  };
+
+  const handleCancelSession = async (sessionId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.put(`http://localhost:5000/api/mentoring/sessions/${sessionId}`, 
+        { status: 'cancelled' },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      setMentorSessions(prev => prev.filter(session => session._id !== sessionId));
+      enqueueSnackbar('Session cancelled', { variant: 'info' });
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      enqueueSnackbar('Failed to cancel session', { variant: 'error' });
+    }
+  };
+
+  const handleCompleteSession = (session) => {
+    setSelectedSession(session);
+    setShowNoteDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setShowNoteDialog(false);
+    setSelectedSession(null);
+    setCompletionNote('');
+  };
+
+  const handleSessionComplete = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.put(`http://localhost:5000/api/mentoring/sessions/${selectedSession._id}`, 
+        {
+          status: 'completed',
+          notes: completionNote
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      setMentorSessions(prev => prev.filter(session => session._id !== selectedSession._id));
+      handleCloseDialog();
+      enqueueSnackbar('Session marked as completed', { variant: 'success' });
+    } catch (error) {
+      console.error('Error completing session:', error);
+      enqueueSnackbar('Failed to update session', { variant: 'error' });
+    }
+  };
+
+  const formatDateTime = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleString(undefined, options);
+  };
+
+  const isSessionSoon = (dateString) => {
+    const sessionDate = new Date(dateString);
+    const now = new Date();
+    const diffTime = sessionDate - now;
+    const diffHours = diffTime / (1000 * 60 * 60);
+    return diffHours > 0 && diffHours < 24;
+  };
+
+  const SessionCard = ({ session, index }) => (
+    <Slide in={!loading} direction="up" style={{ transitionDelay: `${index * 100}ms` }}>
+      <Card sx={{ mb: 2, position: 'relative' }}>
+        {session.scheduledDate && isSessionSoon(session.scheduledDate) && (
+          <Chip
+            label="Upcoming"
+            color="primary"
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              fontWeight: 'bold'
+            }}
+          />
+        )}
         <CardContent>
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <Avatar src={session.candidateAvatar} />
-            <Box flex={1}>
-              <Typography variant="h6">{session.candidateName}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {session.sessionType}
-              </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Avatar src={session.candidateAvatar} sx={{ width: 56, height: 56 }} />
+              <Box>
+                <Typography variant="h6">
+                  {session.candidateName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {session.candidate_email}
+                </Typography>
+                <Box display="flex" gap={1} mt={1}>
+                  {Array.isArray(session.skills) && session.skills.length > 0 ? (
+                    session.skills.map((skill, idx) => (
+                      <Chip 
+                        key={idx} 
+                        label={skill} 
+                        size="small" 
+                        sx={{ bgcolor: "#f0f8ff", color: "#3B5998" }}
+                      />
+                    ))
+                  ) : (
+                    <Chip 
+                      label="General" 
+                      size="small" 
+                      sx={{ bgcolor: "#f0f8ff", color: "#3B5998" }}
+                    />
+                  )}
+                </Box>
+              </Box>
             </Box>
+            
             <Chip 
-              label={session.status === "in-progress" ? "In Progress" : "Upcoming"}
-              size="small"
-              className={`status-chip ${session.status}`}
-              sx={{ 
-                bgcolor: session.status === "in-progress" ? "#e6f7fa" : "#f0f8ff",
-                color: session.status === "in-progress" ? "#0288d1" : "#3B5998"
-              }}
+              label={session.session_type || session.requestType || 'Mentoring'}
+              variant="outlined"
+              color="primary" 
+              sx={{ ml: 1 }}
             />
           </Box>
 
-          {session.status === "in-progress" && (
-            <Box mb={2}>
-              <Typography variant="caption" color="text.secondary">
-                Progress
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={session.progress} 
-                className="progress-bar"
-              />
-            </Box>
-          )}
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography variant="body2">📅 {session.scheduledTime}</Typography>
-            <Typography variant="body2">⏱️ {session.duration}</Typography>
+          <Box mb={2}>
+            <Chip 
+              icon={<CalendarIcon fontSize="small" />}
+              label={`Scheduled: ${session.date_time ? formatDateTime(session.date_time) : 
+                (session.scheduledDate ? formatDateTime(session.scheduledDate) : 'Not set')}`}
+              variant="outlined"
+              sx={{ mr: 1, mb: 1 }}
+            />
+            <Chip 
+              label={`${session.duration || 60} mins`}
+              variant="outlined"
+              size="small"
+              sx={{ mr: 1, mb: 1 }}
+            />
           </Box>
 
-          <Box display="flex" gap={1}>
+          {session.notes && (
+            <Typography variant="body2" sx={{ mb: 2, bgcolor: '#f9f9f9', p: 1, borderRadius: 1 }}>
+              <strong>Session Notes:</strong> {session.notes}
+            </Typography>
+          )}
+
+          <Box display="flex" gap={1} justifyContent="flex-end">
             <Button
-              variant="contained"
-              startIcon={<VideoCallIcon />}
-              size="small"
-              className="join-btn"
-              sx={{ bgcolor: "#3B5998" }}
+              variant="outlined"
+              startIcon={<CancelIcon />}
+              onClick={() => handleCancelSession(session._id)}
+              color="error"
             >
-              Join Session
+              Cancel
             </Button>
             <Button
               variant="outlined"
-              startIcon={<MessageIcon />}
-              size="small"
+              startIcon={<CompleteIcon />}
+              onClick={() => handleCompleteSession(session)}
+              color="success"
             >
-              Message
+              Mark Complete
             </Button>
-            <IconButton size="small" color="error">
-              <CancelIcon />
-            </IconButton>
+            <Button
+              variant="contained"
+              startIcon={<VideoIcon />}
+              sx={{ bgcolor: "#3B5998" }}
+              href={`https://meet.google.com/lookup/${session._id ? session._id.substring(0, 10) : 'default-session'}`}
+              target="_blank"
+            >
+              Start Session
+            </Button>
           </Box>
         </CardContent>
       </Card>
-    </Grid>
+    </Slide>
   );
-  
+
   const CreateSessionForm = () => (
     <Box>
       <DialogTitle sx={{ 
@@ -187,7 +390,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             </Typography>
             <FormControl fullWidth size="small">
               <Select 
-                defaultValue=""
+                name="session_type"
+                value={formData.session_type}
+                onChange={handleInputChange}
                 displayEmpty
                 sx={{ 
                   height: 38,
@@ -227,6 +432,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             </Typography>
             <TextField 
               fullWidth
+              name="candidate_email"
+              value={formData.candidate_email}
+              onChange={handleInputChange}
               size="small"
               placeholder="candidate@example.com"
               sx={{ 
@@ -259,6 +467,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
               </Typography>
               <TextField 
                 type="datetime-local" 
+                name="date_time"
+                value={formData.date_time}
+                onChange={handleInputChange}
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
@@ -291,6 +502,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
               </Typography>
               <FormControl fullWidth size="small">
                 <Select 
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleInputChange}
                   defaultValue="60"
                   sx={{ 
                     height: 38,
@@ -329,6 +543,9 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             </Typography>
             <TextField 
               fullWidth
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
               multiline
               rows={2}
               size="small"
@@ -389,89 +606,150 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
           </Box>
         </Box>
       </DialogContent>
-    </Box>
-  );
-
-  return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight="bold">Active Sessions</Typography>
+      
+      <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button 
-          variant="contained"
+          onClick={handleCancelCreate} 
+          color="inherit"
+          sx={{ mr: 1 }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained" 
+          color="primary"
           startIcon={<ScheduleIcon />}
-          onClick={() => setShowSessionForm(true)}
+          disabled={!formData.candidate_email || !formData.session_type || !formData.date_time}
         >
           Schedule Session
         </Button>
+      </DialogActions>
+    </Box>
+  );
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress color="primary" size={40} />
       </Box>
-      
-      <Grid container spacing={3}>
-        {activeSessions.map(session => (
-          <SessionCard key={session.id} session={session} />
-        ))}
-      </Grid>
-      
-      <Dialog 
-        open={Boolean(showSessionForm)} 
-        onClose={() => setShowSessionForm(false)} 
-        maxWidth="md" 
-        fullWidth
-        scroll="body"
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-            width: '100%',
-            maxWidth: '650px',
-            m: 2
-          }
-        }}
-      >
+    );
+  }
+
+  if (error) {
+    return (
+      <Box textAlign="center" p={4}>
+        <Typography variant="h6" color="error" gutterBottom>
+          Error loading sessions
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {error}
+        </Typography>
+        <Button 
+          variant="outlined" 
+          sx={{ mt: 2 }}
+          onClick={fetchSessions}
+        >
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
+
+  // Clear the form and hide it when cancelled
+  const handleCancelCreate = () => {
+    setShowSessionForm(false);
+    setFormData({
+      session_type: '',
+      candidate_email: '',
+      date_time: '',
+      duration: '60',
+      notes: ''
+    });
+  };
+
+  return (
+    <Box>
+      {showSessionForm ? (
         <CreateSessionForm />
-        <DialogActions sx={{ 
-          p: 2.5, 
-          pt: 1.5,
-          gap: 2,
-          bgcolor: '#fafafa'
-        }}>
-          <Button 
-            onClick={() => setShowSessionForm(false)} 
-            variant="outlined"
-            sx={{ 
-              height: 40,
-              borderRadius: 1,
-              borderColor: '#ddd',
-              color: '#666',
-              fontSize: '0.8rem',
-              minWidth: 100,
-              px: 2.5,
-              '&:hover': {
-                borderColor: '#bbb',
-                bgcolor: '#f5f5f5'
-              }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="contained" 
-            sx={{ 
-              height: 40,
-              borderRadius: 1,
-              bgcolor: '#3B5998',
-              fontSize: '0.8rem',
-              minWidth: 140,
-              px: 3,
-              '&:hover': {
-                bgcolor: '#2d4373'
-              },
-              boxShadow: '0 2px 8px rgba(59, 89, 152, 0.2)'
-            }}
-          >
-            Schedule Session
-          </Button>
-        </DialogActions>
-      </Dialog>
+      ) : (
+        <>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h5" fontWeight="bold">
+              Scheduled Sessions
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<ScheduleIcon />}
+              onClick={() => setShowSessionForm(true)}
+              sx={{ 
+                bgcolor: "#3B5998",
+                '&:hover': { bgcolor: "#2d4373" }
+              }}
+            >
+              New Session
+            </Button>
+          </Box>
+          
+          <Box display="flex" flexDirection="column">
+            {loading ? (
+              <Box display="flex" justifyContent="center" p={4}>
+                <CircularProgress />
+              </Box>
+            ) : mentorSessions.length > 0 ? (
+              mentorSessions.map((session, index) => (
+                <SessionCard key={session._id} session={session} index={index} />
+              ))
+            ) : (
+              <Box textAlign="center" p={5}>
+                <Typography variant="h6" color="text.secondary">
+                  No scheduled sessions
+                </Typography>
+                <Typography variant="body2" color="text.secondary" mb={3}>
+                  You don't have any upcoming mentoring sessions.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<ScheduleIcon />}
+                  onClick={() => setShowSessionForm(true)}
+                >
+                  Schedule Your First Session
+                </Button>
+              </Box>
+            )}
+          </Box>
+          
+          <Dialog open={showNoteDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+            <DialogTitle>Complete Session with {selectedSession?.candidateName}</DialogTitle>
+            <DialogContent>
+              <Box mt={2}>
+                <TextField 
+                  label="Session Notes" 
+                  fullWidth 
+                  multiline
+                  rows={4}
+                  value={completionNote}
+                  onChange={(e) => setCompletionNote(e.target.value)}
+                  placeholder="Add notes about the session, progress made, and recommendations for the candidate..."
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialog} color="inherit">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSessionComplete} 
+                variant="contained" 
+                color="success"
+                startIcon={<CompleteIcon />}
+              >
+                Complete Session
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
+      )}
     </Box>
   );
 };

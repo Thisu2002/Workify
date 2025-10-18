@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
-import { useNavigate } from "react-router-dom";
 
 const dummySkills = [
   { id: 1, name: "JavaScript" },
@@ -38,8 +37,7 @@ const dummyQuizzes = [
   "CSS & Design Systems Quiz",
 ];
 
-const PostJob = ({setShowJobForm}) => {
-  const navigate = useNavigate();
+const PostJob = ({setShowJobForm, fetchPosts}) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -81,7 +79,7 @@ const PostJob = ({setShowJobForm}) => {
           name: panel.name,
         }));
         setPanels(mapped);
-        console.log(mapped);
+        //console.log(mapped);
       } catch (err) {
         toast.error(err.res?.data?.error || "Failed to fetch panels");
         console.error(err);
@@ -231,8 +229,9 @@ const PostJob = ({setShowJobForm}) => {
       setInterviewRounds([{ roundNumber: 1, panelId: "", roundName: "" }]);
       setShowInterviewSection(false);
       setShowJobForm(false);
-      navigate("/recruiter/job-posts");
-      window.location.reload();
+      // navigate("/recruiter/job-posts");
+      // window.location.reload();
+      fetchPosts();
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to post job");
     }

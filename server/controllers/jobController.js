@@ -1,5 +1,6 @@
 // controllers/jobController.js
 
+const Candidate_Job = require('../models/Candidate_Job');
 const JobPost = require('../models/JobPost'); // Adjust path if needed
 const Recruiter = require('../models/Recruiter'); // We need this to populate
 
@@ -49,5 +50,56 @@ exports.getAllOpenJobs = async (req, res) => {
   } catch (error) {
     console.error('Error fetching open jobs:', error);
     res.status(500).json({ message: 'Server error while fetching jobs' });
+  }
+};
+
+exports.deleteJobPost = async (req, res) => {
+  try {
+    const { jobId } = req.body;
+    await JobPost.findByIdAndDelete(jobId);
+    res.json({ message: "Job deleted successfully!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete job post" });
+  }
+};
+
+exports.fetchCandidates = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Fetch all candidate-job entries for that job
+    const candidates = await Candidate_Job.find({ job_id: jobId })
+
+    if (!candidates || candidates.length === 0) {
+      return res.status(404).json({ message: "No candidates found for this job." });
+    }
+
+    res.status(200).json({
+      message: "Candidates fetched successfully.",
+      count: candidates.length,
+      candidates,
+    });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.fetchJobPost = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const jobPost = await JobPost.findById(jobId);
+
+    if (!jobPost) {
+      return res.status(404).json({ message: "Job post not found." });
+    }
+
+    res.status(200).json({
+      message: "Job post fetched successfully.",
+      jobPost,
+    });
+  } catch (error) {
+    console.error("Error fetching job post:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

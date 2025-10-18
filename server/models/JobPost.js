@@ -96,6 +96,14 @@ const jobPostSchema = new mongoose.Schema({
   ],
   quiz: {
     type: String
+  },
+  current_status: {
+    type: String,
+    default: "new"
+  },
+  num_applicants: {
+    type: Number,
+    default: 0
   }
 });
 

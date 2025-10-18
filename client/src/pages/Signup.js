@@ -127,6 +127,8 @@ function Signup() {
               <option value="candidate">Candidate</option>
               <option value="lead_panelist">Lead Panelist</option>
               <option value="recruiter">Recruiter</option>
+              <option value="admin">Admin</option>
+              <option value="business_manager">Business Manager</option>
             </select>
 
             <input
