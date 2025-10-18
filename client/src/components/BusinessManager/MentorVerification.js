@@ -40,32 +40,52 @@ function MentorVerification() {
   const [mentors, setMentors] = useState([]);
   const [selectedMentor, setSelectedMentor] = useState(null);
 
-  useEffect(() => {
-    setMentors(MOCK_MENTORS);
-  }, []);
+ useEffect(() => {
+  fetch('http://localhost:5000/manager/mentors/pending')
+    .then(res => res.json())
+    .then(data => setMentors(data))
+    .catch(err => console.error('Error fetching mentors:', err));
+}, []);
+
 
   const handleCloseModal = () => {
     setSelectedMentor(null);
   };
 
-  const handleAccept = (mentorId) => {
-    console.log(`✅ Accepted mentor with ID: ${mentorId}`);
-    alert(`Mentor has been accepted successfully!`);
-    setMentors(prevMentors => prevMentors.filter(m => m.id !== mentorId));
-    handleCloseModal();
-  };
+ const handleAccept = async (mentorId) => {
+  try {
+    const res = await fetch(`http://localhost:5000/manager/mentors/accept/${mentorId}`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    alert(data.message);
+    setMentors(prev => prev.filter(m => m._id !== mentorId));
+    setSelectedMentor(null);
+  } catch (err) {
+    console.error('Accept error:', err);
+  }
+};
   
-  const handleDecline = (mentorId) => {
-    const reason = prompt("Please provide a reason for declining this mentor application:");
-    if (reason && reason.trim() !== '') {
-        console.log(`❌ Declined mentor with ID: ${mentorId}. Reason: ${reason}`);
-        alert('Mentor application has been declined.');
-        setMentors(prevMentors => prevMentors.filter(m => m.id !== mentorId));
-        handleCloseModal();
-    } else if (reason !== null) {
-        alert("A reason is required to decline a mentor.");
-    }
-  };
+const handleDecline = async (mentorId) => {
+  const reason = prompt("Please provide a reason for declining this mentor application:");
+  if (!reason || reason.trim() === '') {
+    alert('A reason is required to decline a mentor.');
+    return;
+  }
+  try {
+    const res = await fetch(`http://localhost:5000/manager/mentors/decline/${mentorId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason })
+    });
+    const data = await res.json();
+    alert(data.message);
+    setMentors(prev => prev.filter(m => m._id !== mentorId));
+    setSelectedMentor(null);
+  } catch (err) {
+    console.error('Decline error:', err);
+  }
+};
 
   return (
     <div className="mentor-verification-container">
@@ -77,15 +97,15 @@ function MentorVerification() {
           mentors.map(mentor => (
             // UPDATED: Added image and a container for the text info
             <div 
-              key={mentor.id} 
+              key={mentor._id} 
               className="mentor-item" 
               onClick={() => setSelectedMentor(mentor)} 
               role="button" 
               tabIndex={0}
             >
-              <img src={""} alt={""} className="mentor-item-avatar" />
+              <img src={mentor.imageUrl || "https://cdn-icons-png.flaticon.com/512/1077/1077012.png"} alt={mentor.name} className="mentor-item-avatar" />
               <div className="mentor-item-info">
-                <h3>{mentor.name}</h3>
+                <h3>{mentor.firstName} {mentor.lastName}</h3>
                 <p>{mentor.field}</p>
               </div>
             </div>
@@ -101,12 +121,12 @@ function MentorVerification() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             {/* UPDATED: Added image to the modal header */}
             <div className="modal-header">
-              <img src={""} alt={""} className="modal-avatar" />
+              <img src={selectedMentor.imageUrl || "https://cdn-icons-png.flaticon.com/512/1077/1077012.png"} alt={selectedMentor.name} className="modal-avatar" />
               <h2>Mentor Details</h2>
               <button onClick={handleCloseModal} className="close-button">×</button>
             </div>
             <div className="modal-body">
-              <p><strong>Name:</strong> {selectedMentor.name}</p>
+              <p><strong>Name:</strong> {selectedMentor.firstName} {selectedMentor.lastName}</p>
               <p><strong>Field of Expertise:</strong> {selectedMentor.field}</p>
               <p><strong>Professional Experience:</strong> {selectedMentor.experience}</p>
               <p><strong>Biography:</strong> {selectedMentor.bio}</p>
@@ -119,8 +139,8 @@ function MentorVerification() {
               </p>
             </div>
             <div className="modal-footer">
-              <button onClick={() => handleDecline(selectedMentor.id)} className="btn btn-decline">Decline</button>
-              <button onClick={() => handleAccept(selectedMentor.id)} className="btn btn-accept">Accept</button>
+              <button onClick={() => handleDecline(selectedMentor._id)} className="btn btn-decline">Decline</button>
+              <button onClick={() => handleAccept(selectedMentor._id)} className="btn btn-accept">Accept</button>
             </div>
           </div>
         </div>
