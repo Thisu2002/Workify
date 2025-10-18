@@ -23,57 +23,107 @@ import {
   Close as CloseIcon,
   Event as EventIcon
 } from "@mui/icons-material";
+import axios from 'axios';
+import { useSnackbar } from 'notistack';
 import "../../styles/Recruiter.css";
 
 const Requests = () => {
-  const [mentorRequests, setMentorRequests] = useState([
-    {
-      id: 1,
-      candidateName: "Pathum Tilakarathne",
-      candidateAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      requestType: "CV Review",
-      experience: "2 years",
-      field: "Frontend Development",
-      requestDate: "2024-01-15",
-      message: "Looking for help with optimizing my CV for senior frontend roles. I have experience with React, TypeScript, and modern frontend technologies.",
-      urgency: "medium",
-      skills: ["React", "TypeScript", "CSS"]
-    },
-    {
-      id: 2,
-      candidateName: "Sarini Wijesinghe",
-      candidateAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      requestType: "Interview Prep",
-      experience: "1 year",
-      field: "UX Design",
-      requestDate: "2024-01-14",
-      message: "Need guidance for upcoming Google interview. Looking for tips on design thinking and portfolio presentation.",
-      urgency: "high",
-      skills: ["Figma", "User Research", "Prototyping"]
-    },
-    {
-      id: 3,
-      candidateName: "Milinda Udayanga",
-      candidateAvatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      requestType: "Career Guidance",
-      experience: "3 years",
-      field: "Backend Development",
-      requestDate: "2024-01-13",
-      message: "Seeking advice on career transition to cloud technologies. Currently working with Node.js and exploring AWS.",
-      urgency: "low",
-      skills: ["Node.js", "AWS", "Docker"]
-    }
-  ]);
+  const [mentorRequests, setMentorRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [scheduleData, setScheduleData] = useState({
+    sessionType: '',
+    dateTime: '',
+    duration: 60,
+    notes: ''
+  });
+  const { enqueueSnackbar } = useSnackbar();
+
+  // Fetch mentoring requests from backend - only with status "pending"
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+
+      console.log('🔄 Fetching pending mentoring requests...');
+      
+      // Make sure we're explicitly requesting only pending status sessions
+      const response = await axios.get('http://localhost:5000/api/mentoring/sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          status: 'pending' // Explicitly request only pending status
+        }
+      });
+
+      console.log('📥 Response received:', response.data);
+
+      if (response.data.success) {
+        if (Array.isArray(response.data.data)) {
+          // Filter once more on client side to ensure only pending sessions
+          const pendingSessions = response.data.data.filter(session => session.status === 'pending');
+          setMentorRequests(pendingSessions);
+          console.log(`📊 Pending requests count: ${pendingSessions.length}`);
+        } else {
+          console.error('Expected array but got:', typeof response.data.data);
+          setError('Invalid data format received from server');
+        }
+      } else {
+        setError(response.data.message || 'Failed to load requests');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching requests:', error);
+      setError(error.response?.data?.message || 'Failed to load requests');
+      enqueueSnackbar('Failed to load requests', { variant: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch requests on component mount
+  React.useEffect(() => {
+    fetchRequests();
+  }, []);
 
   const handleAcceptRequest = (requestId) => {
-    setSelectedRequest(mentorRequests.find(req => req.id === requestId));
+    const request = mentorRequests.find(req => req._id === requestId);
+    setSelectedRequest(request);
+    setScheduleData({
+      sessionType: request.requestType,
+      dateTime: '',
+      duration: 60,
+      notes: ''
+    });
     setShowScheduleDialog(true);
   };
 
-  const handleDeclineRequest = (requestId) => {
-    setMentorRequests(prev => prev.filter(req => req.id !== requestId));
+  const handleDeclineRequest = async (requestId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:5000/api/mentoring/sessions/${requestId}`, 
+        { status: 'cancelled' },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      setMentorRequests(prev => prev.filter(req => req._id !== requestId));
+      enqueueSnackbar('Request declined', { variant: 'info' });
+    } catch (error) {
+      console.error('Error declining request:', error);
+      enqueueSnackbar('Failed to decline request', { variant: 'error' });
+    }
   };
 
   const handleCloseDialog = () => {
@@ -81,11 +131,41 @@ const Requests = () => {
     setSelectedRequest(null);
   };
 
-  const handleScheduleSession = () => {
-    // Handle scheduling logic here
-    setMentorRequests(prev => prev.filter(req => req.id !== selectedRequest.id));
-    setShowScheduleDialog(false);
-    setSelectedRequest(null);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setScheduleData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleScheduleSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.put(`http://localhost:5000/api/mentoring/sessions/${selectedRequest._id}`, 
+        {
+          status: 'scheduled',
+          scheduledDate: scheduleData.dateTime,
+          date_time: scheduleData.dateTime,
+          duration: scheduleData.duration,
+          notes: scheduleData.notes
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      setMentorRequests(prev => prev.filter(req => req._id !== selectedRequest._id));
+      setShowScheduleDialog(false);
+      setSelectedRequest(null);
+      enqueueSnackbar('Session scheduled successfully', { variant: 'success' });
+    } catch (error) {
+      console.error('Error scheduling session:', error);
+      enqueueSnackbar('Failed to schedule session', { variant: 'error' });
+    }
   };
 
   const getUrgencyColor = (urgency) => {
@@ -97,8 +177,13 @@ const Requests = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   const RequestCard = ({ request, index }) => (
-    <Slide in={true} direction="up" style={{ transitionDelay: `${index * 100}ms` }}>
+    <Slide in={!loading} direction="up" style={{ transitionDelay: `${index * 100}ms` }}>
       <Card className="request-card-modern" sx={{ mb: 2 }}>
         <CardContent>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -106,56 +191,77 @@ const Requests = () => {
               <Avatar src={request.candidateAvatar} sx={{ width: 56, height: 56 }} />
               <Box>
                 <Typography variant="h6" className="candidate-name">
-                  {request.candidateName}
+                  {request.candidateName || 'Candidate'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {request.experience} • {request.field}
+                  {request.candidate_email}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {request.experience ? `${request.experience} • ` : ''}{request.field || 'General Mentoring'}
                 </Typography>
                 <Box display="flex" gap={1} mt={1}>
-                  {request.skills.map((skill, idx) => (
+                  {Array.isArray(request.skills) && request.skills.length > 0 ? (
+                    request.skills.map((skill, idx) => (
+                      <Chip 
+                        key={idx} 
+                        label={skill} 
+                        size="small" 
+                        className="skill-chip"
+                        sx={{ bgcolor: "#f0f8ff", color: "#3B5998" }}
+                      />
+                    ))
+                  ) : (
                     <Chip 
-                      key={idx} 
-                      label={skill} 
+                      label="General" 
                       size="small" 
                       className="skill-chip"
                       sx={{ bgcolor: "#f0f8ff", color: "#3B5998" }}
                     />
-                  ))}
+                  )}
                 </Box>
               </Box>
             </Box>
             <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
               <Chip 
-                label={request.urgency}
+                label={request.urgency || 'medium'}
                 size="small"
                 sx={{ 
-                  backgroundColor: getUrgencyColor(request.urgency),
+                  backgroundColor: getUrgencyColor(request.urgency || 'medium'),
                   color: 'white',
                   fontWeight: 'bold'
                 }}
               />
               <Typography variant="caption" color="text.secondary">
-                {request.requestDate}
+                {formatDate(request.createdAt || request.requestDate || new Date())}
               </Typography>
             </Box>
           </Box>
 
-          <Chip 
-            label={request.requestType} 
-            variant="outlined" 
-            className="type-chip"
-            sx={{ mb: 2 }}
-          />
+          <Box display="flex" justifyContent="space-between" mb={2}>
+            <Chip 
+              label={request.session_type || request.requestType || 'Mentoring Session'} 
+              variant="outlined" 
+              className="type-chip"
+            />
+            
+            {request.date_time && (
+              <Typography variant="body2" color="text.secondary">
+                Preferred time: {new Date(request.date_time).toLocaleString()}
+              </Typography>
+            )}
+          </Box>
 
-          <Typography variant="body2" className="request-message" paragraph>
-            {request.message}
-          </Typography>
+          {request.notes && (
+            <Typography variant="body2" className="request-message" paragraph>
+              <strong>Notes:</strong> {request.notes}
+            </Typography>
+          )}
 
           <Box display="flex" gap={1} justifyContent="flex-end">
             <Button
               variant="outlined"
               startIcon={<CloseIcon />}
-              onClick={() => handleDeclineRequest(request.id)}
+              onClick={() => handleDeclineRequest(request._id)}
               className="decline-btn"
             >
               Decline
@@ -163,7 +269,7 @@ const Requests = () => {
             <Button
               variant="contained"
               startIcon={<CheckIcon />}
-              onClick={() => handleAcceptRequest(request.id)}
+              onClick={() => handleAcceptRequest(request._id)}
               className="accept-btn"
               sx={{ bgcolor: "#3B5998" }}
             >
@@ -175,6 +281,34 @@ const Requests = () => {
     </Slide>
   );
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <Typography variant="body1">Loading requests...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box textAlign="center" p={4}>
+        <Typography variant="h6" color="error" gutterBottom>
+          Error loading requests
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {error}
+        </Typography>
+        <Button 
+          variant="outlined" 
+          sx={{ mt: 2 }}
+          onClick={fetchRequests}
+        >
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Typography variant="h5" fontWeight="bold" mb={3}>
@@ -184,7 +318,7 @@ const Requests = () => {
       <Box display="flex" flexDirection="column">
         {mentorRequests.length > 0 ? (
           mentorRequests.map((request, index) => (
-            <RequestCard key={request.id} request={request} index={index} />
+            <RequestCard key={request._id} request={request} index={index} />
           ))
         ) : (
           <Box textAlign="center" p={5}>
@@ -204,11 +338,15 @@ const Requests = () => {
           <Box mt={2}>
             <FormControl fullWidth margin="normal">
               <InputLabel>Session Type</InputLabel>
-              <Select defaultValue={selectedRequest?.requestType.toLowerCase().replace(' ', '-') || ""}>
-                <MenuItem value="cv-review">CV Review</MenuItem>
-                <MenuItem value="interview-prep">Interview Prep</MenuItem>
-                <MenuItem value="career-guidance">Career Guidance</MenuItem>
-                <MenuItem value="technical-mentoring">Technical Mentoring</MenuItem>
+              <Select 
+                name="sessionType"
+                value={scheduleData.sessionType}
+                onChange={handleInputChange}
+              >
+                <MenuItem value="CV Review">CV Review</MenuItem>
+                <MenuItem value="Interview Prep">Interview Prep</MenuItem>
+                <MenuItem value="Career Guidance">Career Guidance</MenuItem>
+                <MenuItem value="Technical Mentoring">Technical Mentoring</MenuItem>
               </Select>
             </FormControl>
             
@@ -217,12 +355,20 @@ const Requests = () => {
               type="datetime-local" 
               fullWidth 
               margin="normal"
+              name="dateTime"
+              value={scheduleData.dateTime}
+              onChange={handleInputChange}
               InputLabelProps={{ shrink: true }}
+              required
             />
             
             <FormControl fullWidth margin="normal">
               <InputLabel>Duration</InputLabel>
-              <Select defaultValue="60">
+              <Select 
+                name="duration"
+                value={scheduleData.duration}
+                onChange={handleInputChange}
+              >
                 <MenuItem value="30">30 minutes</MenuItem>
                 <MenuItem value="45">45 minutes</MenuItem>
                 <MenuItem value="60">60 minutes</MenuItem>
@@ -236,6 +382,9 @@ const Requests = () => {
               margin="normal"
               multiline
               rows={3}
+              name="notes"
+              value={scheduleData.notes}
+              onChange={handleInputChange}
               placeholder="Provide any preparation instructions or notes for the candidate..."
             />
           </Box>
@@ -249,6 +398,7 @@ const Requests = () => {
             variant="contained" 
             color="primary"
             startIcon={<EventIcon />}
+            disabled={!scheduleData.dateTime}
           >
             Schedule Session
           </Button>
