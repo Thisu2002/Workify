@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -24,209 +24,14 @@ import {
   Quiz,
 } from "@mui/icons-material";
 import "../../styles/Candidates.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import CandidateDetails from "./CandidateDetails";
-
-const candidates = [
-  {
-    id: 1,
-    name: "Nimal Perera",
-    role: "Senior UI Developer",
-    experience: "5 Years Experience",
-    match: "92%",
-    quizScore: "85%",
-    status: "shortlisted",
-    interviewRound: "Round 2",
-    about:
-      "I'm Nimal, a Senior UI Developer with 5 years of experience based in Colombo, Sri Lanka. I specialize in React, TypeScript, and modern UI frameworks. I've worked on enterprise-level applications for financial institutions in Sri Lanka.",
-    tools: ["React", "TypeScript", "Material UI", "Figma", "Node.js"],
-    education: {
-      degree: "Software Engineering",
-      university: "University of Moratuwa",
-      duration: "2015 - 2019",
-      location: "Moratuwa, Sri Lanka",
-      gpa: "3.8",
-    },
-    latestExperience: [
-      {
-        title: "Senior UI Developer",
-        company: "WSO2",
-        date: "2021 - Present / Colombo, Sri Lanka",
-        notes: [
-          "Led UI development for WSO2 Identity Server",
-          "Implemented design system used across products",
-          "Mentored junior developers",
-        ],
-      },
-      {
-        title: "UI Developer",
-        company: "Virtusa",
-        date: "2019 - 2021 / Colombo, Sri Lanka",
-        notes: [
-          "Developed banking applications for EU clients",
-          "Optimized performance of React applications",
-        ],
-      },
-    ],
-    timeline: [
-      {
-        label: "Applied",
-        icon: <CheckCircle color="success" />,
-        date: "Jul 1, 2025",
-      },
-      {
-        label: "Shortlisted (Round 2)",
-        icon: <CheckCircle color="success" />,
-        date: "Jul 3, 2025",
-      },
-      {
-        label: "Interview Scheduled (Round 2)",
-        icon: <EventAvailable color="info" />,
-        date: "",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Kamal Silva",
-    role: "UI/UX Engineer",
-    experience: "4 Years Experience",
-    match: "88%",
-    quizScore: "78%",
-    status: "shortlisted",
-    interviewRound: "Round 1",
-    about:
-      "UI/UX Engineer with strong frontend development skills. I bridge the gap between design and implementation, ensuring pixel-perfect UIs with excellent user experience.",
-    tools: ["React", "Figma", "Adobe XD", "CSS-in-JS", "Storybook"],
-    education: {
-      degree: "Computer Science",
-      university: "University of Colombo",
-      duration: "2016 - 2020",
-      location: "Colombo, Sri Lanka",
-      gpa: "3.7",
-    },
-    latestExperience: [
-      {
-        title: "UI/UX Engineer",
-        company: "99x",
-        date: "2021 - Present / Colombo, Sri Lanka",
-        notes: [
-          "Designed and implemented UI components for Norwegian client",
-          "Created design system used by 20+ developers",
-        ],
-      },
-      {
-        title: "Frontend Developer",
-        company: "CodeGen",
-        date: "2020 - 2021 / Colombo, Sri Lanka",
-        notes: [
-          "Developed travel industry web applications",
-          "Worked closely with designers on UI implementation",
-        ],
-      },
-    ],
-    timeline: [
-      {
-        label: "Applied",
-        icon: <CheckCircle color="success" />,
-        date: "Jul 1, 2025",
-      },
-      {
-        label: "Shortlisted",
-        icon: <Loop color="primary" />,
-        date: "Jul 3, 2025",
-      },
-      {
-        label: "Interview Scheduled",
-        icon: <EventAvailable color="info" />,
-        date: "Jul 7, 2025",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Sunil Fernando",
-    role: "Frontend Architect",
-    experience: "7 Years Experience",
-    match: "85%",
-    quizScore: "92%",
-    status: "rejected",
-    interviewRound: "Round 3",
-    about:
-      "Frontend Architect with extensive experience in building scalable UI systems. I focus on performance, accessibility, and maintainability.",
-    tools: ["React", "TypeScript", "GraphQL", "Webpack", "Jest"],
-    education: {
-      degree: "Information Technology",
-      university: "Sri Lanka Institute of Information Technology",
-      duration: "2013 - 2017",
-      location: "Colombo, Sri Lanka",
-      gpa: "3.9",
-    },
-    latestExperience: [
-      {
-        title: "Frontend Architect",
-        company: "Sysco Labs",
-        date: "2022 - Present / Colombo, Sri Lanka",
-        notes: [
-          "Architected frontend for US retail systems",
-          "Led team of 8 frontend developers",
-        ],
-      },
-      {
-        title: "Senior Frontend Developer",
-        company: "MillenniumIT",
-        date: "2019 - 2022 / Colombo, Sri Lanka",
-        notes: [
-          "Developed trading platform UI",
-          "Optimized rendering performance by 40%",
-        ],
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "Priyanka Rathnayake",
-    role: "Senior React Developer",
-    experience: "4 Years Experience",
-    match: "82%",
-    quizScore: "80%",
-    status: "rejected",
-    interviewRound: "Round 1",
-    about:
-      "Senior React Developer passionate about creating beautiful, functional user interfaces with clean code practices.",
-    tools: ["React", "Redux", "Styled Components", "Jest", "Cypress"],
-    education: {
-      degree: "Computer Engineering",
-      university: "University of Peradeniya",
-      duration: "2014 - 2018",
-      location: "Peradeniya, Sri Lanka",
-      gpa: "3.6",
-    },
-    latestExperience: [
-      {
-        title: "Senior React Developer",
-        company: "Creative Software",
-        date: "2021 - Present / Colombo, Sri Lanka",
-        notes: [
-          "Developed healthcare management system UI",
-          "Implemented CI/CD pipeline for frontend",
-        ],
-      },
-      {
-        title: "React Developer",
-        company: "Vega Innovations",
-        date: "2018 - 2021 / Colombo, Sri Lanka",
-        notes: [
-          "Built automotive UI components",
-          "Worked on real-time data visualization",
-        ],
-      },
-    ],
-  },
-];
+import axios from "axios";
 
 const Candidates = () => {
   const navigate = useNavigate();
+  const { jobId } = useParams();
+  const [candidates, setCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [sortBy, setSortBy] = useState("match");
@@ -236,6 +41,24 @@ const Candidates = () => {
     round3: false,
   });
 
+  // ✅ Fetch candidates who applied for this job
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/recruiter/fetchCandidates/${jobId}`
+        );
+        setCandidates(res.data.candidates || []);
+        //console.log("Fetched candidates:", res.data);
+      } catch (err) {
+        console.error("Error fetching candidates:", err);
+      }
+    };
+
+    if (jobId) fetchCandidates();
+  }, [jobId]);
+
+  // ✅ Filtering logic (unchanged)
   const filteredCandidates = candidates.filter((candidate) => {
     if (activeTab === "all") return true;
     if (activeTab === "shortlisted") return candidate.status === "shortlisted";
@@ -243,17 +66,14 @@ const Candidates = () => {
     return true;
   });
 
+  // ✅ Sorting logic (unchanged)
   const sortedCandidates = [...filteredCandidates].sort((a, b) => {
     if (sortBy === "match") {
-      return parseFloat(b.match) - parseFloat(a.match);
+      return (b.match_score || 0) - (a.match_score || 0);
     } else if (sortBy === "experience") {
-      // Sort by experience (years)
-      const aExp = parseInt(a.experience);
-      const bExp = parseInt(b.experience);
-      return bExp - aExp;
+      return (b.experience?.years || 0) - (a.experience?.years || 0);
     } else {
-      // Sort by quiz score
-      return parseFloat(b.quizScore) - parseFloat(a.quizScore);
+      return (b.quiz_score || 0) - (a.quiz_score || 0);
     }
   });
 
@@ -272,13 +92,14 @@ const Candidates = () => {
         />
         <Box>
           <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5 }}>
-            Senior UI Developer
+            Applicants for Job
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Currently at: Technical Interview (Round 2)
+            Job ID: {jobId}
           </Typography>
         </Box>
       </Box>
+
       <Box className="candidates-root" sx={{ height: "calc(100vh - 56px)" }}>
         <Box
           className={`candidates-list-panel ${
@@ -432,10 +253,10 @@ const Candidates = () => {
           <Box>
             {sortedCandidates.map((candidate) => (
               <Card
-                key={candidate.id}
+                key={candidate._id}
                 onClick={() => setSelectedCandidate(candidate)}
                 className={`candidate-card ${
-                  selectedCandidate?.id === candidate.id ? "active" : ""
+                  selectedCandidate?._id === candidate._id ? "active" : ""
                 }`}
                 sx={{
                   display: "flex",
@@ -445,16 +266,18 @@ const Candidates = () => {
                   mb: 2,
                   borderRadius: 3,
                   cursor: "pointer",
-                  boxShadow: selectedCandidate?.id === candidate.id ? 4 : 1,
+                  boxShadow: selectedCandidate?._id === candidate._id ? 4 : 1,
                   transition: "box-shadow 0.2s, background 0.2s",
                 }}
               >
                 <Box display="flex" alignItems="center">
                   <Avatar sx={{ width: 50, height: 50, mr: 2 }} />
                   <Box>
-                    <Typography fontWeight={600}>{candidate.name}</Typography>
+                    <Typography fontWeight={600}>
+                      {candidate.firstName} {candidate.lastName}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {candidate.role}
+                      {candidate.experience?.years || 0} Years Experience
                     </Typography>
                     <Box
                       mt={1}
@@ -465,37 +288,24 @@ const Candidates = () => {
                     >
                       <Chip
                         icon={<Star fontSize="small" />}
-                        label={`${candidate.match} match`}
+                        label={`${candidate.match_score || 0}% match`}
                         size="small"
                         color="primary"
-                        //outlined chip
                         variant="outlined"
                       />
                       <Chip
                         icon={<Work fontSize="small" />}
-                        label={candidate.experience}
+                        label={`${candidate.experience?.years || 0} Years`}
                         size="small"
                         variant="outlined"
                       />
                       <Chip
                         icon={<Quiz fontSize="small" />}
-                        label={`Quiz: ${candidate.quizScore}`}
+                        label={`Quiz: ${candidate.quiz_score || 0}%`}
                         size="small"
                         color="secondary"
                         variant="outlined"
                       />
-                      {candidate.interviewRound && (
-                        <Chip
-                          icon={<AccessTime fontSize="small" />}
-                          label={candidate.interviewRound}
-                          size="small"  
-                          color={
-                            candidate.status === "rejected"
-                              ? "error"
-                              : "success"
-                          }
-                        />
-                      )}
                     </Box>
                   </Box>
                 </Box>
@@ -503,6 +313,7 @@ const Candidates = () => {
               </Card>
             ))}
           </Box>
+
           {activeTab === "shortlisted" && (
             <Box display="flex" justifyContent="flex-end">
               <Button variant="contained">Check Panel Availability</Button>

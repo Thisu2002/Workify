@@ -2,10 +2,11 @@
 
 const express = require('express');
 const router = express.Router();
-const { getAllOpenJobs } = require('../controllers/jobController');
+const jobController = require('../controllers/jobController');
 
 // This is a public route for anyone (candidates) to see open jobs
-router.get('/open', getAllOpenJobs);
+router.get('/open', jobController.getAllOpenJobs);
+router.delete('/deleteJobPost', jobController.deleteJobPost);
 
 // You will also add the route for recruiters to POST new jobs here
 // const { createJobPost } = require('../controllers/jobController');
