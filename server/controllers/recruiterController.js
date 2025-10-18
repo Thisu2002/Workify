@@ -106,6 +106,8 @@ exports.getAllCandidates = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiterId = decoded.id;
 
+    const { jobId } = req.query; 
+
     // Get recruiter to find company
     const Recruiter = require('../models/Recruiter');
     const recruiter = await Recruiter.findById(recruiterId);
@@ -115,7 +117,11 @@ exports.getAllCandidates = async (req, res) => {
     }
 
     // Find all job posts for this recruiter
-    const jobPosts = await Post.find({ recruiter_id: recruiterId }).select('_id');
+    let jobQuery = { recruiter_id: recruiterId };
+    if (jobId) {
+      jobQuery._id = jobId; // Filter by specific job if provided
+    }
+    const jobPosts = await Post.find(jobQuery).select('_id');
     const jobIds = jobPosts.map(job => job._id);
 
     // Find all applications for these jobs
@@ -234,10 +240,14 @@ exports.getApplicationsByStatus = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiterId = decoded.id;
 
-    const { status } = req.query; // 'shortlisted', 'hired', 'rejected', 'new', 'applied', 'interviewed'
+    const { status, jobId } = req.query; // Filter by status and optional jobId
 
     // Find all job posts for this recruiter
-    const jobPosts = await Post.find({ recruiter_id: recruiterId }).select('_id');
+    let jobQuery = { recruiter_id: recruiterId };
+    if (jobId) {
+      jobQuery._id = jobId; // Filter by specific job if provided
+    }
+    const jobPosts = await Post.find(jobQuery).select('_id');
     const jobIds = jobPosts.map(job => job._id);
 
     // Build query

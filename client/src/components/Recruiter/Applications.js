@@ -21,6 +21,10 @@ import {
   InputAdornment,
   CircularProgress,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -41,7 +45,7 @@ const tabOptions = [
   { label: "Rejected", value: "1_rejected" },
 ];
 
-// Get base URL - will be replaced by use-codespace-url.sh script
+// Get base URL 
 const API_BASE_URL = 'http://localhost:5000';
 
 const Applications = () => {
@@ -51,6 +55,10 @@ const Applications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Job filter states
+  const [jobPosts, setJobPosts] = useState([]);
+  const [selectedJobId, setSelectedJobId] = useState('all');
 
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
@@ -58,10 +66,30 @@ const Applications = () => {
   const [cvModalOpen, setCvModalOpen] = useState(false);
   const [selectedCvUrl, setSelectedCvUrl] = useState('');
 
-  // Fetch data based on active tab
+  // Fetch job posts on component mount
+  useEffect(() => {
+    fetchJobPosts();
+  }, []);
+
+  // Fetch data based on active tab and selected job
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, selectedJobId]);
+
+  const fetchJobPosts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+      
+      const response = await axios.get(`${API_BASE_URL}/recruiter/jobPosts`, config);
+      console.log('Fetched job posts:', response.data);
+      setJobPosts(response.data || []);
+    } catch (err) {
+      console.error('Error fetching job posts:', err);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -75,16 +103,21 @@ const Applications = () => {
 
       if (activeTab === 'all') {
         // Fetch unique candidates for "All" tab
-        const response = await axios.get(`${API_BASE_URL}/recruiter/candidates/all`, config);
+        let url = `${API_BASE_URL}/recruiter/candidates/all`;
+        if (selectedJobId && selectedJobId !== 'all') {
+          url += `?jobId=${selectedJobId}`;
+        }
+        const response = await axios.get(url, config);
         console.log('Fetched candidates:', response.data);
         setCandidates(response.data.candidates || []);
         setApplications([]);
       } else {
         // Fetch applications filtered by status for other tabs
-        const response = await axios.get(
-          `${API_BASE_URL}/recruiter/candidates/applications?status=${activeTab}`,
-          config
-        );
+        let url = `${API_BASE_URL}/recruiter/candidates/applications?status=${activeTab}`;
+        if (selectedJobId && selectedJobId !== 'all') {
+          url += `&jobId=${selectedJobId}`;
+        }
+        const response = await axios.get(url, config);
         console.log('Fetched applications:', response.data);
         setApplications(response.data.applications || []);
         setCandidates([]);
@@ -414,20 +447,43 @@ const Applications = () => {
           ))}
         </Tabs>
 
-        <TextField
-          size="small"
-          placeholder="Search by name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ width: '300px', backgroundColor: '#96BEC5' }}
-        />
+        <Box display="flex" gap={2} alignItems="center">
+          {/* Job Filter Dropdown */}
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel id="job-filter-label">Filter by Job</InputLabel>
+            <Select
+              labelId="job-filter-label"
+              id="job-filter"
+              value={selectedJobId}
+              label="Filter by Job"
+              onChange={(e) => setSelectedJobId(e.target.value)}
+              sx={{ backgroundColor: 'white' }}
+            >
+              <MenuItem value="all">All Jobs</MenuItem>
+              {jobPosts.map((job) => (
+                <MenuItem key={job._id} value={job._id}>
+                  {job.title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Search Field */}
+          <TextField
+            size="small"
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ width: '300px', backgroundColor: '#96BEC5' }}
+          />
+        </Box>
       </Box>
 
       {/* Error Display */}
