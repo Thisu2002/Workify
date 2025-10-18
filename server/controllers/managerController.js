@@ -1,4 +1,7 @@
 const Post = require('../models/JobPost');
+const Company = require('../models/Company');
+
+console.log('managerController loaded'); // debug
 
 // Get job posts with selected fields only
 exports.getJobPosts = async (req, res) => {
@@ -25,6 +28,29 @@ exports.getJobPosts = async (req, res) => {
     console.error('getJobPosts error:', err);
     res.status(500).json({
       message: 'Error fetching job posts',
+      error: err.message,
+    });
+  }
+};
+
+exports.getCompanies = async (req, res) => {
+  try {
+    const companies = await Company.find({})
+      .select({
+        _id: 1,
+        name: 1,
+        location: 1,
+        description: 1,
+        website: 1,
+      })
+      .lean();
+
+    console.log('managerController.getCompanies -> found', companies.length, 'companies');
+    res.status(200).json(companies);
+  } catch (err) {
+    console.error('getCompanies error:', err);
+    res.status(500).json({
+      message: 'Error fetching companies',
       error: err.message,
     });
   }
