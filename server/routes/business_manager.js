@@ -10,6 +10,7 @@ router.get('/ping', (req, res) => res.status(200).send('manager routes OK'));
 router.get('/jobPosts', managerController.getJobPosts);
 
 router.get('/companies', managerController.getCompanies);
+router.get('/users', managerController.getUsers);
 
 
 module.exports = router;
