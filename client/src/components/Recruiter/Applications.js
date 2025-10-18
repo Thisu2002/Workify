@@ -187,6 +187,42 @@ const Applications = () => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  // Format round status array into readable format
+  const formatRoundStatus = (roundStatus) => {
+    if (!roundStatus || !Array.isArray(roundStatus) || roundStatus.length === 0) {
+      return null;
+    }
+
+    return roundStatus.map((round, index) => {
+      const roundNumber = round.round_number || index + 1;
+      const result = round.round_result || 'pending';
+      const feedback = round.round_feedback || '';
+      
+      // Determine color based on result
+      let resultColor = 'default';
+      let resultText = result;
+      
+      if (result === 'passed' || result === 'selected') {
+        resultColor = 'success';
+        resultText = '✓ Passed';
+      } else if (result === 'failed' || result === 'rejected') {
+        resultColor = 'error';
+        resultText = '✗ Failed';
+      } else if (result === 'pending') {
+        resultColor = 'warning';
+        resultText = '⏳ Pending';
+      }
+
+      return {
+        roundNumber,
+        result,
+        resultText,
+        resultColor,
+        feedback
+      };
+    });
+  };
+
   // Render Candidate Card (for "All" tab)
   const renderCandidateCard = (candidate, idx) => (
     <Card key={idx} className="applicant-card" sx={{ borderRadius: 4, boxShadow: 3, p: 3, display: "flex", alignItems: "flex-start", background: "white" }}>
@@ -500,11 +536,29 @@ const Applications = () => {
                     )}
 
                     {/* Round Status Info */}
-                    {activity.roundStatus && (
-                      <Typography variant="body1" sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                        <InfoIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary' }} />
-                        <span><b>Round Status:</b> {JSON.stringify(activity.roundStatus)}</span>
-                      </Typography>
+                    {activity.roundStatus && Array.isArray(activity.roundStatus) && activity.roundStatus.length > 0 && (
+                      <Box>
+                        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1, mt: 1 }}>
+                          Interview Rounds:
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          {formatRoundStatus(activity.roundStatus)?.map((round, idx) => (
+                            <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                              <Chip 
+                                label={`Round ${round.roundNumber}: ${round.resultText}`}
+                                color={round.resultColor}
+                                size="small"
+                                sx={{ fontWeight: 'bold' }}
+                              />
+                              {round.feedback && (
+                                <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 200, fontSize: '0.7rem' }}>
+                                  {round.feedback}
+                                </Typography>
+                              )}
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
                     )}
 
                     {/* Interview Feedback - if available from backend later */}
