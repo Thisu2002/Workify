@@ -36,21 +36,27 @@ const Candidates = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [sortBy, setSortBy] = useState("match");
-  const [roundFilters, setRoundFilters] = useState({
-    round1: false,
-    round2: false,
-    round3: false,
-  });
+  const [roundFilters, setRoundFilters] = useState({});
+  const [currentRound, setCurrentRound] = useState(null);
 
-  // Fetch candidates who applied for this job
   useEffect(() => {
     const fetchJobPost = async () => {
       try {
         const res = await axios.get(
           `http://localhost:5000/api/jobs/fetchJobPost/${jobId}`
         );
-        console.log("Job Post Details:", res.data);
-        setJobPost(res.data.jobPost);
+        const job = res.data.jobPost;
+        setJobPost(job);
+
+        // Determine current round number from current_status
+        if (job.current_status && job.current_status !== "new") {
+          const roundMatch = job.current_status.match(/^(\d+)_/);
+          const roundNumber = roundMatch ? parseInt(roundMatch[1], 10) : null;
+          setCurrentRound(roundNumber);
+          if (roundNumber) {
+            setRoundFilters({ [roundNumber]: true });
+          }
+        }
       } catch (error) {
         console.error("Error fetching job post:", error);
       }
@@ -62,28 +68,77 @@ const Candidates = () => {
           `http://localhost:5000/recruiter/fetchCandidates/${jobId}`
         );
         setCandidates(res.data.candidates || []);
-        //console.log("Fetched candidates:", res.data);
       } catch (err) {
         console.error("Error fetching candidates:", err);
       }
     };
 
-    if (jobId){
+    if (jobId) {
       fetchCandidates();
       fetchJobPost();
     }
   }, [jobId]);
 
-  // Filtering logic
+  // ✅ Filtering logic per tab
   const filteredCandidates = candidates.filter((candidate) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "shortlisted") return candidate.status === "shortlisted";
-    if (activeTab === "rejected") return candidate.status === "rejected";
+    const status = candidate.current_status || "";
+
+    switch (activeTab) {
+      case "toReview":
+        return status === "new";
+
+      case "shortlisted":
+        return candidate.round_status?.some(
+          (r) =>
+            r.round_result !== "rejected" &&
+            r.round_result &&
+            r.round_result.trim() !== ""
+        );
+
+      case "rejected":
+        return candidate.round_status?.some(
+          (r) => r.round_result === "rejected"
+        );
+
+      case "hired":
+        return status.toLowerCase().includes("hired");
+
+      default:
+        return true;
+    }
+  });
+
+  // ✅ Apply round filters for Shortlisted / Rejected
+  const roundFilteredCandidates = filteredCandidates.filter((candidate) => {
+    if (activeTab === "shortlisted" || activeTab === "rejected") {
+      const selectedRounds = Object.keys(roundFilters).filter(
+        (r) => roundFilters[r]
+      );
+
+      if (selectedRounds.length === 0) return true;
+
+      return candidate.round_status?.some((r) => {
+        const roundNum = r.round_number?.toString();
+        const result = r.round_result?.trim()?.toLowerCase();
+
+        if (!selectedRounds.includes(roundNum) || !result) return false;
+
+        if (activeTab === "shortlisted") {
+          return result !== "rejected";
+        }
+
+        if (activeTab === "rejected") {
+          return result === "rejected";
+        }
+
+        return false;
+      });
+    }
     return true;
   });
 
-  // Sorting logic
-  const sortedCandidates = [...filteredCandidates].sort((a, b) => {
+  // ✅ Sorting logic
+  const sortedCandidates = [...roundFilteredCandidates].sort((a, b) => {
     if (sortBy === "match") {
       return (b.match_score || 0) - (a.match_score || 0);
     } else if (sortBy === "experience") {
@@ -92,6 +147,42 @@ const Candidates = () => {
       return (b.quiz_score || 0) - (a.quiz_score || 0);
     }
   });
+
+  // ✅ Helper: Get status label and color for "All Candidates"
+  const getStatusLabel = (status) => {
+    if (status === "new") {
+      return (
+        <Chip
+          label="new"
+          size="small"
+          sx={{ backgroundColor: "#729be1ff", color: "#ffffff" }}
+        />
+      );
+    }
+
+    const roundMatch = status.match(/^(\d+)_/);
+    const roundNumber = roundMatch ? parseInt(roundMatch[1], 10) : null;
+
+    if (!roundNumber) return null;
+
+    if (status.includes("rejected")) {
+      return (
+        <Chip
+          label={`Round ${roundNumber}`}
+          size="small"
+          sx={{ backgroundColor: "#ffdddd", color: "#d32f2f" }}
+        />
+      );
+    }
+
+    return (
+      <Chip
+        label={`Round ${roundNumber}`}
+        size="small"
+        sx={{ backgroundColor: "#d0f0c0", color: "#2e7d32" }}
+      />
+    );
+  };
 
   return (
     <Box className="candidates-main">
@@ -108,13 +199,37 @@ const Candidates = () => {
         />
         <Box>
           <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5 }}>
-            Applicants for Job
+            {jobPost ? jobPost.title : "Loading..."}
           </Typography>
+
           <Typography variant="body2" color="text.secondary">
-            Job ID: {jobId}
+            {jobPost
+              ? (() => {
+                  const status = jobPost.current_status;
+                  if (status === "new") {
+                    return "Currently at: Application Submitted";
+                  }
+                  const roundMatch = status.match(/^(\d+)_/);
+                  const roundNumber = roundMatch
+                    ? parseInt(roundMatch[1], 10)
+                    : null;
+
+                  if (roundNumber) {
+                    const round = jobPost.interview_rounds?.find(
+                      (r) => r.round_number === roundNumber
+                    );
+                    if (round) {
+                      return `Currently at: ${round.round_name} (Round ${round.round_number})`;
+                    }
+                  }
+                  return "Currently at: Processing Applications";
+                })()
+              : "Loading..."}
           </Typography>
         </Box>
       </Box>
+
+      <Divider sx={{ mb: 2, mt: 2 }} />
 
       <Box className="candidates-root" sx={{ height: "calc(100vh - 56px)" }}>
         <Box
@@ -122,6 +237,7 @@ const Candidates = () => {
             selectedCandidate ? "shrink" : "full"
           }`}
         >
+          {/* Tabs */}
           <Box
             display="flex"
             justifyContent="space-between"
@@ -130,64 +246,46 @@ const Candidates = () => {
             mb={2}
           >
             <Box>
-              <Button
-                variant={activeTab === "all" ? "contained" : "outlined"}
-                onClick={() => setActiveTab("all")}
-                sx={{
-                  borderRadius: 5,
-                  mr: 1,
-                  backgroundColor: activeTab === "all" ? "#0f2445" : "inherit",
-                  color: activeTab === "all" ? "#fff" : "inherit",
-                  "&:hover": {
-                    backgroundColor: activeTab === "all" ? "#222" : "inherit",
-                  },
-                }}
-              >
-                All Candidates
-              </Button>
-              <Button
-                variant={activeTab === "shortlisted" ? "contained" : "outlined"}
-                onClick={() => setActiveTab("shortlisted")}
-                sx={{
-                  borderRadius: 5,
-                  mr: 1,
-                  backgroundColor:
-                    activeTab === "shortlisted" ? "#0f2445" : "inherit",
-                  color: activeTab === "shortlisted" ? "#fff" : "inherit",
-                  "&:hover": {
+              {[
+                { key: "all", label: "All Candidates" },
+                { key: "toReview", label: "To Review" },
+                { key: "shortlisted", label: "Shortlisted" },
+                { key: "rejected", label: "Rejected" },
+                { key: "hired", label: "Hired" },
+              ].map((tab) => (
+                <Button
+                  key={tab.key}
+                  variant={activeTab === tab.key ? "contained" : "outlined"}
+                  onClick={() => setActiveTab(tab.key)}
+                  sx={{
+                    borderRadius: 5,
+                    mr: 1,
                     backgroundColor:
-                      activeTab === "shortlisted" ? "#222" : "inherit",
-                  },
-                }}
-              >
-                Shortlisted
-              </Button>
-              <Button
-                variant={activeTab === "rejected" ? "contained" : "outlined"}
-                onClick={() => setActiveTab("rejected")}
-                sx={{
-                  borderRadius: 5,
-                  backgroundColor:
-                    activeTab === "rejected" ? "#0f2445" : "inherit",
-                  color: activeTab === "rejected" ? "#fff" : "inherit",
-                  "&:hover": {
-                    backgroundColor:
-                      activeTab === "rejected" ? "#222" : "inherit",
-                  },
-                }}
-              >
-                Rejected
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{
-                  borderRadius: 5,
-                  ml: 2,
-                }}
-              >
-                Hired
-              </Button>
+                      activeTab === tab.key ? "#0f2445" : "inherit",
+                    color: activeTab === tab.key ? "#fff" : "inherit",
+                    position: "relative",
+                    "&:hover": {
+                      backgroundColor:
+                        activeTab === tab.key ? "#222" : "inherit",
+                    },
+                  }}
+                >
+                  {tab.label}
+                  {tab.key === "toReview" && (
+                    <sup
+                      style={{
+                        color: "#1976d2",
+                        marginLeft: 3,
+                        marginBottom: 3,
+                      }}
+                    >
+                      NEW
+                    </sup>
+                  )}
+                </Button>
+              ))}
             </Box>
+
             <RadioGroup
               row
               value={sortBy}
@@ -211,61 +309,36 @@ const Candidates = () => {
             </RadioGroup>
           </Box>
 
+          {/* Round Filters */}
           {(activeTab === "shortlisted" || activeTab === "rejected") && (
             <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
               <Typography variant="body2" sx={{ mr: 2 }}>
                 Filter by round:
               </Typography>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={roundFilters.round1}
-                    onChange={(e) =>
-                      setRoundFilters({
-                        ...roundFilters,
-                        round1: e.target.checked,
-                      })
-                    }
-                  />
-                }
-                label="Round 1"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={roundFilters.round2}
-                    onChange={(e) =>
-                      setRoundFilters({
-                        ...roundFilters,
-                        round2: e.target.checked,
-                      })
-                    }
-                  />
-                }
-                label="Round 2"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={roundFilters.round3}
-                    onChange={(e) =>
-                      setRoundFilters({
-                        ...roundFilters,
-                        round3: e.target.checked,
-                      })
-                    }
-                  />
-                }
-                label="Round 3"
-              />
+              {jobPost?.interview_rounds?.map((round) => (
+                <FormControlLabel
+                  key={round.round_number}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={!!roundFilters[round.round_number]}
+                      onChange={(e) =>
+                        setRoundFilters({
+                          ...roundFilters,
+                          [round.round_number]: e.target.checked,
+                        })
+                      }
+                    />
+                  }
+                  label={`Round ${round.round_number}`}
+                />
+              ))}
             </Box>
           )}
 
           <Divider sx={{ mb: 2 }} />
 
+          {/* Candidate Cards */}
           <Box>
             {sortedCandidates.map((candidate) => (
               <Card
@@ -289,12 +362,21 @@ const Candidates = () => {
                 <Box display="flex" alignItems="center">
                   <Avatar sx={{ width: 50, height: 50, mr: 2 }} />
                   <Box>
-                    <Typography fontWeight={600}>
+                    <Typography
+                      fontWeight={600}
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                    >
                       {candidate.firstName} {candidate.lastName}
+                      {activeTab === "all" &&
+                        getStatusLabel(candidate.current_status)}
                     </Typography>
+
                     <Typography variant="body2" color="text.secondary">
-                      {candidate.experience?.years || 0} Years Experience
+                      {candidate.about || "No about info provided."}
                     </Typography>
+
                     <Box
                       mt={1}
                       display="flex"
@@ -311,7 +393,9 @@ const Candidates = () => {
                       />
                       <Chip
                         icon={<Work fontSize="small" />}
-                        label={`${candidate.experience?.years || 0} Years`}
+                        label={`${
+                          candidate.experience?.years || 0
+                        } Years Experience`}
                         size="small"
                         variant="outlined"
                       />
@@ -330,11 +414,16 @@ const Candidates = () => {
             ))}
           </Box>
 
-          {activeTab === "shortlisted" && (
-            <Box display="flex" justifyContent="flex-end">
-              <Button variant="contained">Check Panel Availability</Button>
-            </Box>
-          )}
+          {/* ✅ Button shown only if Shortlisted tab and only current round selected */}
+          {activeTab === "shortlisted" &&
+            currentRound &&
+            roundFilters[currentRound] &&
+            Object.keys(roundFilters).filter((r) => roundFilters[r]).length ===
+              1 && (
+              <Box display="flex" justifyContent="flex-end">
+                <Button variant="contained">Check Panel Availability</Button>
+              </Box>
+            )}
         </Box>
 
         <CandidateDetails

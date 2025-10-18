@@ -93,6 +93,7 @@ exports.fetchJobPost = async (req, res) => {
     if (!jobPost) {
       return res.status(404).json({ message: "Job post not found." });
     }
+
     res.status(200).json({
       message: "Job post fetched successfully.",
       jobPost,

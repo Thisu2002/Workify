@@ -80,35 +80,34 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const menuOpen = Boolean(anchorEl);
 
   useEffect(() => {
-  fetchPosts();
-}, []);
+    fetchPosts();
+  }, []);
 
-const fetchPosts = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.get("http://localhost:5000/recruiter/jobPosts", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const posts = res.data.map((p) => {
-      const daysAgo = Math.floor(
-        (Date.now() - new Date(p.date_posted)) / (1000 * 60 * 60 * 24)
-      );
-      return {
-        ...p,
-        id: p._id,
-        rate: p.salary ? p.salary : "",
-        numApplicants: Math.floor(Math.random() * 50) + 1,
-        postedAgo: daysAgo,
-        postedDate: new Date(p.date_posted),
-      };
-    });
-    setOpenJobs(posts.filter((p) => p.status === "Open"));
-    setClosedJobs(posts.filter((p) => p.status === "Closed"));
-  } catch (err) {
-    console.error("Error fetching posts", err);
-  }
-};
-
+  const fetchPosts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/recruiter/jobPosts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const posts = res.data.map((p) => {
+        const daysAgo = Math.floor(
+          (Date.now() - new Date(p.date_posted)) / (1000 * 60 * 60 * 24)
+        );
+        return {
+          ...p,
+          id: p._id,
+          rate: p.salary ? p.salary : "",
+          numApplicants: p.num_applicants,
+          postedAgo: daysAgo,
+          postedDate: new Date(p.date_posted),
+        };
+      });
+      setOpenJobs(posts.filter((p) => p.status === "Open"));
+      setClosedJobs(posts.filter((p) => p.status === "Closed"));
+    } catch (err) {
+      console.error("Error fetching posts", err);
+    }
+  };
 
   const handleJobClick = (job) => {
     setSelectedJob(job);
@@ -144,9 +143,9 @@ const fetchPosts = async () => {
       );
 
       toast.success(res.data.message || "Job deleted successfully!");
-       setOpenJobs((prev) => prev.filter((job) => job.id !== jobId));
-    setClosedJobs((prev) => prev.filter((job) => job.id !== jobId));
-    setSelectedJob(null);
+      setOpenJobs((prev) => prev.filter((job) => job.id !== jobId));
+      setClosedJobs((prev) => prev.filter((job) => job.id !== jobId));
+      setSelectedJob(null);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to delete job");
       console.error("Delete failed:", err);
@@ -485,10 +484,7 @@ const fetchPosts = async () => {
       />
 
       <Dialog open={Boolean(showJobForm)} fullWidth maxWidth="md" padding={20}>
-        <PostJob 
-          setShowJobForm={setShowJobForm}
-          fetchPosts={fetchPosts}
-        />
+        <PostJob setShowJobForm={setShowJobForm} fetchPosts={fetchPosts} />
         <DialogActions>
           <Button onClick={() => setShowJobForm(false)}>Cancel</Button>
         </DialogActions>
