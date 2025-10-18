@@ -3,6 +3,8 @@ const Company = require('../models/Company');
 const User = require('../models/User');
 const Recruiter = require('../models/Recruiter');
 const Candidate = require('../models/Candidate');
+const MentorVerification = require('../models/MentorVerification');
+const Mentor = require('../models/Mentor');
 
 console.log('managerController loaded'); // debug
 
@@ -126,5 +128,87 @@ exports.getUsers = async (req, res) => {
   } catch (err) {
     console.error('getUsers error:', err);
     res.status(500).json({ message: 'Error fetching users', error: err.message });
+  }
+};
+
+// Get all pending mentor verification requests
+exports.getPendingMentors = async (req, res) => {
+  try {
+    const mentors = await MentorVerification.find({ status: 'Pending' }).lean();
+    res.status(200).json(mentors);
+  } catch (err) {
+    console.error('getPendingMentors error:', err);
+    res.status(500).json({ message: 'Error fetching mentor requests', error: err.message });
+  }
+};
+
+// Accept mentor request
+exports.acceptMentor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mentorReq = await MentorVerification.findById(id);
+
+    if (!mentorReq) {
+      return res.status(404).json({ message: 'Mentor request not found' });
+    }
+
+    // 1️⃣ Create User
+    const newUser = new User({
+      email: mentorReq.email,
+      password: 'hashed_default_password', // Replace later with actual password flow
+      firstName: mentorReq.firstName,
+      lastName: mentorReq.lastName,
+      contactNumber: mentorReq.contactNumber,
+      user_roles: ['mentor']
+    });
+    await newUser.save();
+
+    // 2️⃣ Create Mentor
+    const newMentor = new Mentor({
+      _id: newUser._id,
+      field: mentorReq.field,
+      experience: mentorReq.experience,
+      bio: mentorReq.bio,
+      linkedin: mentorReq.linkedin,
+      contactNumber: mentorReq.contactNumber
+    });
+    await newMentor.save();
+
+    // 3️⃣ Update verification record
+    mentorReq.status = 'Accepted';
+    await mentorReq.save();
+
+    // (4️⃣ Send email later — commented out)
+    // sendAcceptanceEmail(mentorReq.email);
+
+    res.status(200).json({ message: 'Mentor accepted successfully.' });
+  } catch (err) {
+    console.error('acceptMentor error:', err);
+    res.status(500).json({ message: 'Error accepting mentor', error: err.message });
+  }
+};
+
+// Decline mentor request
+exports.declineMentor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const mentorReq = await MentorVerification.findById(id);
+    if (!mentorReq) {
+      return res.status(404).json({ message: 'Mentor request not found' });
+    }
+
+    mentorReq.status = 'Declined';
+    mentorReq.reason = reason;
+    await mentorReq.save();
+
+    // (Commented out email)
+    // sendDeclineEmail(mentorReq.email, reason);
+
+    res.status(200).json({ message: 'Mentor declined successfully.' });
+  } catch (err) {
+    console.error('declineMentor error:', err);
+    res.status(500).json({ message: 'Error declining mentor', error: err.message });
   }
 };

@@ -12,5 +12,12 @@ router.get('/jobPosts', managerController.getJobPosts);
 router.get('/companies', managerController.getCompanies);
 router.get('/users', managerController.getUsers);
 
+// Mentor verification routes
+router.get('/mentors/pending', managerController.getPendingMentors);
+router.post('/mentors/accept/:id', managerController.acceptMentor);
+router.post('/mentors/decline/:id', managerController.declineMentor);
+
+
+
 
 module.exports = router;
