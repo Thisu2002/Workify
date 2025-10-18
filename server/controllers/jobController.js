@@ -84,3 +84,21 @@ exports.fetchCandidates = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.fetchJobPost = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const jobPost = await JobPost.findById(jobId);
+
+    if (!jobPost) {
+      return res.status(404).json({ message: "Job post not found." });
+    }
+    res.status(200).json({
+      message: "Job post fetched successfully.",
+      jobPost,
+    });
+  } catch (error) {
+    console.error("Error fetching job post:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

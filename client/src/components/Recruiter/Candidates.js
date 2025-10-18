@@ -31,6 +31,7 @@ import axios from "axios";
 const Candidates = () => {
   const navigate = useNavigate();
   const { jobId } = useParams();
+  const [jobPost, setJobPost] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
@@ -41,8 +42,20 @@ const Candidates = () => {
     round3: false,
   });
 
-  // ✅ Fetch candidates who applied for this job
+  // Fetch candidates who applied for this job
   useEffect(() => {
+    const fetchJobPost = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/jobs/fetchJobPost/${jobId}`
+        );
+        console.log("Job Post Details:", res.data);
+        setJobPost(res.data.jobPost);
+      } catch (error) {
+        console.error("Error fetching job post:", error);
+      }
+    };
+
     const fetchCandidates = async () => {
       try {
         const res = await axios.get(
@@ -55,10 +68,13 @@ const Candidates = () => {
       }
     };
 
-    if (jobId) fetchCandidates();
+    if (jobId){
+      fetchCandidates();
+      fetchJobPost();
+    }
   }, [jobId]);
 
-  // ✅ Filtering logic (unchanged)
+  // Filtering logic
   const filteredCandidates = candidates.filter((candidate) => {
     if (activeTab === "all") return true;
     if (activeTab === "shortlisted") return candidate.status === "shortlisted";
@@ -66,7 +82,7 @@ const Candidates = () => {
     return true;
   });
 
-  // ✅ Sorting logic (unchanged)
+  // Sorting logic
   const sortedCandidates = [...filteredCandidates].sort((a, b) => {
     if (sortBy === "match") {
       return (b.match_score || 0) - (a.match_score || 0);
