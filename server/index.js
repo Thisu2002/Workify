@@ -15,6 +15,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/recruiter', require('./routes/recruiter'));
 app.use('/candidate', require('./routes/candidate')); 
 app.use('/manager', require('./routes/business_manager'));
+app.use('/admin', require('./routes/admin'));
 
 const jobRoutes = require('./routes/jobs'); 
 app.use('/api/jobs', jobRoutes); 
