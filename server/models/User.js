@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    contactNumber: {  
+        type: String,
+        required: false, 
+        trim: true
+    },
     user_roles: {
         type: [String],
         enum: ['admin', 'candidate', 'recruiter', 'mentor', 'business_manager', 'lead_panelist'],
