@@ -37,3 +37,7 @@ const mentoringSessionSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
+// Export the model - this pattern should work
+const MentoringSession = mongoose.model('MentoringSession', mentoringSessionSchema);
+module.exports = MentoringSession;

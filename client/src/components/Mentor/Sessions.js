@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -21,7 +21,8 @@ import {
   MenuItem,
   IconButton,
   Divider,
-  Paper
+  Paper,
+  CircularProgress
 } from "@mui/material";
 import {
   VideoCall as VideoCallIcon,
@@ -49,50 +50,73 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
     duration: '60',
     notes: ''
   });
-
-  const activeSessions = [
-    {
-      id: 1,
-      candidateName: "Emaya Liyanage",
-      candidateAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      sessionType: "CV Review",
-      scheduledTime: "2024-01-16 14:00",
-      duration: "60 min",
-      status: "upcoming",
-      progress: 0
-    },
-    {
-      id: 2,
-      candidateName: "Danushka Perera",
-      candidateAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      sessionType: "Mock Interview",
-      scheduledTime: "2024-01-16 16:30",
-      duration: "90 min",
-      status: "in-progress",
-      progress: 45
-    },
-    {
-      id: 3,
-      candidateName: "Sarah Johnson",
-      candidateAvatar: "https://randomuser.me/api/portraits/women/68.jpg",
-      sessionType: "Career Guidance",
-      scheduledTime: "2024-01-17 10:00",
-      duration: "45 min",
-      status: "upcoming",
-      progress: 0
-    },
-    {
-      id: 4,
-      candidateName: "Michael Smith",
-      candidateAvatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      sessionType: "Technical Mentoring",
-      scheduledTime: "2024-01-17 13:30",
-      duration: "60 min",
-      status: "upcoming",
-      progress: 0
-    }
-  ];
   
+  // State for fetched sessions
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch sessions from backend
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+
+      console.log('🔄 Fetching sessions from backend...');
+      
+      const response = await axios.get('http://localhost:5000/api/mentoring/sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('📥 Response received:', response.data);
+      console.log('📊 Sessions count from API:', response.data.count);
+      console.log('📊 Total in DB:', response.data.totalInDB);
+
+      if (response.data.success) {
+        // Transform the data to match the expected format
+        const transformedSessions = response.data.data.map(session => ({
+          id: session._id,
+          candidateName: session.candidate_email.split('@')[0], // Extract name from email
+          candidateAvatar: `https://ui-avatars.com/api/?name=${session.candidate_email.split('@')[0]}&background=random`,
+          sessionType: session.session_type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          scheduledTime: new Date(session.date_time).toLocaleString(),
+          duration: `${session.duration} min`,
+          status: session.status.toLowerCase() === 'scheduled' ? 'upcoming' : session.status.toLowerCase(),
+          progress: session.status.toLowerCase() === 'in-progress' ? 45 : 0,
+          notes: session.notes,
+          mentorName: session.mentor_id ? `${session.mentor_id.firstName} ${session.mentor_id.lastName}` : 'Unknown Mentor'
+        }));
+        
+        console.log('🔄 Transformed sessions:', transformedSessions.length);
+        setActiveSessions(transformedSessions);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching sessions:', error);
+      setError(error.response?.data?.message || 'Failed to load sessions');
+      enqueueSnackbar('Failed to load sessions', { variant: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch sessions on component mount
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  // Refresh sessions after creating a new one
+  const handleSessionCreated = () => {
+    fetchSessions();
+  };
+
   const SessionCard = ({ session }) => (
     <Grid item xs={12} md={6}>
       <Card className="session-card-modern">
@@ -169,17 +193,20 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
 
   const handleSubmit = async () => {
     try {
-      console.log('Submitting form data:', formData); // Debug log
-      
-      const token = localStorage.getItem('token');
-      console.log('Token:', token); // Debug log
-
       // Validate form data
       if (!formData.session_type || !formData.candidate_email || !formData.date_time) {
         enqueueSnackbar('Please fill all required fields', { variant: 'error' });
         return;
       }
 
+      const token = localStorage.getItem('token');
+      if (!token) {
+        enqueueSnackbar('Authentication required. Please log in again.', { variant: 'error' });
+        return;
+      }
+
+      console.log('Submitting session with data:', formData);
+      
       const response = await axios.post(
         'http://localhost:5000/api/mentoring/sessions', 
         formData,
@@ -191,22 +218,28 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
         }
       );
 
-      console.log('Response:', response.data); // Debug log
-
       if (response.data.success) {
         enqueueSnackbar('Session scheduled successfully!', { variant: 'success' });
         setShowSessionForm(false);
-        setFormData({ // Reset form
+        // Reset form
+        setFormData({
           session_type: '',
           candidate_email: '',
           date_time: '',
           duration: '60',
           notes: ''
         });
+        // Refresh sessions list
+        handleSessionCreated();
       }
     } catch (error) {
-      console.error('Error submitting form:', error); // Debug log
-      enqueueSnackbar(error.response?.data?.message || 'Error scheduling session', { variant: 'error' });
+      console.error('Error submitting form:', error);
+      
+      const errorMessage = 
+        error.response?.data?.message || 
+        'Could not schedule session. Please try again later.';
+      
+      enqueueSnackbar(errorMessage, { variant: 'error' });
     }
   };
 
@@ -469,7 +502,12 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight="bold">Active Sessions</Typography>
+        <Box>
+          <Typography variant="h5" fontWeight="bold"></Typography>
+          <Typography variant="body2" color="text.secondary">
+            
+          </Typography>
+        </Box>
         <Button 
           variant="contained"
           startIcon={<ScheduleIcon />}
@@ -479,11 +517,43 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
         </Button>
       </Box>
       
-      <Grid container spacing={3}>
-        {activeSessions.map(session => (
-          <SessionCard key={session.id} session={session} />
-        ))}
-      </Grid>
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <CircularProgress />
+          <Typography variant="body1" sx={{ ml: 2 }}>Loading sessions...</Typography>
+        </Box>
+      ) : error ? (
+        <Box textAlign="center" p={4}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Error loading sessions
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {error}
+          </Typography>
+          <Button 
+            variant="outlined" 
+            sx={{ mt: 2 }}
+            onClick={fetchSessions}
+          >
+            Try Again
+          </Button>
+        </Box>
+      ) : activeSessions.length === 0 ? (
+        <Box textAlign="center" p={4}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No sessions scheduled
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Click "Schedule Session" to create your first mentoring session.
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {activeSessions.map(session => (
+            <SessionCard key={session.id} session={session} />
+          ))}
+        </Grid>
+      )}
       
       <Dialog 
         open={Boolean(showSessionForm)} 
