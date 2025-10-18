@@ -121,9 +121,34 @@ exports.getAllCandidates = async (req, res) => {
     // Find all applications for these jobs
     const CandidateJob = require('../models/Candidate_Job');
     const User = require('../models/User');
+    const Skill = require('../models/Skills');
+    
     const applications = await CandidateJob.find({ job_id: { $in: jobIds } })
       .populate('candidate_id', 'avatarUrl contact about')
       .populate('job_id', 'title');
+
+    // Fetch all skills once to map skill IDs to names
+    const allSkills = await Skill.find();
+    
+    // Create a map with both numeric IDs and ObjectId strings for compatibility
+    const skillMap = new Map();
+    allSkills.forEach((skill, index) => {
+      // Map by ObjectId string
+      skillMap.set(skill._id.toString(), skill.name);
+      // Map by numeric index (in case skills are stored as numbers 1, 2, 3...)
+      skillMap.set(index + 1, skill.name);
+    });
+
+    // Helper function to map skill IDs to names
+    const mapSkillsToNames = (skillIds) => {
+      if (!skillIds || !Array.isArray(skillIds)) return [];
+      return skillIds
+        .map(id => {
+          // Try both the ID directly and as string
+          return skillMap.get(id) || skillMap.get(id.toString()) || `Skill ${id}`;
+        })
+        .filter(Boolean);
+    };
 
     // Group by candidate to get unique candidates with aggregated data
     const candidateMap = new Map();
@@ -144,7 +169,7 @@ exports.getAllCandidates = async (req, res) => {
           avatarUrl: app.candidate_id.avatarUrl || '',
           about: app.candidate_id.about || '',
           experience: app.experience,
-          skills: app.skills,
+          skills: mapSkillsToNames(app.skills), // Map skill IDs to names
           totalApplications: 0,
           applications: [],
           // Determine overall status priority
@@ -224,10 +249,35 @@ exports.getApplicationsByStatus = async (req, res) => {
     // Find applications
     const CandidateJob = require('../models/Candidate_Job');
     const User = require('../models/User');
+    const Skill = require('../models/Skills');
+    
     const applications = await CandidateJob.find(query)
       .populate('candidate_id', 'avatarUrl contact about')
       .populate('job_id', 'title')
       .sort({ date_applied: -1 });
+
+    // Fetch all skills once to map skill IDs to names
+    const allSkills = await Skill.find();
+    
+    // Create a map with both numeric IDs and ObjectId strings for compatibility
+    const skillMap = new Map();
+    allSkills.forEach((skill, index) => {
+      // Map by ObjectId string
+      skillMap.set(skill._id.toString(), skill.name);
+      // Map by numeric index (in case skills are stored as numbers 1, 2, 3...)
+      skillMap.set(index + 1, skill.name);
+    });
+
+    // Helper function to map skill IDs to names
+    const mapSkillsToNames = (skillIds) => {
+      if (!skillIds || !Array.isArray(skillIds)) return [];
+      return skillIds
+        .map(id => {
+          // Try both the ID directly and as string
+          return skillMap.get(id) || skillMap.get(id.toString()) || `Skill ${id}`;
+        })
+        .filter(Boolean);
+    };
 
     // Format response with full application details
     const formattedApplications = await Promise.all(applications.map(async (app) => {
@@ -246,7 +296,7 @@ exports.getApplicationsByStatus = async (req, res) => {
         jobId: app.job_id._id,
         jobTitle: app.job_id.title,
         experience: app.experience,
-        skills: app.skills,
+        skills: mapSkillsToNames(app.skills), // Map skill IDs to names
         education: app.education,
         currentStatus: app.current_status,
         roundStatus: app.round_status,
