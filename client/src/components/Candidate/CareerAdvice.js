@@ -15,7 +15,9 @@ import {
   ListItem,
   ListItemText,
   Tab,
-  Tabs
+  Tabs,
+  CircularProgress,
+  Alert
 } from "@mui/material";
 import { 
   Search,
@@ -137,6 +139,11 @@ const CareerAdvice = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [sessionsTab, setSessionsTab] = useState(0); // 0: All, 1: Pending, 2: Scheduled, 3: Completed, 4: Cancelled
   const [sessions, setSessions] = useState(MOCK_SESSIONS); // Will be fetched from API
+  
+  // New state for mentors
+  const [mentors, setMentors] = useState([]);
+  const [isLoadingMentors, setIsLoadingMentors] = useState(false);
+  const [mentorsError, setMentorsError] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -154,7 +161,49 @@ const CareerAdvice = () => {
     };
 
     fetchUserProfile();
+    fetchMentors(); // Fetch mentors on component mount
   }, []);
+
+  // New function to fetch mentors
+  const fetchMentors = async () => {
+    setIsLoadingMentors(true);
+    setMentorsError(null);
+    
+    try {
+      console.log('Fetching mentors...');
+      const response = await axios.get('http://localhost:5000/api/mentors', {
+        params: {
+          search: searchTerm,
+          limit: 50
+        }
+      });
+      
+      console.log('API Response:', response.data);
+      
+      if (response.data.success) {
+        console.log('Mentors fetched:', response.data.data);
+        setMentors(response.data.data);
+      } else {
+        setMentorsError('Failed to fetch mentors');
+      }
+    } catch (error) {
+      console.error('Error fetching mentors:', error);
+      setMentorsError('Error loading mentors. Please try again.');
+    } finally {
+      setIsLoadingMentors(false);
+    }
+  };
+
+  // Refetch mentors when search term changes (with debounce)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (!showScheduledOnly) {
+        fetchMentors();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, showScheduledOnly]);
 
   // Fetch sessions when showing sessions view
   useEffect(() => {
@@ -222,7 +271,7 @@ const CareerAdvice = () => {
     }
   };
 
-  const filteredMentors = MOCK_MENTORS.filter(mentor =>
+  const filteredMentors = mentors.filter(mentor =>
     mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mentor.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mentor.specialties.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -248,40 +297,74 @@ const CareerAdvice = () => {
         }}
         sx={{ mb: 4 }}
       />
-      <Grid container spacing={3}>
-        {filteredMentors.map(mentor => (
-          <Grid item key={mentor.id} xs={12} sm={6} lg={4} sx={{ flexGrow: 1 }}>
-            <Paper 
-              elevation={2} 
-              sx={{ p: 2.5, borderRadius: 2, display: 'flex', flexDirection: 'column', height: '100%', transition: 'box-shadow 0.3s, transform 0.2s', '&:hover': { boxShadow: 6, transform: 'translateY(-4px)' } }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar src={mentor.avatar} sx={{ width: 60, height: 60, mr: 2 }} />
-                <Box>
-                  <Typography variant="h6">{mentor.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">{mentor.role}</Typography>
+
+      {/* Loading State */}
+      {isLoadingMentors && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Error State */}
+      {mentorsError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {mentorsError}
+          <Button onClick={fetchMentors} sx={{ ml: 2 }}>
+            Retry
+          </Button>
+        </Alert>
+      )}
+
+      {/* Mentors Grid */}
+      {!isLoadingMentors && !mentorsError && (
+        <Grid container spacing={3}>
+          {filteredMentors.map(mentor => (
+            <Grid item key={mentor.id} xs={12} sm={6} lg={4} sx={{ flexGrow: 1 }}>
+              <Paper 
+                elevation={2} 
+                sx={{ p: 2.5, borderRadius: 2, display: 'flex', flexDirection: 'column', height: '100%', transition: 'box-shadow 0.3s, transform 0.2s', '&:hover': { boxShadow: 6, transform: 'translateY(-4px)' } }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Avatar src={mentor.avatar} sx={{ width: 60, height: 60, mr: 2 }}>
+                    {mentor.name.charAt(0)}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6">{mentor.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {mentor.role}{mentor.company && ` at ${mentor.company}`}
+                    </Typography>
+                    {mentor.rating > 0 && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Star fontSize="small" color="warning" />
+                        <Typography variant="body2" sx={{ ml: 0.5 }}>
+                          {mentor.rating.toFixed(1)} ({mentor.totalSessions} sessions)
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-              <Typography variant="body2" sx={{ flexGrow: 1, mb: 2 }}>{mentor.bio}</Typography>
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Can help with:</Typography>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                  {mentor.specialties.map(specialty => (
-                    <Chip key={specialty} icon={<Star fontSize="small" />} label={specialty} size="small" variant="outlined" color="primary" />
-                  ))}
-                </Stack>
-              </Box>
-              <Button variant="contained" startIcon={<ChatBubbleOutline />} fullWidth sx={{ mt: 'auto' }} onClick={() => handleRequestSession(mentor)}>
-                Request a Session
-              </Button>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-      {filteredMentors.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 5 }}>
-              <Typography variant="h6" color="text.secondary">No mentors found matching your search.</Typography>
-          </Box>
+                <Typography variant="body2" sx={{ flexGrow: 1, mb: 2 }}>{mentor.bio}</Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Can help with:</Typography>
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    {mentor.specialties.map(specialty => (
+                      <Chip key={specialty} icon={<Star fontSize="small" />} label={specialty} size="small" variant="outlined" color="primary" />
+                    ))}
+                  </Stack>
+                </Box>
+                <Button variant="contained" startIcon={<ChatBubbleOutline />} fullWidth sx={{ mt: 'auto' }} onClick={() => handleRequestSession(mentor)}>
+                  Request a Session
+                </Button>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {!isLoadingMentors && !mentorsError && filteredMentors.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 5 }}>
+          <Typography variant="h6" color="text.secondary">No mentors found matching your search.</Typography>
+        </Box>
       )}
     </>
   );
