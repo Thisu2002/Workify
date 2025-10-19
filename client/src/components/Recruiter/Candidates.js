@@ -35,10 +35,11 @@ const Candidates = () => {
   const [jobPost, setJobPost] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("toReview");
   const [sortBy, setSortBy] = useState("match");
   const [roundFilters, setRoundFilters] = useState({});
   const [currentRound, setCurrentRound] = useState(null);
+  const [skills, setSkills] = useState([]);
 
   const fetchJobPost = useCallback(async () => {
     try {
@@ -66,18 +67,66 @@ const Candidates = () => {
       const res = await axios.get(
         `http://localhost:5000/recruiter/fetchCandidates/${jobId}`
       );
-      setCandidates(res.data.candidates || []);
+      const fetchedCandidates = res.data.candidates || [];
+
+      // Filter candidates without match_score
+      const candidatesWithoutScore = fetchedCandidates.filter(
+        (c) => !c.match_score && c.match_score !== 0
+      );
+
+      if (candidatesWithoutScore.length > 0 && jobId) {
+        // Send job id and candidates with no match_score to backend
+        const updateRes = await axios.post(
+          "http://localhost:5000/api/jobs/updateMatchScores",
+          {
+            jobId: jobId,
+            candidates: candidatesWithoutScore,
+          }
+        );
+
+        setCandidates(updateRes.data.candidates || []);
+      } else {
+        setCandidates(fetchedCandidates);
+      }
     } catch (err) {
       console.error("Error fetching candidates:", err);
     }
   }, [jobId]);
 
-  useEffect(() => {
-    if (jobId) {
-      fetchCandidates();
-      fetchJobPost();
+  const fetchSkills = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        "http://localhost:5000/recruiter/fetchSkills",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSkills(res.data);
+      //console.log("Skills fetched:", res.data);
+    } catch (err) {
+      console.error("Error fetching posts", err);
     }
-  }, [jobId, fetchCandidates, fetchJobPost]);
+  }, []);
+
+  useEffect(() => {
+    if (!jobId) return;
+
+    const loadAll = async () => {
+      try {
+        await Promise.all([fetchJobPost(), fetchCandidates(), fetchSkills()]);
+      } catch (err) {
+        console.error("Error loading initial data:", err);
+      }
+    };
+
+    loadAll();
+  }, [jobId, fetchJobPost, fetchCandidates, fetchSkills]);
+
+  const refreshCandidates = async () => {
+    await fetchCandidates();
+    await fetchJobPost();
+  };
 
   const changeJobStatus = async () => {
     try {
@@ -446,7 +495,10 @@ const Candidates = () => {
 
         <CandidateDetails
           candidate={selectedCandidate}
+          skills={skills}
+          currentRound={currentRound}
           onClose={() => setSelectedCandidate(null)}
+          onStatusChange={refreshCandidates}
         />
       </Box>
     </Box>
