@@ -130,3 +130,41 @@ exports.changeJobStatus = async (req, res) => {
     res.status(500).json({ message: "Server error while changing job status" });
   }
 };
+
+exports.changeApplicationStatus = async (req, res) => {
+  try {
+    const { candidateId, newCurrentStatus, currentRound, roundResult } = req.body;
+
+    if (!candidateId || !newCurrentStatus || !currentRound || !roundResult) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    const candidate = await Candidate_Job.findById(candidateId);
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found." });
+    }
+
+    candidate.current_status = newCurrentStatus;
+
+    const roundIndex = candidate.round_status.findIndex(
+      (r) => r.round_number === currentRound
+    );
+
+    if (roundIndex !== -1) {
+      candidate.round_status[roundIndex].round_result = roundResult;
+    } else {
+      candidate.round_status.push({
+        round_number: currentRound,
+        round_result: roundResult,
+        round_feedback: "",
+      });
+    }
+
+    await candidate.save();
+
+    res.status(200).json({ message: "Candidate status updated successfully.", candidate });
+  } catch (err) {
+    console.error("Error updating candidate status:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

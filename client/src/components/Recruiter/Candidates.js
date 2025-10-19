@@ -35,7 +35,7 @@ const Candidates = () => {
   const [jobPost, setJobPost] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("toReview");
   const [sortBy, setSortBy] = useState("match");
   const [roundFilters, setRoundFilters] = useState({});
   const [currentRound, setCurrentRound] = useState(null);
@@ -73,13 +73,15 @@ const Candidates = () => {
     }
   }, [jobId]);
 
-  const fetchSkills = useCallback(
-    async() => {
+  const fetchSkills = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/recruiter/fetchSkills", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        "http://localhost:5000/recruiter/fetchSkills",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setSkills(res.data);
       //console.log("Skills fetched:", res.data);
     } catch (err) {
@@ -94,6 +96,11 @@ const Candidates = () => {
       fetchSkills();
     }
   }, [jobId, fetchCandidates, fetchJobPost, fetchSkills]);
+
+  const refreshCandidates = async () => {
+    await fetchCandidates();
+    await fetchJobPost();
+  };
 
   const changeJobStatus = async () => {
     try {
@@ -463,7 +470,9 @@ const Candidates = () => {
         <CandidateDetails
           candidate={selectedCandidate}
           skills={skills}
+          currentRound={currentRound}
           onClose={() => setSelectedCandidate(null)}
+          onStatusChange={refreshCandidates}
         />
       </Box>
     </Box>

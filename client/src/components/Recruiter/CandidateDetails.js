@@ -17,9 +17,40 @@ import {
   History,
   Description,
 } from "@mui/icons-material";
+import toast from "react-hot-toast";
 
-const CandidateDetails = ({ candidate, skills, onClose }) => {
+const CandidateDetails = ({ candidate, skills, currentRound, onClose, onStatusChange }) => {
   if (!candidate) return null;
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/jobs/changeApplicationStatus",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            candidateId: candidate._id,
+            newCurrentStatus: `${currentRound}_${newStatus}`,
+            currentRound,
+            roundResult: newStatus,
+          }),
+        }
+      );
+
+      if (res.ok) {
+        toast.success("Candidate status updated successfully");
+         if (onStatusChange) onStatusChange();
+         onClose();
+      } else {
+        toast.error("Failed to update candidate status");
+      }
+    } catch (error) {
+      toast.error("An error occurred while updating status");
+    }
+  };
 
   return (
     <Slide
@@ -136,26 +167,25 @@ const CandidateDetails = ({ candidate, skills, onClose }) => {
             Skills
           </Typography>
           <Box
-  className="candidate-tools-list"
-  sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
->
-  {candidate?.skills?.length > 0 ? (
-    candidate.skills.map((skillId, idx) => {
-      // Find matching skill name from the skills collection
-      const skill = skills?.find((s) => s.id === skillId);
-      return (
-        <Chip
-          key={idx}
-          label={skill ? skill.name : `Skill #${skillId}`}
-          className="candidate-tool-chip"
-        />
-      );
-    })
-  ) : (
-    <Typography>No skills listed</Typography>
-  )}
-</Box>
-
+            className="candidate-tools-list"
+            sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+          >
+            {candidate?.skills?.length > 0 ? (
+              candidate.skills.map((skillId, idx) => {
+                // Find matching skill name from the skills collection
+                const skill = skills?.find((s) => s.id === skillId);
+                return (
+                  <Chip
+                    key={idx}
+                    label={skill ? skill.name : `Skill #${skillId}`}
+                    className="candidate-tool-chip"
+                  />
+                );
+              })
+            ) : (
+              <Typography>No skills listed</Typography>
+            )}
+          </Box>
         </Box>
 
         {/* Education */}
@@ -218,6 +248,12 @@ const CandidateDetails = ({ candidate, skills, onClose }) => {
               backgroundColor: "#16a34a",
               "&:hover": { backgroundColor: "#15803d" },
             }}
+            onClick={() => handleStatusChange("shortlisted")}
+            disabled={
+              !["new", "rejected"].some((status) =>
+                candidate?.current_status?.includes(status)
+              )
+            }
           >
             Shortlist
           </Button>
@@ -231,6 +267,12 @@ const CandidateDetails = ({ candidate, skills, onClose }) => {
               backgroundColor: "#dc2626",
               "&:hover": { backgroundColor: "#b91c1c" },
             }}
+            onClick={() => handleStatusChange("rejected")}
+            disabled={
+              !["new", "shortlisted"].some((status) =>
+                candidate?.current_status?.includes(status)
+              )
+            }
           >
             Reject
           </Button>
