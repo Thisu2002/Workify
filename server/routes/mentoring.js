@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const Mentor = require('../models/Mentor'); // Add this import
 
 // Define the MentoringSession model schema
 const MentoringSessionSchema = new mongoose.Schema({
@@ -299,6 +300,8 @@ router.post('/request', auth, async (req, res) => {
   try {
     const { mentorId, sessionGoals, requestType } = req.body;
     
+    console.log('Received request data:', { mentorId, sessionGoals, requestType }); // Debug log
+    
     // Validate required fields
     if (!mentorId || !sessionGoals) {
       return res.status(400).json({
@@ -306,7 +309,15 @@ router.post('/request', auth, async (req, res) => {
         message: 'Mentor ID and session goals are required'
       });
     }
-    
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(mentorId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid mentor ID format'
+      });
+    }
+
     // Get candidate information from authenticated user
     const candidate = await User.findById(req.user.id);
     if (!candidate || !candidate.user_roles.includes('candidate')) {
@@ -315,9 +326,39 @@ router.post('/request', auth, async (req, res) => {
         message: 'Only candidates can create mentoring requests'
       });
     }
-    
-    // Get candidate profile for additional info
-    const candidateProfile = await require('../models/Candidate').findById(req.user.id);
+
+    console.log('Candidate found:', candidate.firstName, candidate.lastName); // Debug log
+
+    // Check if candidate already has a pending or scheduled request with this mentor
+    const existingRequest = await MentoringSession.findOne({
+      candidateId: req.user.id,
+      mentorId: mentorId,
+      status: { $in: ['pending', 'scheduled'] }
+    });
+
+    console.log('Existing request check:', existingRequest); // Debug log
+
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        message: 'You already have a pending or scheduled session with this mentor'
+      });
+    }
+
+    // Verify mentor exists (check if it's a valid mentor ID)
+    const mentor = await Mentor.findById(mentorId);
+    if (!mentor) {
+      // If not found in Mentor collection, check if it's a valid user with mentor role
+      const mentorUser = await User.findById(mentorId);
+      if (!mentorUser || !mentorUser.user_roles.includes('mentor')) {
+        return res.status(404).json({
+          success: false,
+          message: 'Mentor not found'
+        });
+      }
+    }
+
+    console.log('Mentor verification passed'); // Debug log
     
     // Create new mentoring session with pending status
     const newSession = new MentoringSession({
@@ -325,26 +366,85 @@ router.post('/request', auth, async (req, res) => {
       candidateId: req.user.id,
       candidate_email: candidate.email,
       candidateName: `${candidate.firstName} ${candidate.lastName}`,
-      candidateAvatar: candidateProfile?.avatarUrl || '',
+      candidateAvatar: candidate.profilePicture || '',
       session_type: requestType || 'General Mentoring',
       message: sessionGoals,
       status: 'pending',
       urgency: 'medium',
-      requestDate: new Date()
+      requestDate: new Date(),
+      field: 'General Mentoring'
     });
     
     const savedSession = await newSession.save();
+    console.log('New session created:', savedSession); // Debug log
     
     return res.status(201).json({
       success: true,
       message: 'Mentoring request sent successfully',
-      data: savedSession
+      data: {
+        sessionId: savedSession._id,
+        mentorId: mentorId,
+        status: 'pending',
+        requestDate: savedSession.requestDate,
+        session: savedSession
+      }
     });
   } catch (error) {
     console.error('Error creating mentoring request:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error while creating request'
+      message: 'Server error while creating request',
+      error: error.message
+    });
+  }
+});
+
+// Get candidate's sessions
+router.get('/my-sessions', auth, async (req, res) => {
+  try {
+    const candidateId = req.user.id;
+    
+    console.log('Fetching sessions for candidate:', candidateId); // Debug log
+    
+    const sessions = await MentoringSession.find({ candidateId })
+      .populate('mentorId', 'firstName lastName')
+      .sort({ createdAt: -1 });
+    
+    console.log('Found sessions:', sessions.length); // Debug log
+    
+    const formattedSessions = sessions.map(session => {
+      // Handle cases where mentor might not be populated or found
+      const mentorName = session.mentorId ? 
+        `${session.mentorId.firstName || ''} ${session.mentorId.lastName || ''}`.trim() : 
+        session.candidateName || 'Unknown Mentor';
+      
+      return {
+        _id: session._id,
+        mentorId: session.mentorId ? session.mentorId._id : session.mentorId,
+        mentorName: mentorName,
+        mentorAvatar: session.candidateAvatar || '',
+        session_type: session.session_type,
+        status: session.status,
+        message: session.message,
+        requestDate: session.requestDate,
+        scheduledDate: session.scheduledDate,
+        date_time: session.date_time,
+        duration: session.duration,
+        notes: session.notes
+      };
+    });
+    
+    console.log('Formatted sessions:', formattedSessions); // Debug log
+    
+    return res.status(200).json({
+      success: true,
+      data: formattedSessions
+    });
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching sessions'
     });
   }
 });

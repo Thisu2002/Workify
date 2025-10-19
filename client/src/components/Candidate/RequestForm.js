@@ -33,7 +33,7 @@ const MOCK_USER = {
 };
 
 // 2. The component now accepts a `mentor` prop instead of `job`
-const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
+const ApplyForm = ({ open, onClose, mentor, userProfile, onSuccess }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // 3. Replaced resume/cover letter state with state for session goals
@@ -74,16 +74,21 @@ const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
       const token = localStorage.getItem('token');
       if (!token) {
         enqueueSnackbar('Please log in to send a request', { variant: 'error' });
+        setIsSubmitting(false);
         return;
       }
 
+      const requestData = {
+        mentorId: mentor._id || mentor.id,
+        sessionGoals: sessionGoals,
+        requestType: requestType || 'General Mentoring'
+      };
+
+      console.log('Sending request with data:', requestData);
+
       const response = await axios.post(
         'http://localhost:5000/api/mentoring/request',
-        {
-          mentorId: mentor.id,
-          sessionGoals: sessionGoals,
-          requestType: requestType || 'General Mentoring'
-        },
+        requestData,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -91,9 +96,22 @@ const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
           }
         }
       );
+
+      console.log('Response received:', response.data);
+
       if (response.data.success) {
         enqueueSnackbar('Mentoring request sent successfully!', { variant: 'success' });
-        handleNext(); // Move to success step
+        
+        // Call the success callback BEFORE closing the form
+        if (onSuccess) {
+          console.log('Calling onSuccess callback');
+          onSuccess(mentor, requestData);
+        }
+        
+        // Reset form state
+        setSessionGoals('');
+        setRequestType('');
+        setActiveStep(0);
       } else {
         enqueueSnackbar(response.data.message || 'Failed to send request', { variant: 'error' });
       }
