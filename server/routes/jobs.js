@@ -8,7 +8,7 @@ const jobController = require('../controllers/jobController');
 router.get('/open', jobController.getAllOpenJobs);
 router.delete('/deleteJobPost', jobController.deleteJobPost);
 router.get("/fetchJobPost/:jobId", jobController.fetchJobPost);
-
+router.put("/changeJobStatus/:jobId", jobController.changeJobStatus);
 // You will also add the route for recruiters to POST new jobs here
 // const { createJobPost } = require('../controllers/jobController');
 // router.post('/', authMiddleware, isRecruiter, createJobPost);

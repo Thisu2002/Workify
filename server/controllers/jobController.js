@@ -103,3 +103,30 @@ exports.fetchJobPost = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.changeJobStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { new_status } = req.body;
+
+    if (!new_status) {
+      return res.status(400).json({ message: "New status is required" });
+    }
+
+    const jobPost = await JobPost.findById(jobId);
+    if (!jobPost) {
+      return res.status(404).json({ message: "Job post not found" });
+    }
+
+    jobPost.current_status = new_status;
+    await jobPost.save();
+
+    return res.status(200).json({
+      message: "Job status updated successfully",
+      updatedStatus: new_status,
+    });
+  } catch (error) {
+    console.error("Error changing job status:", error);
+    res.status(500).json({ message: "Server error while changing job status" });
+  }
+};

@@ -99,7 +99,7 @@ const jobPostSchema = new mongoose.Schema({
   },
   current_status: {
     type: String,
-    default: "new"
+    default: "1_new"
   },
   num_applicants: {
     type: Number,

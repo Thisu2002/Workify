@@ -41,18 +41,18 @@ const cardColors = [
   "#f7e5e5",
 ];
 
-const dummySkills = [
-  { id: 1, name: "JavaScript" },
-  { id: 2, name: "React" },
-  { id: 3, name: "Node.js" },
-  { id: 4, name: "MongoDB" },
-  { id: 5, name: "UI/UX" },
-  { id: 6, name: "Figma" },
-  { id: 7, name: "SQL" },
-  { id: 8, name: "Azure" },
-  { id: 9, name: "API Design" },
-  { id: 10, name: "Cloud" },
-];
+// const skills = [
+//   { id: 1, name: "JavaScript" },
+//   { id: 2, name: "React" },
+//   { id: 3, name: "Node.js" },
+//   { id: 4, name: "MongoDB" },
+//   { id: 5, name: "UI/UX" },
+//   { id: 6, name: "Figma" },
+//   { id: 7, name: "SQL" },
+//   { id: 8, name: "Azure" },
+//   { id: 9, name: "API Design" },
+//   { id: 10, name: "Cloud" },
+// ];
 
 const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [selectedJob, setSelectedJob] = useState(null);
@@ -60,6 +60,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [editedJob, setEditedJob] = useState(null);
   const [openJobs, setOpenJobs] = useState([]);
   const [closedJobs, setClosedJobs] = useState([]);
+  const [skills, setSkills] = useState([]);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuJob, setMenuJob] = useState(null);
@@ -81,6 +82,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
   useEffect(() => {
     fetchPosts();
+    fetchSkills();
   }, []);
 
   const fetchPosts = async () => {
@@ -104,6 +106,19 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       });
       setOpenJobs(posts.filter((p) => p.status === "Open"));
       setClosedJobs(posts.filter((p) => p.status === "Closed"));
+    } catch (err) {
+      console.error("Error fetching posts", err);
+    }
+  };
+
+  const fetchSkills = async() => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/recruiter/fetchSkills", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSkills(res.data);
+      //console.log("Skills fetched:", res.data);
     } catch (err) {
       console.error("Error fetching posts", err);
     }
@@ -296,7 +311,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
         <Typography className="job-description">{job.description}</Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mb: 2 }}>
           {job.skills.map((skillId, idx) => {
-            const skill = dummySkills.find((s) => s.id === skillId);
+            const skill = skills.find((s) => s.id === skillId);
             return (
               <Chip
                 key={idx}
@@ -470,7 +485,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       </Box>
 
       <JobDetails
-        dummySkills={dummySkills}
+        dummySkills={skills}
         open={Boolean(selectedJob)}
         job={selectedJob}
         isEditing={isEditing}

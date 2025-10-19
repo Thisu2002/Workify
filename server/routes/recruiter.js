@@ -9,5 +9,6 @@ router.get('/jobPosts', recruiterController.getJobPosts);
 router.post('/changeJobStatus', recruiterController.changeJobStatus);
 router.get('/fetchPanels', recruiterController.fetchPanels);
 router.get('/fetchCandidates/:jobId', jobController.fetchCandidates);
+router.get('/fetchSkills', recruiterController.fetchSkills);
 
 module.exports = router;
