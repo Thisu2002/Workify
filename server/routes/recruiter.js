@@ -9,6 +9,7 @@ router.get('/jobPosts', recruiterController.getJobPosts);
 router.post('/changeJobStatus', recruiterController.changeJobStatus);
 router.get('/fetchPanels', recruiterController.fetchPanels);
 router.get('/fetchCandidates/:jobId', jobController.fetchCandidates);
+router.get('/fetchSkills', recruiterController.fetchSkills);
 
 // New candidate endpoints for /recruiter/candidates page
 router.get('/candidates/all', recruiterController.getAllCandidates);

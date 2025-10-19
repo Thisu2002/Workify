@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -27,6 +27,7 @@ import "../../styles/Candidates.css";
 import { useNavigate, useParams } from "react-router-dom";
 import CandidateDetails from "./CandidateDetails";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const Candidates = () => {
   const navigate = useNavigate();
@@ -39,47 +40,62 @@ const Candidates = () => {
   const [roundFilters, setRoundFilters] = useState({});
   const [currentRound, setCurrentRound] = useState(null);
 
-  useEffect(() => {
-    const fetchJobPost = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/jobs/fetchJobPost/${jobId}`
-        );
-        const job = res.data.jobPost;
-        setJobPost(job);
+  const fetchJobPost = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/jobs/fetchJobPost/${jobId}`
+      );
+      const job = res.data.jobPost;
+      setJobPost(job);
 
-        // Determine current round number from current_status
-        if (job.current_status && job.current_status !== "new") {
-          const roundMatch = job.current_status.match(/^(\d+)_/);
-          const roundNumber = roundMatch ? parseInt(roundMatch[1], 10) : null;
-          setCurrentRound(roundNumber);
-          if (roundNumber) {
-            setRoundFilters({ [roundNumber]: true });
-          }
+      if (job.current_status) {
+        const roundMatch = job.current_status.match(/^(\d+)_/);
+        const roundNumber = roundMatch ? parseInt(roundMatch[1], 10) : null;
+        setCurrentRound(roundNumber);
+        if (roundNumber) {
+          setRoundFilters({ [roundNumber]: true });
         }
-      } catch (error) {
-        console.error("Error fetching job post:", error);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching job post:", error);
+    }
+  }, [jobId]);
 
-    const fetchCandidates = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/recruiter/fetchCandidates/${jobId}`
-        );
-        setCandidates(res.data.candidates || []);
-      } catch (err) {
-        console.error("Error fetching candidates:", err);
-      }
-    };
+  const fetchCandidates = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/recruiter/fetchCandidates/${jobId}`
+      );
+      setCandidates(res.data.candidates || []);
+    } catch (err) {
+      console.error("Error fetching candidates:", err);
+    }
+  }, [jobId]);
 
+  useEffect(() => {
     if (jobId) {
       fetchCandidates();
       fetchJobPost();
     }
-  }, [jobId]);
+  }, [jobId, fetchCandidates, fetchJobPost]);
 
-  // ✅ Filtering logic per tab
+  const changeJobStatus = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/jobs/changeJobStatus/${jobId}`,
+        {
+          new_status: `${currentRound}_panelRequested`,
+        }
+      );
+      fetchJobPost();
+      toast.success("Panel availability requested successfully.");
+    } catch (err) {
+      toast.error("Failed to request panel availability.");
+      console.error("Error changing job status:", err);
+    }
+  };
+
+  // Filtering logic per tab
   const filteredCandidates = candidates.filter((candidate) => {
     const status = candidate.current_status || "";
 
@@ -108,7 +124,7 @@ const Candidates = () => {
     }
   });
 
-  // ✅ Apply round filters for Shortlisted / Rejected
+  // Apply round filters for Shortlisted / Rejected
   const roundFilteredCandidates = filteredCandidates.filter((candidate) => {
     if (activeTab === "shortlisted" || activeTab === "rejected") {
       const selectedRounds = Object.keys(roundFilters).filter(
@@ -137,7 +153,7 @@ const Candidates = () => {
     return true;
   });
 
-  // ✅ Sorting logic
+  // Sorting logic
   const sortedCandidates = [...roundFilteredCandidates].sort((a, b) => {
     if (sortBy === "match") {
       return (b.match_score || 0) - (a.match_score || 0);
@@ -148,7 +164,7 @@ const Candidates = () => {
     }
   });
 
-  // ✅ Helper: Get status label and color for "All Candidates"
+  // Helper: Get status label and color for "All Candidates"
   const getStatusLabel = (status) => {
     if (status === "new") {
       return (
@@ -206,20 +222,19 @@ const Candidates = () => {
             {jobPost
               ? (() => {
                   const status = jobPost.current_status;
-                  if (status === "new") {
-                    return "Currently at: Application Submitted";
-                  }
-                  const roundMatch = status.match(/^(\d+)_/);
-                  const roundNumber = roundMatch
-                    ? parseInt(roundMatch[1], 10)
-                    : null;
+                  if (status !== "1_new") {
+                    const roundMatch = status.match(/^(\d+)_/);
+                    const roundNumber = roundMatch
+                      ? parseInt(roundMatch[1], 10)
+                      : null;
 
-                  if (roundNumber) {
-                    const round = jobPost.interview_rounds?.find(
-                      (r) => r.round_number === roundNumber
-                    );
-                    if (round) {
-                      return `Currently at: ${round.round_name} (Round ${round.round_number})`;
+                    if (roundNumber) {
+                      const round = jobPost.interview_rounds?.find(
+                        (r) => r.round_number === roundNumber
+                      );
+                      if (round) {
+                        return `Currently at: ${round.round_name} (Round ${round.round_number})`;
+                      }
                     }
                   }
                   return "Currently at: Processing Applications";
@@ -362,16 +377,13 @@ const Candidates = () => {
                 <Box display="flex" alignItems="center">
                   <Avatar sx={{ width: 50, height: 50, mr: 2 }} />
                   <Box>
-                    <Typography
-                      fontWeight={600}
-                      display="flex"
-                      alignItems="center"
-                      gap={1}
-                    >
-                      {candidate.firstName} {candidate.lastName}
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography fontWeight={600}>
+                        {candidate.firstName} {candidate.lastName}
+                      </Typography>
                       {activeTab === "all" &&
                         getStatusLabel(candidate.current_status)}
-                    </Typography>
+                    </Box>
 
                     <Typography variant="body2" color="text.secondary">
                       {candidate.about || "No about info provided."}
@@ -414,14 +426,20 @@ const Candidates = () => {
             ))}
           </Box>
 
-          {/* ✅ Button shown only if Shortlisted tab and only current round selected */}
+          {/* Button shown only if Shortlisted tab and only current round selected */}
           {activeTab === "shortlisted" &&
             currentRound &&
             roundFilters[currentRound] &&
             Object.keys(roundFilters).filter((r) => roundFilters[r]).length ===
               1 && (
               <Box display="flex" justifyContent="flex-end">
-                <Button variant="contained">Check Panel Availability</Button>
+                <Button
+                  variant="contained"
+                  onClick={changeJobStatus}
+                  disabled={jobPost?.current_status?.includes("panelRequested")}
+                >
+                  Check Panel Availability
+                </Button>
               </Box>
             )}
         </Box>

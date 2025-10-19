@@ -1,6 +1,7 @@
 const Post = require('../models/JobPost');
 const jwt = require('jsonwebtoken');
 const Panel = require('../models/Panel');
+const Skill = require('../models/Skill');
 
 exports.getJobPosts = async (req, res) => {
     try {
@@ -94,6 +95,15 @@ exports.fetchPanels = async (req, res) => {
   }
 };
 
+exports.fetchSkills = async (req, res) => {
+  try {
+    const skills = await Skill.find().select('id name');
+    res.status(200).json(skills);
+  }
+  catch (err) {
+    res.status(500).json({ message: 'Error fetching skills', error: err.message });
+  }
+};
 // Get all unique candidates who applied to jobs from recruiter's company
 exports.getAllCandidates = async (req, res) => {
   try {
