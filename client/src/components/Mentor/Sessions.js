@@ -70,19 +70,34 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
           'Authorization': `Bearer ${token}`
         },
         params: {
-          status: 'scheduled'
+          status: 'scheduled' // This will match both 'scheduled' and 'Scheduled' with our updated backend
         }
       });
 
       console.log('📥 Sessions received:', response.data);
 
       if (response.data.success) {
-        // Clear any existing data first
-        setMentorSessions([]);
-        
-        // Set the data from the API
         if (Array.isArray(response.data.data)) {
-          setMentorSessions(response.data.data);
+          // Filter to include both 'scheduled' and 'Scheduled'
+          const scheduledSessions = response.data.data.filter(session => {
+            const sessionStatus = session.status || '';
+            return sessionStatus.toLowerCase() === 'scheduled';
+          });
+          
+          console.log(`📊 Scheduled sessions found: ${scheduledSessions.length}`);
+          
+          // Transform sessions to handle field variations
+          const processedSessions = scheduledSessions.map(session => ({
+            ...session,
+            // Handle both mentorId and mentor_id
+            mentorId: session.mentorId || session.mentor_id,
+            // Ensure consistent property naming
+            candidateName: session.candidateName || 'Candidate',
+            candidate_email: session.candidate_email || 'No email provided',
+            session_type: session.session_type || 'General Mentoring'
+          }));
+          
+          setMentorSessions(processedSessions);
         } else {
           console.error('Expected array but got:', typeof response.data.data);
           setError('Invalid data format received from server');
@@ -131,9 +146,13 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
 
       console.log('Submitting session with data:', formData);
       
+      // When creating new sessions from mentor dashboard, they should be created with status="scheduled"
       const response = await axios.post(
         'http://localhost:5000/api/mentoring/sessions', 
-        formData,
+        {
+          ...formData,
+          status: 'scheduled' // Ensure the session is created with scheduled status
+        },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -158,11 +177,7 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      
-      const errorMessage = 
-        error.response?.data?.message || 
-        'Could not schedule session. Please try again later.';
-      
+      const errorMessage = error.response?.data?.message || 'Could not schedule session. Please try again later.';
       enqueueSnackbar(errorMessage, { variant: 'error' });
     }
   };
@@ -206,7 +221,7 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
       await axios.put(`http://localhost:5000/api/mentoring/sessions/${selectedSession._id}`, 
         {
           status: 'completed',
-          notes: completionNote
+          message: completionNote  // Store the completion note in the message field instead of notes
         },
         {
           headers: {
@@ -265,10 +280,10 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
               <Avatar src={session.candidateAvatar} sx={{ width: 56, height: 56 }} />
               <Box>
                 <Typography variant="h6">
-                  {session.candidateName}
+                  {session.candidateName || 'Candidate'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {session.candidate_email}
+                  {session.candidate_email || 'No email provided'}
                 </Typography>
                 <Box display="flex" gap={1} mt={1}>
                   {Array.isArray(session.skills) && session.skills.length > 0 ? (
@@ -723,8 +738,11 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
             <DialogTitle>Complete Session with {selectedSession?.candidateName}</DialogTitle>
             <DialogContent>
               <Box mt={2}>
+                <Typography variant="body2" color="text.secondary" mb={2}>
+                  Add your feedback and summary of the session. These notes will be stored with the completed session record.
+                </Typography>
                 <TextField 
-                  label="Session Notes" 
+                  label="Session Feedback" 
                   fullWidth 
                   multiline
                   rows={4}
