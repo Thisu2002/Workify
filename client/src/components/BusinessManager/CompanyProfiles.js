@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useParams } from "react-router-dom";
 import "../../styles/CompanyProfiles.css";
 import {
   Search,
@@ -91,21 +92,29 @@ const CompanyProfilesPage = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/manager/companies");
-        const data = await response.json();
-        setCompanies(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching companies:", error);
-        setLoading(false);
-      }
-    };
+  const { companyId } = useParams();
 
-    fetchCompanies();
-  }, []);
+  useEffect(() => {
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/manager/companies");
+      const data = await response.json();
+      setCompanies(data);
+      setLoading(false);
+
+      if (companyId) {
+        const selected = data.find(c => c._id === companyId);
+        if (selected) setSelectedCompany(selected);
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      setLoading(false);
+    }
+  };
+
+  fetchCompanies();
+}, [companyId]);
+
 
   const filteredCompanies = useMemo(
     () =>

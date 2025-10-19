@@ -5,6 +5,7 @@ const Recruiter = require('../models/Recruiter');
 const Candidate = require('../models/Candidate');
 const MentorVerification = require('../models/MentorVerification');
 const Mentor = require('../models/Mentor');
+const SubscriptionPlan = require('../models/SubscriptionPlan');
 
 console.log('managerController loaded'); // debug
 
@@ -210,5 +211,110 @@ exports.declineMentor = async (req, res) => {
   } catch (err) {
     console.error('declineMentor error:', err);
     res.status(500).json({ message: 'Error declining mentor', error: err.message });
+  }
+};
+
+// Get all subscription plans with subscribers count
+exports.getSubscriptionPlans = async (req, res) => {
+  try {
+    const plans = await SubscriptionPlan.find({}).lean();
+
+    // Attach number of companies subscribed to each plan
+    const plansWithSubscribers = await Promise.all(
+      plans.map(async (plan) => {
+        const subscribedCompanies = await Company.find({ 'currentSubscription.plan': plan._id }).select('name').lean();
+        return {
+          ...plan,
+          subscribers: subscribedCompanies.length,
+          companies: subscribedCompanies.map(c => c.name)
+        };
+      })
+    );
+
+    res.status(200).json(plansWithSubscribers);
+  } catch (err) {
+    console.error('getSubscriptionPlans error:', err);
+    res.status(500).json({ message: 'Error fetching subscription plans', error: err.message });
+  }
+};
+
+// Create a new subscription plan
+exports.createSubscriptionPlan = async (req, res) => {
+  try {
+    const { name, price, features, billingCycle, description, trialDays } = req.body;
+
+    const newPlan = new SubscriptionPlan({
+      name,
+      price,
+      features: features.split(',').map(f => f.trim()),
+      billingCycle,
+      description,
+      trialDays,
+      isActive: true
+    });
+
+    await newPlan.save();
+    res.status(201).json({ message: 'Subscription plan created successfully', plan: newPlan });
+  } catch (err) {
+    console.error('createSubscriptionPlan error:', err);
+    res.status(500).json({ message: 'Error creating subscription plan', error: err.message });
+  }
+};
+
+// Update existing plan
+exports.updateSubscriptionPlan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, price, features, billingCycle, description, trialDays } = req.body;
+
+    const plan = await SubscriptionPlan.findById(id);
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+
+    plan.name = name || plan.name;
+    plan.price = price || plan.price;
+    if (features) {
+      if (Array.isArray(features)) {
+        plan.features = features.map(f => f.trim());
+      } else if (typeof features === 'string') {
+        plan.features = features.split(',').map(f => f.trim());
+      }
+    }
+    plan.billingCycle = billingCycle || plan.billingCycle;
+    plan.description = description || plan.description;
+    plan.trialDays = trialDays || plan.trialDays;
+
+    await plan.save();
+    res.status(200).json({ message: 'Plan updated successfully', plan });
+  } catch (err) {
+    console.error('updateSubscriptionPlan error:', err);
+    res.status(500).json({ message: 'Error updating subscription plan', error: err.message });
+  }
+};
+
+// Enable / Disable plan
+exports.toggleSubscriptionPlanStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const plan = await SubscriptionPlan.findById(id);
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+
+    plan.isActive = !plan.isActive;
+    await plan.save();
+    res.status(200).json({ message: `Plan ${plan.isActive ? 'enabled' : 'disabled'} successfully`, plan });
+  } catch (err) {
+    console.error('toggleSubscriptionPlanStatus error:', err);
+    res.status(500).json({ message: 'Error toggling plan status', error: err.message });
+  }
+};
+
+// Get companies subscribed to a plan
+exports.getSubscribedCompanies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const companies = await Company.find({ 'currentSubscription.plan': id }).select('name location website currentSubscription').lean();
+    res.status(200).json(companies);
+  } catch (err) {
+    console.error('getSubscribedCompanies error:', err);
+    res.status(500).json({ message: 'Error fetching subscribed companies', error: err.message });
   }
 };
