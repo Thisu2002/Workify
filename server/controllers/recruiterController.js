@@ -339,8 +339,8 @@ exports.getApplicationsByStatus = async (req, res) => {
   }
 };
 
-// Get interviews for the "New" tab - jobs with panel requested/confirmed status
-exports.getNewInterviews = async (req, res) => {
+// Get job posts filtered by interview status for interviews page
+exports.getInterviewsByStatus = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -351,232 +351,172 @@ exports.getNewInterviews = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiterId = decoded.id;
 
-    // Find job posts with panel requested or confirmed status
-    const newInterviews = await Post.find({
-      recruiter_id: recruiterId,
-      current_status: {
-        $in: ['1_panelRequested', '2_panelRequested', '3_panelRequested', '1_panelConfirmed', '2_panelConfirmed', '3_panelConfirmed']
-      }
-    })
-    .populate({
-      path: 'interview_rounds.panel_id',
-      select: 'name members lead_panelist',
-      populate: {
-        path: 'members lead_panelist',
-        select: 'firstName lastName avatarUrl'
-      }
-    });
+    // Find all job posts for this recruiter
+    const jobPosts = await Post.find({ recruiter_id: recruiterId })
+      .populate({
+        path: 'interview_rounds.panel_id',
+        select: 'name members lead_panelist',
+        populate: {
+          path: 'members lead_panelist',
+          select: 'firstName lastName avatarUrl'
+        }
+      })
+      .select('title current_status interview_rounds num_applicants date_posted')
+      .sort({ date_posted: -1 });
 
-    // Get application counts for each job
-    const CandidateJob = require('../models/Candidate_Job');
-    
-    const interviewsWithDetails = await Promise.all(newInterviews.map(async (job) => {
-      // Get current round from status
-      const roundMatch = job.current_status.match(/^(\d+)_/);
-      const currentRound = roundMatch ? parseInt(roundMatch[1]) : 1;
-      
-      // Find the interview round details
-      const roundDetails = job.interview_rounds.find(round => round.round_number === currentRound);
-      
-      // Count applications for this job that are eligible for this round
-      const applicationCount = await CandidateJob.countDocuments({
-        job_id: job._id,
-        current_status: { $not: /rejected|selected/ } // Exclude rejected and selected candidates
-      });
+    // Classify job posts into tabs based on current_status
+    const classifiedInterviews = {
+      new: [],
+      pending: [],
+      scheduled: [],
+      completed: []
+    };
 
-      // Format available dates for display
-      let panelAvailability = "Waiting for available dates";
-      let availableDates = [];
-      
-      if (roundDetails?.available_dates && roundDetails.available_dates.length > 0) {
-        // Format dates for display (e.g., "Jul 25, 26, 27")
-        const dateStrings = roundDetails.available_dates.map(dateObj => {
-          const date = new Date(dateObj.date);
-          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
-        panelAvailability = dateStrings.join(', ');
-        availableDates = roundDetails.available_dates;
-      }
-
-      return {
-        _id: job._id,
-        jobTitle: job.title,
-        round: `Round ${currentRound}: ${roundDetails?.round_name || 'Interview'}`,
-        roundNumber: currentRound,
-        panel: roundDetails?.panel_id ? {
-          _id: roundDetails.panel_id._id,
-          name: roundDetails.panel_id.name,
-          members: roundDetails.panel_id.members || [],
-          leadPanelist: roundDetails.panel_id.lead_panelist
-        } : null,
-        status: job.current_status,
-        applicationCount: applicationCount,
-        datePosted: job.date_posted,
-        panelAvailability: panelAvailability,
-        availableDates: availableDates,
-        isWaitingForDates: job.current_status.includes('panelRequested'),
-        isReadyToNotify: job.current_status.includes('panelConfirmed') && availableDates.length > 0
-      };
-    }));
-
-    res.status(200).json({
-      success: true,
-      count: interviewsWithDetails.length,
-      interviews: interviewsWithDetails
-    });
-
-  } catch (err) {
-    console.error('Error fetching new interviews:', err);
-    res.status(500).json({ message: 'Error fetching new interviews', error: err.message });
-  }
-};
-
-// Get interviews for the "Pending" tab - jobs with candidates notified
-exports.getPendingInterviews = async (req, res) => {
-  try {
-    console.log('getPendingInterviews called');
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log('No auth header or invalid format');
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const recruiterId = decoded.id;
-    console.log('Recruiter ID:', recruiterId);
-
-    // Find job posts with candidates notified status
-    console.log('Searching for pending interviews...');
-    const pendingInterviews = await Post.find({
-      recruiter_id: recruiterId,
-      current_status: {
-        $in: ['1_candidatesNotified', '2_candidatesNotified', '3_candidatesNotified']
-      }
-    })
-    .populate({
-      path: 'interview_rounds.panel_id',
-      select: 'name members lead_panelist',
-      populate: {
-        path: 'members lead_panelist',
-        select: 'firstName lastName avatarUrl'
-      }
-    });
-    console.log('Found pending interviews:', pendingInterviews.length);
-
-    // Get application and confirmation details for each job
+    // Import Candidate_Job model
     const CandidateJob = require('../models/Candidate_Job');
     const User = require('../models/User');
-    
-    const interviewsWithDetails = [];
-    for (const job of pendingInterviews) {
-      try {
-        console.log('Processing job:', job.title);
-        // Get current round from status
-        const roundMatch = job.current_status.match(/^(\d+)_/);
-        const currentRound = roundMatch ? parseInt(roundMatch[1]) : 1;
-        console.log('Current round:', currentRound);
-        
-        // Find the interview round details
-        const roundDetails = job.interview_rounds.find(round => round.round_number === currentRound);
-        console.log('Round details found:', !!roundDetails);
-        
-        // Fetch candidates for this job with their round confirmation status
-        let candidateApplications = [];
-        try {
-          candidateApplications = await CandidateJob.find({
-            job_id: job._id,
-            current_status: job.current_status // Only get candidates with matching status (candidatesNotified)
-          })
-          .populate('candidate_id', 'avatarUrl contact')
-          .lean();
 
-          console.log('Found candidate applications:', candidateApplications.length);
-        } catch (candidateError) {
-          console.error('Error fetching candidate applications for job', job.title, ':', candidateError);
-          candidateApplications = []; // Continue with empty array if candidates fail to load
-        }
+    // Process each job and fetch candidates based on job status
+    for (const job of jobPosts) {
+      const status = job.current_status;
+      let candidateStatusQuery;
+      let tabType;
 
-        // Format candidates with their confirmation status
-        const candidates = [];
-        for (const app of candidateApplications) {
-          try {
-            // Get user details for email
-            const user = await User.findById(app.candidate_id._id).select('email');
-            
-            // Find the round confirmation status for the current round
-            const roundStatusEntry = app.round_status?.find(rs => rs.round_number === currentRound);
-            const confirmationStatus = roundStatusEntry?.round_confirmation || 'not_replied';
-            
-            candidates.push({
-              id: app._id.toString(),
-              candidateId: app.candidate_id._id.toString(),
-              name: `${app.firstName} ${app.lastName}`,
-              email: user?.email || '',
-              phone: app.candidate_id.contact?.phone || '',
-              avatarUrl: app.candidate_id.avatarUrl || '',
-              status: confirmationStatus === 'confirmed' ? 'Confirmed' : 'Pending',
-              confirmationStatus: confirmationStatus,
-              roundNumber: currentRound,
-              appliedDate: app.date_applied,
-              matchScore: app.match_score,
-              quizScore: app.quiz_score
-            });
-          } catch (userError) {
-            console.error('Error processing candidate', app.firstName, app.lastName, ':', userError);
-            // Continue processing other candidates
-          }
-        }
+      // Determine which candidates to fetch based on job status
+      if (status.includes('panelRequested') || status.includes('panelConfirmed')) {
+        // New tab: fetch shortlisted candidates
+        candidateStatusQuery = { $regex: /shortlisted/i };
+        tabType = 'new';
+      } else if (status.includes('candidatesNotified')) {
+        // Pending tab: fetch interviewPending or interviewScheduled candidates
+        candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled)/i };
+        tabType = 'pending';
+      } else if (status.includes('scheduled')) {
+        // Scheduled tab: fetch interviewScheduled candidates
+        candidateStatusQuery = { $regex: /interviewScheduled/i };
+        tabType = 'scheduled';
+      } else if (status.includes('completed')) {
+        // Completed tab: fetch completed interview candidates
+        candidateStatusQuery = { $regex: /(interviewCompleted|selected|rejected)/i };
+        tabType = 'completed';
+      }
 
-        // Get the final interview date from interview_rounds
-        let interviewDate = null;
-        if (roundDetails?.final_date?.date) {
-          const date = new Date(roundDetails.final_date.date);
-          interviewDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        }
+      let relevantCandidates = [];
+      
+      if (candidateStatusQuery) {
+        // Fetch candidates based on the determined status query
+        const candidateApplications = await CandidateJob.find({
+          job_id: job._id,
+          current_status: candidateStatusQuery
+        }).populate('candidate_id', 'avatarUrl');
 
-        const jobResult = {
-          _id: job._id,
-          jobTitle: job.title,
-          round: `Round ${currentRound}: ${roundDetails?.round_name || 'Interview'}`,
-          roundNumber: currentRound,
-          panel: roundDetails?.panel_id ? {
-            _id: roundDetails.panel_id._id,
-            name: roundDetails.panel_id.name,
-            members: roundDetails.panel_id.members || [],
-            leadPanelist: roundDetails.panel_id.lead_panelist
-          } : null,
-          status: job.current_status,
-          applicationCount: candidates.length,
-          interviewDate: interviewDate,
-          finalDateDetails: roundDetails?.final_date || null,
-          candidates: candidates,
-          datePosted: job.date_posted
-        };
-        
-        interviewsWithDetails.push(jobResult);
-        console.log('Successfully processed job:', job.title, 'with', candidates.length, 'candidates');
-        
-      } catch (jobError) {
-        console.error('Error processing job', job.title, ':', jobError);
-        // Continue with other jobs even if one fails
+        // Format candidate data
+        const candidatePromises = candidateApplications.map(app => {
+          // Get user email from User model for this candidate
+          return User.findById(app.candidate_id._id).select('email').then(user => ({
+            candidateId: app.candidate_id._id,
+            firstName: app.firstName,
+            lastName: app.lastName,
+            email: user?.email || app.contact?.email || '',
+            phone: app.contact?.phone || '',
+            avatarUrl: app.candidate_id.avatarUrl || '',
+            applicationId: app._id,
+            currentStatus: app.current_status,
+            dateApplied: app.date_applied
+          }));
+        });
+
+        // Wait for all candidate data to be resolved
+        relevantCandidates = await Promise.all(candidatePromises);
+      }
+
+      // Classification logic based on current_status
+      if (tabType === 'new') {
+        classifiedInterviews.new.push(formatJobForInterview(job, 'new', relevantCandidates));
+      } else if (tabType === 'pending') {
+        classifiedInterviews.pending.push(formatJobForInterview(job, 'pending', relevantCandidates));
+      } else if (tabType === 'scheduled') {
+        classifiedInterviews.scheduled.push(formatJobForInterview(job, 'scheduled', relevantCandidates));
+      } else if (tabType === 'completed') {
+        classifiedInterviews.completed.push(formatJobForInterview(job, 'completed', relevantCandidates));
       }
     }
 
-    console.log('Sending response with', interviewsWithDetails.length, 'interviews');
     res.status(200).json({
       success: true,
-      count: interviewsWithDetails.length,
-      interviews: interviewsWithDetails
+      data: classifiedInterviews
     });
 
   } catch (err) {
-    console.error('Error fetching pending interviews:', err);
-    res.status(500).json({ message: 'Error fetching pending interviews', error: err.message });
+    console.error('Error fetching interviews:', err);
+    res.status(500).json({ message: 'Error fetching interviews', error: err.message });
   }
 };
 
-// Notify candidates about interview date and update status
+// Helper function to format job data for interview display
+const formatJobForInterview = (job, status, relevantCandidates = []) => {
+  const currentRound = job.interview_rounds && job.interview_rounds.length > 0 
+    ? job.interview_rounds[job.interview_rounds.length - 1] // Get the latest round
+    : null;
+
+  let formattedJob = {
+    id: job._id,
+    jobTitle: job.title,
+    round: currentRound ? `Round ${currentRound.round_number}: ${currentRound.round_name}` : 'Round not defined',
+    panel: currentRound?.panel_id?.name || 'Panel not assigned',
+    panelId: currentRound?.panel_id?._id || null,
+    applicationCount: job.num_applicants || 0,
+    shortlistedCandidatesCount: relevantCandidates.length, // This now represents relevant candidates for each tab
+    shortlistedCandidates: relevantCandidates, // This now contains relevant candidates for each tab
+    currentStatus: job.current_status
+  };
+
+  // Add status-specific fields
+  if (status === 'new') {
+    // For new interviews, show panel availability
+    if (currentRound?.available_dates && currentRound.available_dates.length > 0) {
+      const dates = currentRound.available_dates
+        .filter(d => d.date)
+        .map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      formattedJob.panelAvailability = dates.length > 0 ? dates.join(', ') : 'Waiting for available dates';
+    } else {
+      formattedJob.panelAvailability = 'Waiting for available dates';
+    }
+  } else if (status === 'pending' || status === 'scheduled') {
+    // For pending/scheduled, show the final interview date
+    if (currentRound?.final_date) {
+      formattedJob.interviewDate = new Date(currentRound.final_date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } else {
+      formattedJob.interviewDate = 'Date TBD';
+    }
+    
+    // Add panel members info if available
+    if (currentRound?.panel_id?.members) {
+      formattedJob.panelMembers = currentRound.panel_id.members.map(member => ({
+        name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'Unknown',
+        avatar: member.avatarUrl || null
+      }));
+    }
+  } else if (status === 'completed') {
+    // For completed interviews, show the date it was completed
+    if (currentRound?.final_date) {
+      formattedJob.interviewDate = new Date(currentRound.final_date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } else {
+      formattedJob.interviewDate = 'Date not available';
+    }
+  }
+
+  return formattedJob;
+};
+
+// Notify candidates about interview dates
 exports.notifyCandidates = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -588,94 +528,54 @@ exports.notifyCandidates = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiterId = decoded.id;
 
-    const { jobId, interviewDate, startTime, endTime } = req.body;
+    const { jobId, finalDate } = req.body;
 
-    if (!jobId || !interviewDate) {
-      return res.status(400).json({ message: 'Job ID and interview date are required' });
+    if (!jobId || !finalDate) {
+      return res.status(400).json({ message: "Job ID and final date are required" });
     }
 
-    // Find the job post
-    const job = await Post.findOne({
-      _id: jobId,
-      recruiter_id: recruiterId
-    });
-
-    if (!job) {
-      return res.status(404).json({ message: 'Job post not found or unauthorized' });
+    // Find the job post and verify it belongs to this recruiter
+    const jobPost = await Post.findOne({ _id: jobId, recruiter_id: recruiterId });
+    if (!jobPost) {
+      return res.status(404).json({ message: "Job post not found or unauthorized" });
     }
 
-    // Verify that the job is in panel confirmed status
-    if (!job.current_status.includes('panelConfirmed')) {
-      return res.status(400).json({ message: 'Job must be in panel confirmed status to notify candidates' });
+    // Verify the job is in the correct status (panelConfirmed)
+    if (!jobPost.current_status.includes('panelConfirmed')) {
+      return res.status(400).json({ message: "Job is not in the correct status for candidate notification" });
     }
 
-    // Get current round from status
-    const roundMatch = job.current_status.match(/^(\d+)_/);
-    const currentRound = roundMatch ? parseInt(roundMatch[1]) : 1;
-    
-    // Find the interview round to update
-    const roundIndex = job.interview_rounds.findIndex(round => round.round_number === currentRound);
-    
-    if (roundIndex === -1) {
-      return res.status(400).json({ message: 'Interview round not found' });
+    // Update job status to candidatesNotified
+    jobPost.current_status = jobPost.current_status.replace('panelConfirmed', 'candidatesNotified');
+
+    // Update the final date for the current round
+    if (jobPost.interview_rounds && jobPost.interview_rounds.length > 0) {
+      const currentRound = jobPost.interview_rounds[jobPost.interview_rounds.length - 1];
+      currentRound.final_date = new Date(finalDate);
     }
 
-    // Validate that the selected date is in the available dates
-    const selectedDate = new Date(interviewDate);
-    const roundDetails = job.interview_rounds[roundIndex];
-    
-    const isDateAvailable = roundDetails.available_dates?.some(availDate => {
-      const availableDate = new Date(availDate.date);
-      return availableDate.toDateString() === selectedDate.toDateString();
-    });
+    await jobPost.save();
 
-    if (!isDateAvailable && roundDetails.available_dates?.length > 0) {
-      return res.status(400).json({ message: 'Selected date is not in the available dates list' });
-    }
-
-    // Update job status from panelConfirmed to candidatesNotified
-    const newStatus = job.current_status.replace('panelConfirmed', 'candidatesNotified');
-    job.current_status = newStatus;
-    
-    // Set the final date in the interview round
-    job.interview_rounds[roundIndex].final_date = {
-      date: selectedDate,
-      start_time: startTime || '09:00',
-      end_time: endTime || '10:00'
-    };
-    
-    await job.save();
-
-    // Update all eligible candidate applications to the same status
+    // Update all shortlisted candidates' status from shortlisted to interviewPending
     const CandidateJob = require('../models/Candidate_Job');
     
-    // Update candidate applications that are eligible for this round (using currentRound from above)
-    await CandidateJob.updateMany(
-      {
-        job_id: jobId,
-        current_status: { $not: /rejected|selected/ } // Don't update rejected or already selected candidates
-      },
-      {
-        current_status: newStatus
-      }
-    );
+    // Get all shortlisted candidates first
+    const shortlistedCandidates = await CandidateJob.find({
+      job_id: jobId,
+      current_status: { $regex: /shortlisted/i }
+    });
 
-    // TODO: Send notification emails to candidates
-    // This would involve:
-    // 1. Get all candidate emails
-    // 2. Send email with interview details
-    // 3. Include confirmation link/form
+    // Update each candidate individually to preserve round number
+    for (const candidate of shortlistedCandidates) {
+      candidate.current_status = candidate.current_status.replace(/shortlisted/i, 'interviewPending');
+      await candidate.save();
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Candidates notified successfully',
-      jobId: jobId,
-      newStatus: newStatus,
-      finalDate: {
-        date: selectedDate,
-        start_time: startTime || '09:00',
-        end_time: endTime || '10:00'
-      }
+      message: "Candidates have been notified successfully",
+      updatedCandidates: shortlistedCandidates.length,
+      finalDate: finalDate
     });
 
   } catch (err) {
