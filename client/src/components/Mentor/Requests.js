@@ -55,13 +55,13 @@ const Requests = () => {
 
       console.log('🔄 Fetching pending mentoring requests...');
       
-      // Make sure we're explicitly requesting only pending status sessions
+      // Explicitly request only pending status sessions
       const response = await axios.get('http://localhost:5000/api/mentoring/sessions', {
         headers: {
           'Authorization': `Bearer ${token}`
         },
         params: {
-          status: 'pending' // Explicitly request only pending status
+          status: 'pending' // This will match both 'pending' and 'Pending' with our updated backend
         }
       });
 
@@ -69,8 +69,10 @@ const Requests = () => {
 
       if (response.data.success) {
         if (Array.isArray(response.data.data)) {
-          // Filter once more on client side to ensure only pending sessions
-          const pendingSessions = response.data.data.filter(session => session.status === 'pending');
+          // Filter to include both 'pending' and 'Pending' in case the backend regex doesn't work
+          const pendingSessions = response.data.data.filter(session => 
+            session.status.toLowerCase() === 'pending'
+          );
           setMentorRequests(pendingSessions);
           console.log(`📊 Pending requests count: ${pendingSessions.length}`);
         } else {

@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 
-// Define MentoringSession schema
+// Define the MentoringSession model schema
 const MentoringSessionSchema = new mongoose.Schema({
   candidateId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -30,8 +30,7 @@ const MentoringSessionSchema = new mongoose.Schema({
     type: String
   },
   session_type: {
-    type: String,
-    required: true
+    type: String
   },
   urgency: {
     type: String,
@@ -68,7 +67,7 @@ const MentoringSessionSchema = new mongoose.Schema({
     type: String
   },
   duration: {
-    type: Number, // in minutes
+    type: Number,
     default: 60
   },
   notes: {
@@ -76,7 +75,7 @@ const MentoringSessionSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Create model if it doesn't exist
+// Create MentoringSession model if it doesn't exist
 let MentoringSession;
 try {
   MentoringSession = mongoose.model('MentoringSession');
@@ -84,12 +83,14 @@ try {
   MentoringSession = mongoose.model('MentoringSession', MentoringSessionSchema);
 }
 
-// Get mentoring sessions with specific status (pending, scheduled, etc.)
+// Get mentoring sessions - with status filter
 router.get('/sessions', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
     const { status } = req.query;
-    
+    console.log('Request query status:', status);
+
+    // Get the authenticated user
+    const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -97,111 +98,73 @@ router.get('/sessions', auth, async (req, res) => {
       });
     }
 
+    // Build query
     let query = {};
     
-    // Set query based on user role
-    if (user.user_roles && user.user_roles.includes('mentor')) {
-      query.mentorId = req.user.id;
-    } else if (user.user_roles && user.user_roles.includes('candidate')) {
+    // Apply role-based filtering
+    if (user.user_roles.includes('mentor')) {
+      // Check for mentorId in both formats
+      query.$or = [
+        { mentorId: req.user.id },
+        { mentor_id: req.user.id } // Add this to check for mentor_id field
+      ];
+    } else if (user.user_roles.includes('candidate')) {
       query.candidateId = req.user.id;
-    } else {
-      return res.status(403).json({
-        success: false,
-        message: 'User must be a mentor or candidate'
-      });
     }
     
-    // Add status filter - explicitly use the status parameter from query
+    // Apply status filter if provided using case-insensitive regex to handle both cases
     if (status) {
-      query.status = status;
-      console.log(`Filtering sessions by status: ${status}`);
+      // Case-insensitive query that matches both 'scheduled' and 'Scheduled'
+      query.status = { $regex: new RegExp(`^${status}$`, 'i') };
+      console.log(`Filtering sessions by status (case-insensitive): "${status}"`);
     }
-    
-    console.log('Final query:', query);
-    
+
+    console.log('Database query:', JSON.stringify(query));
+
+    // Execute query with explicit sort order to get newest first
     const sessions = await MentoringSession.find(query)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean(); // Use lean for better performance
+      
+    console.log(`Found ${sessions.length} sessions with status: ${status || 'all'}`);
     
-    console.log(`Found ${sessions.length} sessions matching query`);
-    
+    // Log a sample session to see what fields are available
+    if (sessions.length > 0) {
+      console.log('Sample session data:', JSON.stringify(sessions[0]));
+    }
+
     return res.json({
       success: true,
       count: sessions.length,
       data: sessions
     });
   } catch (error) {
-    console.error('Error fetching mentoring sessions:', error);
+    console.error('Error in /sessions route:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error while fetching sessions'
+      message: 'Server error'
     });
   }
 });
 
-// Create a new session directly (status: pending)
-router.post('/sessions', auth, async (req, res) => {
-  try {
-    const { candidate_email, session_type, date_time, duration, notes } = req.body;
-    
-    // Validate required fields
-    if (!candidate_email || !session_type) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: candidate_email and session_type are required'
-      });
-    }
-    
-    // Find mentor
-    const mentor = await User.findById(req.user.id);
-    if (!mentor || !mentor.user_roles.includes('mentor')) {
-      return res.status(403).json({
-        success: false,
-        message: 'Only mentors can create sessions'
-      });
-    }
-    
-    // Find candidate by email
-    const candidate = await User.findOne({ email: candidate_email });
-    
-    // Create new session with pending status
-    const newSession = new MentoringSession({
-      mentorId: req.user.id,
-      candidate_email: candidate_email,
-      candidateId: candidate ? candidate._id : null,
-      candidateName: candidate ? `${candidate.firstName} ${candidate.lastName}` : null,
-      candidateAvatar: candidate ? candidate.profilePicture : null,
-      session_type: session_type,
-      date_time: date_time || null,
-      scheduledDate: date_time ? new Date(date_time) : null,
-      duration: duration || 60,
-      notes: notes || '',
-      status: 'pending' // Always create with pending status
-    });
-    
-    const savedSession = await newSession.save();
-    console.log('Created new pending session:', savedSession);
-    
-    return res.status(201).json({
-      success: true,
-      data: savedSession
-    });
-  } catch (error) {
-    console.error('Error creating session:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error while creating session'
-    });
-  }
-});
-
-// Update a session
+// Update session status - ensure we normalize the status casing
 router.put('/sessions/:id', auth, async (req, res) => {
   try {
-    const { status, scheduledDate, date_time, duration, notes } = req.body;
+    const sessionId = req.params.id;
+    const updates = { ...req.body };
+    
+    // Normalize status to lowercase
+    if (updates.status) {
+      updates.status = updates.status.toLowerCase();
+      
+      // If status is being changed to completed, ensure we have the message/feedback
+      if (updates.status === 'completed' && updates.message) {
+        console.log('Session completed with feedback:', updates.message);
+      }
+    }
     
     // Find the session
-    const session = await MentoringSession.findById(req.params.id);
-    
+    const session = await MentoringSession.findById(sessionId);
     if (!session) {
       return res.status(404).json({
         success: false,
@@ -209,41 +172,183 @@ router.put('/sessions/:id', auth, async (req, res) => {
       });
     }
     
-    // Authorization check (only mentor can update their own sessions)
-    if (session.mentorId.toString() !== req.user.id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this session'
-      });
+    // Check permission (only mentor can update)
+    if (session.mentorId && session.mentorId.toString() !== req.user.id.toString()) {
+      // Also check mentor_id if mentorId is not available
+      if (!session.mentor_id || session.mentor_id.toString() !== req.user.id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to update this session'
+        });
+      }
     }
     
-    // Update fields if provided
-    if (status) session.status = status;
-    if (scheduledDate) {
-      session.scheduledDate = new Date(scheduledDate);
-      if (!session.date_time) session.date_time = scheduledDate;
-    }
-    if (date_time) {
-      session.date_time = date_time;
-      session.scheduledDate = new Date(date_time);
-    }
-    if (duration) session.duration = parseInt(duration);
-    if (notes !== undefined) session.notes = notes;
+    // Apply updates
+    Object.keys(updates).forEach(key => {
+      session[key] = updates[key];
+    });
     
-    // Save the updated session
-    const updatedSession = await session.save();
+    await session.save();
+    console.log('Session updated successfully:', session);
     
     return res.json({
       success: true,
-      data: updatedSession
+      message: 'Session updated successfully',
+      data: session
     });
   } catch (error) {
     console.error('Error updating session:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error while updating session'
+      message: 'Server error'
     });
   }
 });
+
+// Create a new session - ensure consistent status casing
+router.post('/sessions', auth, async (req, res) => {
+  try {
+    const { candidate_email, session_type, date_time, duration, notes, status } = req.body;
+    
+    // Validate input
+    if (!candidate_email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Candidate email is required'
+      });
+    }
+    
+    // Find the candidate by email
+    const candidate = await User.findOne({ email: candidate_email });
+    
+    // Create new session with specified status (normalize to lowercase)
+    const newSession = new MentoringSession({
+      mentorId: req.user.id,
+      candidate_email,
+      candidateId: candidate ? candidate._id : null,
+      candidateName: candidate ? `${candidate.firstName} ${candidate.lastName}` : null,
+      candidateAvatar: candidate ? candidate.profilePicture : null,
+      session_type: session_type || 'general',
+      date_time,
+      scheduledDate: date_time ? new Date(date_time) : null,
+      duration: duration || 60,
+      notes,
+      status: (status || 'scheduled').toLowerCase() // Normalize to lowercase
+    });
+    
+    await newSession.save();
+    console.log('New session created:', newSession);
+    
+    return res.status(201).json({
+      success: true,
+      data: newSession
+    });
+  } catch (error) {
+    console.error('Error creating session:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// Add a migration utility to normalize existing status values
+router.post('/normalize-status', auth, async (req, res) => {
+  try {
+    // Only allow admins to run this
+    const user = await User.findById(req.user.id);
+    if (!user || !user.user_roles.includes('admin')) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Only admins can perform this operation' 
+      });
+    }
+
+    // Get all sessions
+    const sessions = await MentoringSession.find({});
+    let updatedCount = 0;
+
+    // Update each session with normalized status
+    for (const session of sessions) {
+      if (session.status) {
+        const oldStatus = session.status;
+        session.status = session.status.toLowerCase();
+        
+        if (oldStatus !== session.status) {
+          await session.save();
+          updatedCount++;
+        }
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Normalized status for ${updatedCount} sessions`
+    });
+  } catch (error) {
+    console.error('Error normalizing session status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// Create a mentoring request from candidate to mentor
+router.post('/request', auth, async (req, res) => {
+  try {
+    const { mentorId, sessionGoals, requestType } = req.body;
+    
+    // Validate required fields
+    if (!mentorId || !sessionGoals) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mentor ID and session goals are required'
+      });
+    }
+    
+    // Get candidate information from authenticated user
+    const candidate = await User.findById(req.user.id);
+    if (!candidate || !candidate.user_roles.includes('candidate')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only candidates can create mentoring requests'
+      });
+    }
+    
+    // Get candidate profile for additional info
+    const candidateProfile = await require('../models/Candidate').findById(req.user.id);
+    
+    // Create new mentoring session with pending status
+    const newSession = new MentoringSession({
+      mentorId: mentorId,
+      candidateId: req.user.id,
+      candidate_email: candidate.email,
+      candidateName: `${candidate.firstName} ${candidate.lastName}`,
+      candidateAvatar: candidateProfile?.avatarUrl || '',
+      session_type: requestType || 'General Mentoring',
+      message: sessionGoals,
+      status: 'pending',
+      urgency: 'medium',
+      requestDate: new Date()
+    });
+    
+    const savedSession = await newSession.save();
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Mentoring request sent successfully',
+      data: savedSession
+    });
+  } catch (error) {
+    console.error('Error creating mentoring request:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while creating request'
+    });
+  }
+});
+
+
 
 module.exports = router;

@@ -12,9 +12,15 @@ import {
   Typography,
   TextField,
   CircularProgress,
-  IconButton
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { Person, Chat, RateReview, CheckCircle, Close } from '@mui/icons-material';
+import axios from 'axios';
+import { useSnackbar } from 'notistack';
 
 // 1. Updated steps for requesting a session
 const steps = ['Your Details', 'Session Goals', 'Review & Submit'];
@@ -32,21 +38,23 @@ const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // 3. Replaced resume/cover letter state with state for session goals
   const [sessionGoals, setSessionGoals] = useState('');
+  const [requestType, setRequestType] = useState('');
+  const { enqueueSnackbar } = useSnackbar();
   
   // Add state variables for user information - now read-only from profile
   const [userInfo, setUserInfo] = useState({
-    name: userProfile?.name || MOCK_USER.name,
-    email: userProfile?.contact?.email || MOCK_USER.email,
-    phone: userProfile?.contact?.phone || MOCK_USER.phone
+    name: userProfile?.name || '',
+    email: userProfile?.contact?.email || '',
+    phone: userProfile?.contact?.phone || ''
   });
 
   // Update user info when userProfile changes or dialog opens
   useEffect(() => {
     if (open && userProfile) {
       setUserInfo({
-        name: userProfile.name || MOCK_USER.name,
-        email: userProfile.contact?.email || MOCK_USER.email,
-        phone: userProfile.contact?.phone || MOCK_USER.phone
+        name: userProfile.name || '',
+        email: userProfile.contact?.email || '',
+        phone: userProfile.contact?.phone || ''
       });
     }
   }, [open, userProfile]);
@@ -61,15 +69,43 @@ const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Simulate API call to request a session
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log('Submitting Session Request:', {
-      mentorId: mentor.id,
-      sessionGoals: sessionGoals,
-      userInfo: userInfo
-    });
-    setIsSubmitting(false);
-    handleNext(); // Move to the success step
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        enqueueSnackbar('Please log in to send a request', { variant: 'error' });
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:5000/api/mentoring/request',
+        {
+          mentorId: mentor.id,
+          sessionGoals: sessionGoals,
+          requestType: requestType || 'General Mentoring'
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      if (response.data.success) {
+        enqueueSnackbar('Mentoring request sent successfully!', { variant: 'success' });
+        handleNext(); // Move to success step
+      } else {
+        enqueueSnackbar(response.data.message || 'Failed to send request', { variant: 'error' });
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      enqueueSnackbar(
+        error.response?.data?.message || 'Failed to send request. Please try again.',
+        { variant: 'error' }
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleCloseDialog = () => {
@@ -78,9 +114,9 @@ const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
         setActiveStep(0);
         setSessionGoals('');
         setUserInfo({
-          name: userProfile?.name || MOCK_USER.name,
-          email: userProfile?.contact?.email || MOCK_USER.email,
-          phone: userProfile?.contact?.phone || MOCK_USER.phone
+          name: userProfile?.name || '',
+          email: userProfile?.contact?.email || '',
+          phone: userProfile?.contact?.phone || ''
         });
     }, 300); // Delay to allow closing animation
     onClose();
@@ -132,6 +168,21 @@ const ApplyForm = ({ open, onClose, mentor, userProfile }) => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Briefly describe your goals for this session. This will help the mentor prepare. (e.g., "Resume review", "Career path advice", "Mock interview for a React role")
             </Typography>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Session Type</InputLabel>
+              <Select
+                value={requestType}
+                onChange={(e) => setRequestType(e.target.value)}
+                label="Session Type"
+              >
+                <MenuItem value="CV Review">CV Review</MenuItem>
+                <MenuItem value="Interview Prep">Interview Preparation</MenuItem>
+                <MenuItem value="Career Guidance">Career Guidance</MenuItem>
+                <MenuItem value="Technical Mentoring">Technical Mentoring</MenuItem>
+                <MenuItem value="Portfolio Review">Portfolio Review</MenuItem>
+                <MenuItem value="General Mentoring">General Mentoring</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Message to Mentor"
               multiline
