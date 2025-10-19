@@ -17,7 +17,11 @@ router.get('/mentors/pending', managerController.getPendingMentors);
 router.post('/mentors/accept/:id', managerController.acceptMentor);
 router.post('/mentors/decline/:id', managerController.declineMentor);
 
-
+router.get('/subscriptionPlans', managerController.getSubscriptionPlans);
+router.post('/subscriptionPlans', managerController.createSubscriptionPlan);
+router.put('/subscriptionPlans/:id', managerController.updateSubscriptionPlan);
+router.patch('/subscriptionPlans/:id/toggle', managerController.toggleSubscriptionPlanStatus);
+router.get('/subscriptionPlans/:id/companies', managerController.getSubscribedCompanies);
 
 
 module.exports = router;

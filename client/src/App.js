@@ -17,6 +17,8 @@ import LeadPanelistRoot from "./pages/LeadPanelistRoot";
 import AdminRoot from "./pages/AdminRoot";
 
 import BusinessManagerRoot from "./pages/BusinessManagerRoot";
+import CompanyProfilesPage from './components/BusinessManager/CompanyProfiles';
+
 
 import JobPosts from "./components/Recruiter/JobPosts";
 import CandidateList from "./components/LeadPanelist/CandidateList";
@@ -77,6 +79,8 @@ function App() {
         <Route path="/manager/subscription-plans" element={<BusinessManagerRoot />} />
         <Route path="/manager/jobPosts" element={<BusinessManagerRoot />} />
         <Route path="/manager/feedback" element={<BusinessManagerRoot />} />
+        <Route path="/manager/company-profiles/:companyId" element={<CompanyProfilesPage />} />
+
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
 
       </Routes>
