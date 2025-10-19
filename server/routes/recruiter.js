@@ -15,4 +15,9 @@ router.get('/fetchSkills', recruiterController.fetchSkills);
 router.get('/candidates/all', recruiterController.getAllCandidates);
 router.get('/candidates/applications', recruiterController.getApplicationsByStatus);
 
+// Interview management endpoints
+router.get('/interviews/new', recruiterController.getNewInterviews);
+router.get('/interviews/pending', recruiterController.getPendingInterviews);
+router.put('/interviews/notify-candidates', recruiterController.notifyCandidates);
+
 module.exports = router;
