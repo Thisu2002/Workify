@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -32,6 +32,7 @@ import {
   Work
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 
 const tabLabels = ["New", "Pending", "Schedule", "Complete"];
@@ -241,6 +242,135 @@ const Assignments = () => {
 
   // Add panelMembers to new assignments
   const [openPanelDetails, setOpenPanelDetails] = useState(null); // assignment id or null
+  const [completedAssignments, setCompletedAssignments] = useState([]);
+  const [pendingAssignments, setPendingAssignments] = useState([]);
+  
+  useEffect(() => {
+    const fetchCompletedAssignments = async () => {
+      if (currentTab === 3) {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+
+          const res = await axios.get('http://localhost:5000/leadpanelist/completed-assignments', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          console.log('Raw API response:', res.data);
+
+          // If no data, use empty array
+          if (!res.data) {
+            console.log('No data received from API');
+            setCompletedAssignments([]);
+            return;
+          }
+
+          const transformedAssignments = res.data.map(job => ({
+            id: job._id,
+            jobName: job.title,
+            round: "Round 1 - Technical Interview",
+            status: "complete",
+            completedDate: new Date(job.date_posted).toLocaleDateString(),
+            time: "10:00 AM - 11:00 AM",
+            panel: "Technical Panel",
+            type: job.jobType || "Interview",
+            duration: "1 hour"
+          }));
+
+          console.log('Transformed assignments:', transformedAssignments);
+          setCompletedAssignments(transformedAssignments);
+        } catch (err) {
+          console.error('Error:', err);
+          setCompletedAssignments([]);
+        }
+      }
+    };
+
+    fetchCompletedAssignments();
+  }, [currentTab]);
+
+  useEffect(() => {
+    const fetchPendingAssignments = async () => {
+      if (currentTab === 1) {
+        try {
+          console.log('Fetching pending assignments...');
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.log('No token found');
+            return;
+          }
+
+          // First try the test endpoint to verify server connectivity
+          try {
+            const testResponse = await axios.get('http://localhost:5000/leadpanelist/test');
+            console.log('Test endpoint response:', testResponse.data);
+          } catch (testErr) {
+            console.error('Test endpoint failed:', testErr);
+          }
+
+          const res = await axios.get('http://localhost:5000/leadpanelist/pending-assignments', {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('Pending assignments response status:', res.status);
+          console.log('Raw pending API response:', res.data);
+
+          if (!res.data) {
+            console.log('No pending data received from API');
+            setPendingAssignments([]);
+            return;
+          }
+
+          // Check if data is an array
+          if (!Array.isArray(res.data)) {
+            console.error('Expected array but got:', typeof res.data);
+            setPendingAssignments([]);
+            return;
+          }
+
+          const transformedAssignments = res.data.map(job => ({
+            id: job._id,
+            jobName: job.title,
+            round: "Round 1 - Technical Interview",
+            status: "pending",
+            scheduledDate: new Date(job.date_posted).toLocaleDateString(),
+            time: "10:00 AM - 11:00 AM",
+            panel: job.jobType || "Technical Panel",
+            type: "Technical Assessment",
+            duration: "1 hour"
+          }));
+
+          console.log('Transformed pending assignments:', transformedAssignments);
+          setPendingAssignments(transformedAssignments);
+
+        } catch (err) {
+          console.error('Error fetching pending assignments:', err.response?.status || 'No status', 
+            err.response?.data || err.message);
+          setPendingAssignments([]);
+        }
+      }
+    };
+
+    fetchPendingAssignments();
+  }, [currentTab]);
+
+  const filteredAssignments = useMemo(() => {
+    if (currentTab === 3) {
+      return completedAssignments;
+    }
+    if (currentTab === 1) {
+      return pendingAssignments;
+    }
+    return assignmentsData.filter(a => statusMap[a.status] === currentTab);
+  }, [currentTab, completedAssignments, pendingAssignments]);
+
+  // Remove the static completed assignments from assignmentsData
+  const staticAssignmentsData = useMemo(() => {
+    return assignmentsData.filter(a => a.status !== "complete");
+  }, []);
 
   const handleOpenCalendar = (id) => setOpenCalendar(id);
   const handleCloseCalendar = () => setOpenCalendar(null);
@@ -252,10 +382,6 @@ const Assignments = () => {
       return { ...prev, [id]: newArr };
     });
   };
-
-  const filteredAssignments = assignmentsData.filter(
-    (a) => statusMap[a.status] === currentTab
-  );
 
   // For the 'New' tab, ensure 3 cards per row (fill with empty Grid items if needed)
   const isNewTab = currentTab === 0;
@@ -562,4 +688,4 @@ const Assignments = () => {
   );
 };
 
-export default Assignments; 
+export default Assignments;

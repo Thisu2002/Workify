@@ -14,6 +14,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/auth', require('./routes/auth'));
 app.use('/recruiter', require('./routes/recruiter'));
 app.use('/candidate', require('./routes/candidate')); 
+app.use('/leadpanelist', require('./routes/leadPanelist'));
 app.use('/manager', require('./routes/business_manager'));
 app.use('/admin', require('./routes/admin'));
 
