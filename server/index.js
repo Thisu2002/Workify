@@ -22,6 +22,10 @@ app.use('/api/jobs', jobRoutes);
 // Mentoring routes
 app.use('/api/mentoring', require('./routes/mentoring'));
 
+// Import mentor routes
+const mentorRoutes = require('./routes/mentors');
+app.use('/api/mentors', mentorRoutes);
+
 //app.use('/user', require('./routes/user')); // Assuming you have a user route
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
