@@ -18,5 +18,6 @@ router.get('/candidates/applications', recruiterController.getApplicationsByStat
 // Interview endpoints
 router.get('/interviews', recruiterController.getInterviewsByStatus);
 router.post('/interviews/notify-candidates', recruiterController.notifyCandidates);
+router.post('/interviews/proceed-to-interviews', recruiterController.proceedToInterviews);
 
 module.exports = router;

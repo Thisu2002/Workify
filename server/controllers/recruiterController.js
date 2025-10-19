@@ -382,7 +382,7 @@ exports.getInterviewsByStatus = async (req, res) => {
       let candidateStatusQuery;
       let tabType;
 
-      // Determine which candidates to fetch based on job status
+      // Determine which candidates to fetch based on job status and final_date
       if (status.includes('panelRequested') || status.includes('panelConfirmed')) {
         // New tab: fetch shortlisted candidates
         candidateStatusQuery = { $regex: /shortlisted/i };
@@ -392,12 +392,26 @@ exports.getInterviewsByStatus = async (req, res) => {
         candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled)/i };
         tabType = 'pending';
       } else if (status.includes('scheduled')) {
-        // Scheduled tab: fetch interviewScheduled candidates
-        candidateStatusQuery = { $regex: /interviewScheduled/i };
-        tabType = 'scheduled';
+        // Check if the interview date has passed
+        const currentRound = job.interview_rounds && job.interview_rounds.length > 0 
+          ? job.interview_rounds[job.interview_rounds.length - 1] 
+          : null;
+        
+        const finalDate = currentRound?.final_date;
+        const currentDate = new Date();
+        
+        if (finalDate && new Date(finalDate) < currentDate) {
+          // Interview date has passed - move to completed tab
+          candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled|interviewCompleted|selected|rejected)/i };
+          tabType = 'completed';
+        } else {
+          // Interview date is upcoming - keep in scheduled tab
+          candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled)/i };
+          tabType = 'scheduled';
+        }
       } else if (status.includes('completed')) {
-        // Completed tab: fetch completed interview candidates
-        candidateStatusQuery = { $regex: /(interviewCompleted|selected|rejected)/i };
+        // Completed tab: fetch all interview candidates (pending, scheduled, completed, selected, rejected)
+        candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled|interviewCompleted|selected|rejected)/i };
         tabType = 'completed';
       }
 
@@ -413,17 +427,31 @@ exports.getInterviewsByStatus = async (req, res) => {
         // Format candidate data
         const candidatePromises = candidateApplications.map(app => {
           // Get user email from User model for this candidate
-          return User.findById(app.candidate_id._id).select('email').then(user => ({
-            candidateId: app.candidate_id._id,
-            firstName: app.firstName,
-            lastName: app.lastName,
-            email: user?.email || app.contact?.email || '',
-            phone: app.contact?.phone || '',
-            avatarUrl: app.candidate_id.avatarUrl || '',
-            applicationId: app._id,
-            currentStatus: app.current_status,
-            dateApplied: app.date_applied
-          }));
+          return User.findById(app.candidate_id._id).select('email').then(user => {
+            // Determine overall result status for completed tab
+            let overallResult = 'Not Interviewed'; // Default for pending/scheduled
+            if (app.current_status.toLowerCase().includes('selected')) {
+              overallResult = 'Selected';
+            } else if (app.current_status.toLowerCase().includes('rejected')) {
+              overallResult = 'Rejected';
+            } else if (app.current_status.toLowerCase().includes('interviewcompleted')) {
+              overallResult = 'Completed'; // For completed but not yet selected/rejected
+            }
+
+            return {
+              candidateId: app.candidate_id._id,
+              firstName: app.firstName,
+              lastName: app.lastName,
+              email: user?.email || app.contact?.email || '',
+              phone: app.contact?.phone || '',
+              avatarUrl: app.candidate_id.avatarUrl || '',
+              applicationId: app._id,
+              currentStatus: app.current_status,
+              dateApplied: app.date_applied,
+              overallResult: overallResult,
+              roundStatus: app.round_status || [] // Include round_status array
+            };
+          });
         });
 
         // Wait for all candidate data to be resolved
@@ -511,6 +539,14 @@ const formatJobForInterview = (job, status, relevantCandidates = []) => {
     } else {
       formattedJob.interviewDate = 'Date not available';
     }
+    
+    // Add panel members info if available for completed interviews too
+    if (currentRound?.panel_id?.members) {
+      formattedJob.panelMembers = currentRound.panel_id.members.map(member => ({
+        name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'Unknown',
+        avatar: member.avatarUrl || null
+      }));
+    }
   }
 
   return formattedJob;
@@ -581,5 +617,50 @@ exports.notifyCandidates = async (req, res) => {
   } catch (err) {
     console.error('Error notifying candidates:', err);
     res.status(500).json({ message: 'Error notifying candidates', error: err.message });
+  }
+};
+
+// Proceed to interviews - update job status from candidatesNotified to scheduled
+exports.proceedToInterviews = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const recruiterId = decoded.id;
+
+    const { jobId } = req.body;
+
+    if (!jobId) {
+      return res.status(400).json({ message: "Job ID is required" });
+    }
+
+    // Find the job post and verify it belongs to this recruiter
+    const jobPost = await Post.findOne({ _id: jobId, recruiter_id: recruiterId });
+    if (!jobPost) {
+      return res.status(404).json({ message: "Job post not found or unauthorized" });
+    }
+
+    // Verify the job is in the correct status (candidatesNotified)
+    if (!jobPost.current_status.includes('candidatesNotified')) {
+      return res.status(400).json({ message: "Job is not in the correct status to proceed to interviews" });
+    }
+
+    // Update job status from candidatesNotified to scheduled (preserve round number)
+    jobPost.current_status = jobPost.current_status.replace('candidatesNotified', 'scheduled');
+    await jobPost.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Successfully proceeded to interviews",
+      newStatus: jobPost.current_status
+    });
+
+  } catch (err) {
+    console.error('Error proceeding to interviews:', err);
+    res.status(500).json({ message: 'Error proceeding to interviews', error: err.message });
   }
 };

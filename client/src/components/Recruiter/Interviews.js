@@ -300,9 +300,31 @@ const Interviews = () => {
         setTimeout(() => setSelectedInterview(null), 300);
     };
 
-    const handleProceedToInterviews = () => {
-        alert(`Proceeding to interviews for ${selectedInterview.jobTitle}`);
-        handleCloseCandidateModal();
+    const handleProceedToInterviews = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await axios.post('http://localhost:5000/recruiter/interviews/proceed-to-interviews', {
+                jobId: selectedInterview.id
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data.success) {
+                alert(`Successfully proceeded to interviews for ${selectedInterview.jobTitle}. Job status updated to: ${response.data.newStatus}`);
+                
+                // Refresh the interview data to reflect changes
+                await fetchInterviewData();
+                
+                handleCloseCandidateModal();
+            }
+        } catch (error) {
+            console.error('Error proceeding to interviews:', error);
+            alert('Failed to proceed to interviews. Please try again.');
+        }
     };
 
     const getConfirmationStatusColor = (status) => {
@@ -357,7 +379,23 @@ const Interviews = () => {
     };
 
     const handleViewFeedbacks = (interview) => {
-        setViewingInterviewDetails(interview);
+        // Map the fetched candidates to the expected format for feedback view
+        const mappedCandidates = interview.shortlistedCandidates.map(candidate => ({
+            id: candidate.candidateId,
+            name: `${candidate.firstName} ${candidate.lastName}`,
+            email: candidate.email,
+            status: 'Confirmed', // For feedback view, all are considered as having participated
+            interviewStatus: candidate.overallResult || 'Not Interviewed',
+            feedback: candidate.roundStatus && candidate.roundStatus.length > 0 
+                ? candidate.roundStatus[candidate.roundStatus.length - 1].round_feedback || 'No feedback provided'
+                : 'No feedback provided',
+            roundResults: candidate.roundStatus || []
+        }));
+        
+        setViewingInterviewDetails({
+            ...interview,
+            candidates: mappedCandidates
+        });
     };
 
     const handleBackToGrid = () => {
@@ -380,9 +418,10 @@ const Interviews = () => {
     };
 
     const getInterviewStatusColor = (status) => {
-        if (status === 'Passed') return 'success';
-        if (status === 'Failed') return 'error';
-        if (status === 'On Hold') return 'warning';
+        if (status === 'Selected' || status === 'Passed') return 'success';
+        if (status === 'Rejected' || status === 'Failed') return 'error';
+        if (status === 'Not Interviewed' || status === 'On Hold') return 'warning';
+        if (status === 'Completed') return 'info';
         return 'default';
     };
   
@@ -797,11 +836,11 @@ const Interviews = () => {
                                                     {interview.interviewDate}
                                                 </Typography>
                                             </Box>
-                                            {/*Application Count*/}
+                                            {/*Interviewees Count*/}
                                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1.5 }}>
                                                 <PeopleOutlineIcon color="action" />
                                                 <Typography variant="body2">
-                                                    <strong>{interview.applicationCount}</strong> Interviewees
+                                                    <strong>{interview.shortlistedCandidatesCount || 0}</strong> Interviewees
                                                 </Typography>
                                             </Box>
                                         </CardContent>
@@ -966,11 +1005,57 @@ const Interviews = () => {
         </Dialog>
 
         {/* Feedback Details Modal */}
-        <Dialog open={isFeedbackModalOpen} onClose={handleCloseFeedbackModal} fullWidth maxWidth="sm">
+        <Dialog open={isFeedbackModalOpen} onClose={handleCloseFeedbackModal} fullWidth maxWidth="md">
             <DialogTitle>Interview Feedback for: <strong>{selectedCandidateFeedback?.name}</strong></DialogTitle>
             <DialogContent dividers>
-                <Typography variant="h6" gutterBottom>Status: {selectedCandidateFeedback?.interviewStatus}</Typography>
-                <Typography variant="body1">{selectedCandidateFeedback?.feedback}</Typography>
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                        Overall Status: 
+                        <Chip 
+                            label={selectedCandidateFeedback?.interviewStatus} 
+                            color={getInterviewStatusColor(selectedCandidateFeedback?.interviewStatus)} 
+                            sx={{ ml: 1 }}
+                        />
+                    </Typography>
+                </Box>
+
+                {selectedCandidateFeedback?.roundResults && selectedCandidateFeedback.roundResults.length > 0 ? (
+                    <>
+                        <Typography variant="h6" gutterBottom>Round-by-Round Results:</Typography>
+                        {selectedCandidateFeedback.roundResults.map((round, index) => (
+                            <Card key={index} sx={{ mb: 2, p: 2 }}>
+                                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                    Round {round.round_number}
+                                </Typography>
+                                <Box sx={{ mb: 1 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Result: 
+                                        <Chip 
+                                            label={round.round_result || 'Pending'} 
+                                            color={getInterviewStatusColor(round.round_result)} 
+                                            size="small" 
+                                            sx={{ ml: 1 }}
+                                        />
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body1">
+                                    <strong>Feedback:</strong> {round.round_feedback || 'No feedback provided'}
+                                </Typography>
+                            </Card>
+                        ))}
+                    </>
+                ) : (
+                    <Typography variant="body1" color="text.secondary">
+                        No round-specific feedback available.
+                    </Typography>
+                )}
+
+                {selectedCandidateFeedback?.feedback && (
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="h6" gutterBottom>General Feedback:</Typography>
+                        <Typography variant="body1">{selectedCandidateFeedback.feedback}</Typography>
+                    </Box>
+                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleCloseFeedbackModal}>Close</Button>
