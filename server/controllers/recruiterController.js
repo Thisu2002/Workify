@@ -424,16 +424,20 @@ exports.getNewInterviews = async (req, res) => {
 // Get interviews for the "Pending" tab - jobs with candidates notified
 exports.getPendingInterviews = async (req, res) => {
   try {
+    console.log('getPendingInterviews called');
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log('No auth header or invalid format');
       return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiterId = decoded.id;
+    console.log('Recruiter ID:', recruiterId);
 
     // Find job posts with candidates notified status
+    console.log('Searching for pending interviews...');
     const pendingInterviews = await Post.find({
       recruiter_id: recruiterId,
       current_status: {
@@ -448,67 +452,108 @@ exports.getPendingInterviews = async (req, res) => {
         select: 'firstName lastName avatarUrl'
       }
     });
+    console.log('Found pending interviews:', pendingInterviews.length);
 
     // Get application and confirmation details for each job
     const CandidateJob = require('../models/Candidate_Job');
     const User = require('../models/User');
     
-    const interviewsWithDetails = await Promise.all(pendingInterviews.map(async (job) => {
-      // Get current round from status
-      const roundMatch = job.current_status.match(/^(\d+)_/);
-      const currentRound = roundMatch ? parseInt(roundMatch[1]) : 1;
-      
-      // Find the interview round details
-      const roundDetails = job.interview_rounds.find(round => round.round_number === currentRound);
-      
-      // Get applications for this job and round
-      const applications = await CandidateJob.find({
-        job_id: job._id,
-        current_status: job.current_status // Same status as job
-      })
-      .populate('candidate_id', 'firstName lastName avatarUrl contact');
+    const interviewsWithDetails = [];
+    for (const job of pendingInterviews) {
+      try {
+        console.log('Processing job:', job.title);
+        // Get current round from status
+        const roundMatch = job.current_status.match(/^(\d+)_/);
+        const currentRound = roundMatch ? parseInt(roundMatch[1]) : 1;
+        console.log('Current round:', currentRound);
+        
+        // Find the interview round details
+        const roundDetails = job.interview_rounds.find(round => round.round_number === currentRound);
+        console.log('Round details found:', !!roundDetails);
+        
+        // Fetch candidates for this job with their round confirmation status
+        let candidateApplications = [];
+        try {
+          candidateApplications = await CandidateJob.find({
+            job_id: job._id,
+            current_status: job.current_status // Only get candidates with matching status (candidatesNotified)
+          })
+          .populate('candidate_id', 'avatarUrl contact')
+          .lean();
 
-      // Format candidates with their confirmation status
-      const candidates = await Promise.all(applications.map(async (app) => {
-        const user = await User.findById(app.candidate_id._id).select('email');
-        return {
-          _id: app.candidate_id._id,
-          name: `${app.firstName} ${app.lastName}`,
-          email: user?.email || '',
-          phone: app.candidate_id.contact?.phone || '',
-          avatarUrl: app.candidate_id.avatarUrl || '',
-          confirmationStatus: 'Not Replied', // This will be updated based on candidate response
-          // You can add interview_confirmation field to Candidate_Job model later
+          console.log('Found candidate applications:', candidateApplications.length);
+        } catch (candidateError) {
+          console.error('Error fetching candidate applications for job', job.title, ':', candidateError);
+          candidateApplications = []; // Continue with empty array if candidates fail to load
+        }
+
+        // Format candidates with their confirmation status
+        const candidates = [];
+        for (const app of candidateApplications) {
+          try {
+            // Get user details for email
+            const user = await User.findById(app.candidate_id._id).select('email');
+            
+            // Find the round confirmation status for the current round
+            const roundStatusEntry = app.round_status?.find(rs => rs.round_number === currentRound);
+            const confirmationStatus = roundStatusEntry?.round_confirmation || 'not_replied';
+            
+            candidates.push({
+              id: app._id.toString(),
+              candidateId: app.candidate_id._id.toString(),
+              name: `${app.firstName} ${app.lastName}`,
+              email: user?.email || '',
+              phone: app.candidate_id.contact?.phone || '',
+              avatarUrl: app.candidate_id.avatarUrl || '',
+              status: confirmationStatus === 'confirmed' ? 'Confirmed' : 'Pending',
+              confirmationStatus: confirmationStatus,
+              roundNumber: currentRound,
+              appliedDate: app.date_applied,
+              matchScore: app.match_score,
+              quizScore: app.quiz_score
+            });
+          } catch (userError) {
+            console.error('Error processing candidate', app.firstName, app.lastName, ':', userError);
+            // Continue processing other candidates
+          }
+        }
+
+        // Get the final interview date from interview_rounds
+        let interviewDate = null;
+        if (roundDetails?.final_date?.date) {
+          const date = new Date(roundDetails.final_date.date);
+          interviewDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        const jobResult = {
+          _id: job._id,
+          jobTitle: job.title,
+          round: `Round ${currentRound}: ${roundDetails?.round_name || 'Interview'}`,
+          roundNumber: currentRound,
+          panel: roundDetails?.panel_id ? {
+            _id: roundDetails.panel_id._id,
+            name: roundDetails.panel_id.name,
+            members: roundDetails.panel_id.members || [],
+            leadPanelist: roundDetails.panel_id.lead_panelist
+          } : null,
+          status: job.current_status,
+          applicationCount: candidates.length,
+          interviewDate: interviewDate,
+          finalDateDetails: roundDetails?.final_date || null,
+          candidates: candidates,
+          datePosted: job.date_posted
         };
-      }));
-
-      // Get the final interview date from interview_rounds
-      let interviewDate = null;
-      if (roundDetails?.final_date?.date) {
-        const date = new Date(roundDetails.final_date.date);
-        interviewDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        interviewsWithDetails.push(jobResult);
+        console.log('Successfully processed job:', job.title, 'with', candidates.length, 'candidates');
+        
+      } catch (jobError) {
+        console.error('Error processing job', job.title, ':', jobError);
+        // Continue with other jobs even if one fails
       }
+    }
 
-      return {
-        _id: job._id,
-        jobTitle: job.title,
-        round: `Round ${currentRound}: ${roundDetails?.round_name || 'Interview'}`,
-        roundNumber: currentRound,
-        panel: roundDetails?.panel_id ? {
-          _id: roundDetails.panel_id._id,
-          name: roundDetails.panel_id.name,
-          members: roundDetails.panel_id.members || [],
-          leadPanelist: roundDetails.panel_id.lead_panelist
-        } : null,
-        status: job.current_status,
-        applicationCount: candidates.length,
-        interviewDate: interviewDate,
-        finalDateDetails: roundDetails?.final_date || null,
-        candidates: candidates,
-        datePosted: job.date_posted
-      };
-    }));
-
+    console.log('Sending response with', interviewsWithDetails.length, 'interviews');
     res.status(200).json({
       success: true,
       count: interviewsWithDetails.length,

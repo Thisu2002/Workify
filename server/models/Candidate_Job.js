@@ -69,6 +69,7 @@ const candidateJobSchema = new mongoose.Schema({
   round_status: [
     {
       round_number: { type: Number },
+      round_confirmation: { type: String, default: "not_replied", enum: ["not_replied", "confirmed"] },
       round_result: { type: String },
       round_feedback: { type: String },
     },
