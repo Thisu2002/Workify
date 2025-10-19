@@ -7,6 +7,7 @@ const MentorVerification = require('../models/MentorVerification');
 const Mentor = require('../models/Mentor');
 const SubscriptionPlan = require('../models/SubscriptionPlan');
 const RegistrationRequest = require('../models/RegistrationRequest');
+const BusinessManager = require('../models/BusinessManager');
 
 
 console.log('managerController loaded'); // debug
@@ -385,5 +386,54 @@ exports.declineRegistrationRequest = async (req, res) => {
   } catch (err) {
     console.error('declineRegistrationRequest error:', err);
     res.status(500).json({ message: 'Error declining registration request', error: err.message });
+  }
+};
+
+// Get active business manager
+exports.getActiveBusinessManager = async (req, res) => {
+  try {
+    const manager = await BusinessManager.findOne({ status: 'Active' }).lean();
+    if (!manager) return res.status(404).json({ message: 'No active manager found' });
+
+    res.status(200).json(manager);
+  } catch (err) {
+    console.error('getActiveBusinessManager error:', err);
+    res.status(500).json({ message: 'Error fetching active manager', error: err.message });
+  }
+};
+
+// Update manager profile
+exports.updateBusinessManager = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const manager = await BusinessManager.findById(id);
+    if (!manager) return res.status(404).json({ message: 'Manager not found' });
+
+    Object.assign(manager, updates);
+    await manager.save();
+
+    res.status(200).json({ message: 'Manager updated successfully', manager });
+  } catch (err) {
+    console.error('updateBusinessManager error:', err);
+    res.status(500).json({ message: 'Error updating manager', error: err.message });
+  }
+};
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalJobPosts = await Post.countDocuments({ status: 'Open' });
+    const pendingMentorRequests = await MentorVerification.countDocuments({ status: 'Pending' });
+    const pendingCompanyRequests = await RegistrationRequest.countDocuments({ status: 'Pending' });
+
+    res.status(200).json({
+      totalJobPosts,
+      pendingMentorRequests,
+      pendingCompanyRequests
+    });
+  } catch (err) {
+    console.error('getDashboardStats error:', err);
+    res.status(500).json({ message: 'Error fetching dashboard stats', error: err.message });
   }
 };
