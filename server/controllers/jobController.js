@@ -3,6 +3,7 @@
 const Candidate_Job = require('../models/Candidate_Job');
 const JobPost = require('../models/JobPost'); // Adjust path if needed
 const Recruiter = require('../models/Recruiter'); // We need this to populate
+const calculateMatchScore = require('../utils/matchScore');
 
 // Helper function to format the date
 const formatPostedDate = (date) => {
@@ -166,5 +167,45 @@ exports.changeApplicationStatus = async (req, res) => {
   } catch (err) {
     console.error("Error updating candidate status:", err);
     res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+exports.updateMatchScores = async (req, res) => {
+  try {
+    const { jobId, candidates } = req.body;
+
+    if (!jobId || !candidates || candidates.length === 0) {
+      return res.status(400).json({ message: "Job and candidates data required" });
+    }
+
+    // Fetch the latest job post to ensure it's valid
+    const jobPost = await JobPost.findById(jobId);
+    if (!jobPost) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Loop through candidates with no match_score
+    for (let cand of candidates) {
+      const candidateDoc = await Candidate_Job.findById(cand._id);
+      if (!candidateDoc) continue;
+
+      // Calculate match score
+      const score = calculateMatchScore(jobPost, candidateDoc);
+
+      // Update in DB
+      candidateDoc.match_score = score;
+      await candidateDoc.save();
+    }
+
+    // Fetch updated list of candidates for the job
+    const updatedCandidates = await Candidate_Job.find({ job_id: jobId });
+
+    res.status(200).json({
+      message: "Match scores updated successfully.",
+      candidates: updatedCandidates,
+    });
+  } catch (error) {
+    console.error("Error updating match scores:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

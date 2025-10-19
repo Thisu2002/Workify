@@ -67,7 +67,27 @@ const Candidates = () => {
       const res = await axios.get(
         `http://localhost:5000/recruiter/fetchCandidates/${jobId}`
       );
-      setCandidates(res.data.candidates || []);
+      const fetchedCandidates = res.data.candidates || [];
+
+      // Filter candidates without match_score
+      const candidatesWithoutScore = fetchedCandidates.filter(
+        (c) => !c.match_score && c.match_score !== 0
+      );
+
+      if (candidatesWithoutScore.length > 0 && jobId) {
+        // Send job id and candidates with no match_score to backend
+        const updateRes = await axios.post(
+          "http://localhost:5000/api/jobs/updateMatchScores",
+          {
+            jobId: jobId,
+            candidates: candidatesWithoutScore,
+          }
+        );
+
+        setCandidates(updateRes.data.candidates || []);
+      } else {
+        setCandidates(fetchedCandidates);
+      }
     } catch (err) {
       console.error("Error fetching candidates:", err);
     }
@@ -90,12 +110,18 @@ const Candidates = () => {
   }, []);
 
   useEffect(() => {
-    if (jobId) {
-      fetchCandidates();
-      fetchJobPost();
-      fetchSkills();
-    }
-  }, [jobId, fetchCandidates, fetchJobPost, fetchSkills]);
+    if (!jobId) return;
+
+    const loadAll = async () => {
+      try {
+        await Promise.all([fetchJobPost(), fetchCandidates(), fetchSkills()]);
+      } catch (err) {
+        console.error("Error loading initial data:", err);
+      }
+    };
+
+    loadAll();
+  }, [jobId, fetchJobPost, fetchCandidates, fetchSkills]);
 
   const refreshCandidates = async () => {
     await fetchCandidates();

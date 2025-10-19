@@ -79,9 +79,11 @@ const candidateJobSchema = new mongoose.Schema({
   ],
   match_score: {
     type: Number,
+    default: null
   },
   quiz_score: {
     type: Number,
+    default: null
   },
   round_status: [
     {
