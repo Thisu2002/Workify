@@ -92,6 +92,26 @@ const jobPostSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Panel",
       },
+      available_dates: [{
+        date: {
+          type: Date,
+        },
+        time_slots: [{
+          start_time: String,
+          end_time: String,
+          available: {
+            type: Boolean,
+            default: true
+          }
+        }]
+      }],
+      final_date: {
+        date: {
+          type: Date,
+        },
+        start_time: String,
+        end_time: String
+      }
     },
   ],
   quiz: {
