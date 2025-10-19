@@ -39,6 +39,7 @@ const Candidates = () => {
   const [sortBy, setSortBy] = useState("match");
   const [roundFilters, setRoundFilters] = useState({});
   const [currentRound, setCurrentRound] = useState(null);
+  const [skills, setSkills] = useState([]);
 
   const fetchJobPost = useCallback(async () => {
     try {
@@ -72,12 +73,27 @@ const Candidates = () => {
     }
   }, [jobId]);
 
+  const fetchSkills = useCallback(
+    async() => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/recruiter/fetchSkills", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSkills(res.data);
+      //console.log("Skills fetched:", res.data);
+    } catch (err) {
+      console.error("Error fetching posts", err);
+    }
+  }, []);
+
   useEffect(() => {
     if (jobId) {
       fetchCandidates();
       fetchJobPost();
+      fetchSkills();
     }
-  }, [jobId, fetchCandidates, fetchJobPost]);
+  }, [jobId, fetchCandidates, fetchJobPost, fetchSkills]);
 
   const changeJobStatus = async () => {
     try {
@@ -446,6 +462,7 @@ const Candidates = () => {
 
         <CandidateDetails
           candidate={selectedCandidate}
+          skills={skills}
           onClose={() => setSelectedCandidate(null)}
         />
       </Box>

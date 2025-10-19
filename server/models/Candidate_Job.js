@@ -22,8 +22,19 @@ const candidateJobSchema = new mongoose.Schema({
   about: {
     type: String,
   },
-  address: {
-    type: String,
+  contact: {
+    phone: {
+      type: String,
+    },
+    location: {
+      type: String, default: ''
+    },
+    linkedIn: {
+      type: String, default: ''
+    },
+    email: {
+      type: String, default: ''
+    }
   },
   skills: {
     type: [Number], // skill IDs
@@ -34,11 +45,17 @@ const candidateJobSchema = new mongoose.Schema({
   },
   education: [
     {
-      level: {
-        type: String,
+      degree: {
+        type: String, default: ''
       },
-      field: {
-        type: String,
+      school: {
+        type: String, default: ''
+      },
+      dates: {
+        type: String, default: ''
+      },
+      gpa: {
+        type: Number,
       },
     },
   ],
@@ -74,6 +91,14 @@ const candidateJobSchema = new mongoose.Schema({
     },
   ],
   current_status: { type: String, default: "new" },
+  work_experience: [
+    {
+      title: { type: String, default:'' },
+      company: { type: String, default:'' },
+      dates: { type: String , default:'' },
+      description: { type: String , default:'' }
+    },
+  ],
 });
 
 module.exports = mongoose.model("Candidate_Job", candidateJobSchema);
