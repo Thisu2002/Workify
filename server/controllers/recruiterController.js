@@ -137,7 +137,7 @@ exports.getAllCandidates = async (req, res) => {
     // Find all applications for these jobs
     const CandidateJob = require('../models/Candidate_Job');
     const User = require('../models/User');
-    const Skill = require('../models/Skills');
+    const Skill = require('../models/Skill');
     
     const applications = await CandidateJob.find({ job_id: { $in: jobIds } })
       .populate('candidate_id', 'avatarUrl contact about')
@@ -269,7 +269,7 @@ exports.getApplicationsByStatus = async (req, res) => {
     // Find applications
     const CandidateJob = require('../models/Candidate_Job');
     const User = require('../models/User');
-    const Skill = require('../models/Skills');
+    const Skill = require('../models/Skill');
     
     const applications = await CandidateJob.find(query)
       .populate('candidate_id', 'avatarUrl contact about')
