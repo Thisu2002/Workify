@@ -246,4 +246,61 @@ router.put('/sessions/:id', auth, async (req, res) => {
   }
 });
 
+// Create a mentoring request from candidate to mentor
+router.post('/request', auth, async (req, res) => {
+  try {
+    const { mentorId, sessionGoals, requestType } = req.body;
+    
+    // Validate required fields
+    if (!mentorId || !sessionGoals) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mentor ID and session goals are required'
+      });
+    }
+    
+    // Get candidate information from authenticated user
+    const candidate = await User.findById(req.user.id);
+    if (!candidate || !candidate.user_roles.includes('candidate')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only candidates can create mentoring requests'
+      });
+    }
+    
+    // Get candidate profile for additional info
+    const candidateProfile = await require('../models/Candidate').findById(req.user.id);
+    
+    // Create new mentoring session with pending status
+    const newSession = new MentoringSession({
+      mentorId: mentorId,
+      candidateId: req.user.id,
+      candidate_email: candidate.email,
+      candidateName: `${candidate.firstName} ${candidate.lastName}`,
+      candidateAvatar: candidateProfile?.avatarUrl || '',
+      session_type: requestType || 'General Mentoring',
+      message: sessionGoals,
+      status: 'pending',
+      urgency: 'medium',
+      requestDate: new Date()
+    });
+    
+    const savedSession = await newSession.save();
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Mentoring request sent successfully',
+      data: savedSession
+    });
+  } catch (error) {
+    console.error('Error creating mentoring request:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while creating request'
+    });
+  }
+});
+
+
+
 module.exports = router;
