@@ -3,13 +3,14 @@ const router = express.Router();
 const Mentor = require('../models/Mentor');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const mongoose = require('mongoose');
 
 // Get all active mentors
 router.get('/', async (req, res) => {
   try {
     const { search, specialty, page = 1, limit = 10 } = req.query;
     
-    let query = { isActive: true };
+    let query = { isActive: { $ne: false } }; // Changed this to handle missing isActive field
     
     // Add search functionality
     if (search) {
@@ -17,6 +18,7 @@ router.get('/', async (req, res) => {
         { name: { $regex: search, $options: 'i' } },
         { bio: { $regex: search, $options: 'i' } },
         { role: { $regex: search, $options: 'i' } },
+        { field: { $regex: search, $options: 'i' } },
         { specialties: { $in: [new RegExp(search, 'i')] } }
       ];
     }
@@ -26,28 +28,36 @@ router.get('/', async (req, res) => {
       query.specialties = { $in: [specialty] };
     }
     
+    console.log('Query:', JSON.stringify(query, null, 2));
+    
     const mentors = await Mentor.find(query)
-      .populate('userId', 'firstName lastName email')
       .sort({ rating: -1, totalSessions: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
+    
+    console.log('Found mentors:', mentors.length);
     
     const total = await Mentor.countDocuments(query);
     
     const formattedMentors = mentors.map(mentor => ({
       id: mentor._id,
-      userId: mentor.userId._id,
-      name: mentor.name,
-      avatar: mentor.avatar,
-      role: mentor.role,
-      company: mentor.company,
-      bio: mentor.bio,
-      specialties: mentor.specialties,
-      experience: mentor.experience,
-      rating: mentor.rating,
-      totalSessions: mentor.totalSessions,
-      socialLinks: mentor.socialLinks
+      _id: mentor._id,
+      name: mentor.name || 'Unknown',
+      avatar: mentor.avatar || '',
+      role: mentor.role || 'Mentor',
+      company: mentor.company || '',
+      field: mentor.field || '',
+      bio: mentor.bio || '',
+      specialties: mentor.specialties || [],
+      experience: mentor.experience || 0,
+      rating: mentor.rating || 0,
+      totalSessions: mentor.totalSessions || 0,
+      email: mentor.email || '',
+      linkedin: mentor.linkedin || '',
+      contactNumber: mentor.contactNumber || ''
     }));
+    
+    console.log('Formatted mentors:', JSON.stringify(formattedMentors, null, 2));
     
     return res.status(200).json({
       success: true,
@@ -64,7 +74,8 @@ router.get('/', async (req, res) => {
     console.error('Error fetching mentors:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching mentors'
+      message: 'Error fetching mentors',
+      error: error.message
     });
   }
 });

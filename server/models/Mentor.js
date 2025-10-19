@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const MentorSchema = new mongoose.Schema({
-  userId: {
+  _id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -17,6 +17,10 @@ const MentorSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: ''
+  },
+  field: {
+    type: String,
+    required: true
   },
   role: {
     type: String,
@@ -62,11 +66,6 @@ const MentorSchema = new mongoose.Schema({
       startTime: String, // '09:00'
       endTime: String // '17:00'
     }]
-  },
-  socialLinks: {
-    linkedin: String,
-    github: String,
-    portfolio: String
   }
 }, {
   timestamps: true

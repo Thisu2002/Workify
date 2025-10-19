@@ -170,14 +170,18 @@ const CareerAdvice = () => {
     setMentorsError(null);
     
     try {
+      console.log('Fetching mentors...');
       const response = await axios.get('http://localhost:5000/api/mentors', {
         params: {
           search: searchTerm,
-          limit: 50 // Fetch more mentors if needed
+          limit: 50
         }
       });
       
+      console.log('API Response:', response.data);
+      
       if (response.data.success) {
+        console.log('Mentors fetched:', response.data.data);
         setMentors(response.data.data);
       } else {
         setMentorsError('Failed to fetch mentors');
