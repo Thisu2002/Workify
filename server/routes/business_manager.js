@@ -23,5 +23,11 @@ router.put('/subscriptionPlans/:id', managerController.updateSubscriptionPlan);
 router.patch('/subscriptionPlans/:id/toggle', managerController.toggleSubscriptionPlanStatus);
 router.get('/subscriptionPlans/:id/companies', managerController.getSubscribedCompanies);
 
+// Registration Requests
+router.get('/registrationRequests', managerController.getRegistrationRequests);
+router.post('/registrationRequests/accept/:id', managerController.acceptRegistrationRequest);
+router.post('/registrationRequests/decline/:id', managerController.declineRegistrationRequest);
+
+
 
 module.exports = router;

@@ -6,6 +6,8 @@ const Candidate = require('../models/Candidate');
 const MentorVerification = require('../models/MentorVerification');
 const Mentor = require('../models/Mentor');
 const SubscriptionPlan = require('../models/SubscriptionPlan');
+const RegistrationRequest = require('../models/RegistrationRequest');
+
 
 console.log('managerController loaded'); // debug
 
@@ -316,5 +318,72 @@ exports.getSubscribedCompanies = async (req, res) => {
   } catch (err) {
     console.error('getSubscribedCompanies error:', err);
     res.status(500).json({ message: 'Error fetching subscribed companies', error: err.message });
+  }
+};
+
+// Get all pending registration requests
+exports.getRegistrationRequests = async (req, res) => {
+  try {
+    const requests = await RegistrationRequest.find({ status: 'Pending' }).lean();
+    res.status(200).json(requests);
+  } catch (err) {
+    console.error('getRegistrationRequests error:', err);
+    res.status(500).json({ message: 'Error fetching registration requests', error: err.message });
+  }
+};
+
+// Accept registration request
+exports.acceptRegistrationRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await RegistrationRequest.findById(id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    // ✅ Create a new Company document
+    const newCompany = new Company({
+      name: request.companyName,
+      location: request.address || 'N/A',
+      description: request.description,
+      website: request.website,
+      currentSubscription: {
+        plan: request.subscriptionPlan.planId,
+        startDate: new Date(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)),
+        status: 'active'
+      }
+    });
+
+    await newCompany.save();
+
+    // Update request status
+    request.status = 'Accepted';
+    await request.save();
+
+    // (Optional: Send notification/email here)
+    res.status(200).json({ message: 'Registration request accepted', company: newCompany });
+  } catch (err) {
+    console.error('acceptRegistrationRequest error:', err);
+    res.status(500).json({ message: 'Error accepting registration request', error: err.message });
+  }
+};
+
+// Decline registration request
+exports.declineRegistrationRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const request = await RegistrationRequest.findById(id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    request.status = 'Declined';
+    request.declineReason = reason;
+    await request.save();
+
+    // (Optional: Send alert/email here)
+    res.status(200).json({ message: 'Registration request declined', request });
+  } catch (err) {
+    console.error('declineRegistrationRequest error:', err);
+    res.status(500).json({ message: 'Error declining registration request', error: err.message });
   }
 };
