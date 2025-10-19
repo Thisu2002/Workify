@@ -269,7 +269,29 @@ const Interviews = () => {
     );
 
     const handleOpenCandidateModal = (interview) => {
-        setSelectedInterview(interview);
+        // Map the fetched candidates to the expected format for the modal
+        const mappedCandidates = interview.shortlistedCandidates.map(candidate => {
+            // Check if status contains "interviewPending" (orange chip - Not Replied)
+            // or "interviewScheduled" (green chip - Confirmed)
+            let confirmationStatus = 'Not Replied'; // Default to orange chip
+            
+            if (candidate.currentStatus.toLowerCase().includes('interviewscheduled')) {
+                confirmationStatus = 'Confirmed'; // Green chip
+            }
+            
+            return {
+                id: candidate.candidateId,
+                name: `${candidate.firstName} ${candidate.lastName}`,
+                email: candidate.email,
+                status: confirmationStatus,
+                originalStatus: candidate.currentStatus // Keep original for debugging
+            };
+        });
+        
+        setSelectedInterview({
+            ...interview,
+            candidates: mappedCandidates
+        });
         setCandidateModalOpen(true);
     };
 
@@ -285,9 +307,9 @@ const Interviews = () => {
 
     const getConfirmationStatusColor = (status) => {
         if (status === 'Confirmed') {
-            return 'success'; 
+            return 'success'; // Green chip for interviewScheduled/Confirmed
         }
-        return 'warning'; 
+        return 'warning'; // Orange chip for interviewPending/Not Replied
     };
 
     const handleOpenNotifyModal = (interview) => {
@@ -890,23 +912,39 @@ const Interviews = () => {
             <DialogTitle>Candidate Confirmation for: <strong>{selectedInterview?.jobTitle}</strong></DialogTitle>
             <DialogContent dividers>
                 {selectedInterview?.candidates && selectedInterview.candidates.length > 0 ? (
-                    <List>
-                        {selectedInterview.candidates.map((candidate) => (
-                            <ListItem key={candidate.id} disableGutters>
-                                <ListItemText 
-                                    primary={candidate.name} 
-                                    secondary={candidate.email} 
-                                />
-                                <Chip 
-                                    label={candidate.status} 
-                                    color={getConfirmationStatusColor(candidate.status)} 
-                                    size="small"
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
+                    <>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Interview candidates and their confirmation status:
+                        </Typography>
+                        <List>
+                            {selectedInterview.candidates.map((candidate) => (
+                                <ListItem key={candidate.id} disableGutters>
+                                    <ListItemText 
+                                        primary={candidate.name} 
+                                        secondary={candidate.email} 
+                                    />
+                                    <Chip 
+                                        label={candidate.status} 
+                                        color={getConfirmationStatusColor(candidate.status)} 
+                                        size="small"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            '&.MuiChip-colorWarning': {
+                                                backgroundColor: '#db7d02ff', // Orange for "Not Replied"
+                                                color: 'white'
+                                            },
+                                            '&.MuiChip-colorSuccess': {
+                                                backgroundColor: '#348336ff', // Green for "Confirmed"
+                                                color: 'white'
+                                            }
+                                        }}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </>
                 ) : (
-                    <Typography>No candidates to display.</Typography>
+                    <Typography>No candidates found for this interview round.</Typography>
                 )}
             </DialogContent>
             <DialogActions>
@@ -914,7 +952,14 @@ const Interviews = () => {
                 <Button 
                     variant="contained" 
                     onClick={handleProceedToInterviews}
-                    >
+                    disabled={!selectedInterview?.candidates || selectedInterview.candidates.length === 0}
+                    sx={{
+                        backgroundColor: '#0a2048',
+                        '&:hover': {
+                            backgroundColor: '#062a5eff',
+                        }
+                    }}
+                >
                     Proceed to Interviews
                 </Button>
             </DialogActions>
