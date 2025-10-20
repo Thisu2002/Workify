@@ -10,6 +10,7 @@ const RegistrationRequest = require('../models/RegistrationRequest');
 const BusinessManager = require('../models/BusinessManager');
 const Skill = require('../models/Skill');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 
 
@@ -375,7 +376,9 @@ exports.acceptRegistrationRequest = async (req, res) => {
         startDate: new Date(),
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)),
         status: 'active'
-      }
+      },
+     // ensure passkey is present (use request.passkey if provided, otherwise generate one)
+     passkey: request.passkey || crypto.randomBytes(12).toString('hex')
     });
 
     await newCompany.save();
@@ -385,7 +388,7 @@ exports.acceptRegistrationRequest = async (req, res) => {
     await request.save();
 
     // (Optional: Send notification/email here)
-    res.status(200).json({ message: 'Registration request accepted', company: newCompany });
+    res.status(200).json({ message: 'Registration request accepted and email sent', company: newCompany });
   } catch (err) {
     console.error('acceptRegistrationRequest error:', err);
     res.status(500).json({ message: 'Error accepting registration request', error: err.message });
@@ -406,7 +409,7 @@ exports.declineRegistrationRequest = async (req, res) => {
     await request.save();
 
     // (Optional: Send alert/email here)
-    res.status(200).json({ message: 'Registration request declined', request });
+    res.status(200).json({ message: 'Registration request declined and email sent', request });
   } catch (err) {
     console.error('declineRegistrationRequest error:', err);
     res.status(500).json({ message: 'Error declining registration request', error: err.message });
