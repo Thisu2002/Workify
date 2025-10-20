@@ -11,8 +11,35 @@ const BusinessManager = require('../models/BusinessManager');
 const Skill = require('../models/Skill');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
+// Prefer explicit Gmail config using EMAIL_USER / EMAIL_PASS (app password)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: (process.env.SMTP_SECURE === 'true'), // true for 465, false for 587
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // must be 16-char app password (no spaces) for Gmail
+  },
+});
 
+// verify transporter at startup (logs useful errors)
+transporter.verify().then(() => {
+  console.log('Email transporter ready');
+}).catch(err => {
+  console.error('Email transporter verify failed:', err);
+});
+
+async function sendEmail(to, subject, html, text) {
+  const from = process.env.FROM_EMAIL || process.env.EMAIL_USER || 'no-reply@workify.local';
+  try {
+    await transporter.sendMail({ from, to, subject, text: text || '', html });
+    console.log('Email sent to', to, 'subject:', subject);
+  } catch (err) {
+    console.error('sendEmail error:', err);
+  }
+}
 
 console.log('managerController loaded'); // debug
 
@@ -176,7 +203,6 @@ exports.acceptMentor = async (req, res) => {
   try {
     const { id } = req.params;
     const mentorReq = await MentorVerification.findById(id);
-
     if (!mentorReq) {
       return res.status(404).json({ message: 'Mentor request not found' });
     }
@@ -207,8 +233,14 @@ exports.acceptMentor = async (req, res) => {
     mentorReq.status = 'Accepted';
     await mentorReq.save();
 
-    // (4️⃣ Send email later — commented out)
-    // sendAcceptanceEmail(mentorReq.email);
+    // Notify mentor by email
+    const html = `
+      <p>Hi ${mentorReq.firstName},</p>
+      <p>Your mentor verification request has been <strong>accepted</strong>. Welcome aboard!</p>
+      <p>We will notify you with login details / next steps shortly.</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(mentorReq.email, 'Mentor Verification Accepted - Workify', html);
 
     res.status(200).json({ message: 'Mentor accepted successfully.' });
   } catch (err) {
@@ -232,8 +264,14 @@ exports.declineMentor = async (req, res) => {
     mentorReq.reason = reason;
     await mentorReq.save();
 
-    // (Commented out email)
-    // sendDeclineEmail(mentorReq.email, reason);
+    // Notify mentor by email
+    const html = `
+      <p>Hi ${mentorReq.firstName},</p>
+      <p>Your mentor verification request has been <strong>declined</strong>.</p>
+      <p>Reason: ${reason || 'Not specified'}</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(mentorReq.email, 'Mentor Verification Declined - Workify', html);
 
     res.status(200).json({ message: 'Mentor declined successfully.' });
   } catch (err) {
@@ -365,7 +403,6 @@ exports.acceptRegistrationRequest = async (req, res) => {
     const request = await RegistrationRequest.findById(id);
     if (!request) return res.status(404).json({ message: 'Request not found' });
 
-    // ✅ Create a new Company document
     const newCompany = new Company({
       name: request.companyName,
       location: request.address || 'N/A',
@@ -377,8 +414,7 @@ exports.acceptRegistrationRequest = async (req, res) => {
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)),
         status: 'active'
       },
-     // ensure passkey is present (use request.passkey if provided, otherwise generate one)
-     passkey: request.passkey || crypto.randomBytes(12).toString('hex')
+      passkey: request.passkey || crypto.randomBytes(12).toString('hex')
     });
 
     await newCompany.save();
@@ -387,6 +423,17 @@ exports.acceptRegistrationRequest = async (req, res) => {
     request.status = 'Accepted';
     await request.save();
 
+    // Notify requester by email
+    const html = `
+      <p>Dear ${request.contactPerson || request.companyName},</p>
+      <p>Your company registration request has been <strong>accepted</strong>.</p>
+      <p>Company: <strong>${newCompany.name}</strong></p>
+      <p>Passkey: <code>${newCompany.passkey}</code></p>
+      <p>You can now login and complete your profile.</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(request.email, 'Company Registration Accepted - Workify', html);
+    
     // (Optional: Send notification/email here)
     res.status(200).json({ message: 'Registration request accepted and email sent', company: newCompany });
   } catch (err) {
@@ -407,6 +454,16 @@ exports.declineRegistrationRequest = async (req, res) => {
     request.status = 'Declined';
     request.declineReason = reason;
     await request.save();
+
+    // Notify requester by email
+    const html = `
+      <p>Dear ${request.contactPerson || request.companyName},</p>
+      <p>We regret to inform you that your company registration request has been <strong>declined</strong>.</p>
+      <p>Reason: ${reason || 'Not specified'}</p>
+      <p>If you believe this is a mistake please contact support.</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(request.email, 'Company Registration Declined - Workify', html);
 
     // (Optional: Send alert/email here)
     res.status(200).json({ message: 'Registration request declined and email sent', request });
