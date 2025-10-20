@@ -9,6 +9,7 @@ const SubscriptionPlan = require('../models/SubscriptionPlan');
 const RegistrationRequest = require('../models/RegistrationRequest');
 const BusinessManager = require('../models/BusinessManager');
 const Skill = require('../models/Skill');
+const mongoose = require('mongoose');
 
 
 
@@ -30,6 +31,8 @@ exports.getJobPosts = async (req, res) => {
         education_requirements: 1,
         date_posted: 1,
         status: 1,
+        company_id: 1,      // <-- include company reference
+        recruiter_id: 1,    // <-- include recruiter reference if present
         skills: 1, // include skill IDs
       })
       .sort({ date_posted: -1 })
@@ -609,6 +612,76 @@ exports.getAnalyticsData = async (req, res) => {
   } catch (err) {
     console.error("getAnalyticsData error:", err);
     res.status(500).json({ message: "Error fetching analytics", error: err.message });
+  }
+};
+
+
+exports.getCompanyDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Load company and populate recruiters and subscription plan if possible
+    const company = await Company.findById(id)
+      .populate({ path: 'recruiters', select: '_id name email contactNumber company firstName lastName' })
+      .populate({ path: 'currentSubscription.plan', model: 'SubscriptionPlan' })
+      .lean();
+
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+
+    // Fetch jobs for this company (ensure company_id exists on JobPost)
+    const jobs = await Post.find({ company_id: company._id })
+      .select({
+        _id: 1,
+        title: 1,
+        description: 1,
+        location: 1,
+        salary: 1,
+        jobType: 1,
+        deadline: 1,
+        education_requirements: 1,
+        date_posted: 1,
+        status: 1,
+        company_id: 1,
+        skills: 1,
+      })
+      .sort({ date_posted: -1 })
+      .lean();
+
+    // Clean recruiters array (filter out nulls and normalize name)
+    const recruiters = (company.recruiters || [])
+      .filter(Boolean)
+      .map((r) => ({
+        _id: r._id,
+        name: r.name || `${r.firstName || ''} ${r.lastName || ''}`.trim(),
+        email: r.email,
+        contactNumber: r.contactNumber,
+        company: r.company,
+      }));
+
+    // If currentSubscription.plan is an ObjectId (not populated), try to fetch the plan
+    let plan = null;
+    if (company.currentSubscription?.plan) {
+      if (typeof company.currentSubscription.plan === 'object' && company.currentSubscription.plan.name) {
+        plan = company.currentSubscription.plan;
+      } else {
+        // fetch plan by id as fallback
+        try {
+          plan = await SubscriptionPlan.findById(company.currentSubscription.plan).lean();
+        } catch (e) {
+          plan = null;
+        }
+      }
+    }
+
+    res.status(200).json({
+      ...company,
+      recruiters,
+      jobs,
+      subscriptionPlan: plan,
+    });
+  } catch (err) {
+    console.error('getCompanyDetails error:', err);
+    res.status(500).json({ message: 'Error fetching company details', error: err.message });
   }
 };
 
