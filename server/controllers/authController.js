@@ -134,6 +134,8 @@ exports.companyRegister = async (req, res) => {
       }
     }
 
+    const hashedPasskey = await bcrypt.hash(passkey, 10);
+
     const newRequest = new RegistrationRequest({
       companyName,
       contactPerson,
@@ -144,7 +146,7 @@ exports.companyRegister = async (req, res) => {
       companySize: companySize || '',
       address,
       description: description || '',
-      passkey,
+      passkey: hashedPasskey,
       subscriptionPlan: planDetails || null,
     });
 
