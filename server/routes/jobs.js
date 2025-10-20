@@ -11,6 +11,7 @@ router.get("/fetchJobPost/:jobId", jobController.fetchJobPost);
 router.put("/changeJobStatus/:jobId", jobController.changeJobStatus);
 router.post("/changeApplicationStatus", jobController.changeApplicationStatus);
 router.post("/updateMatchScores", jobController.updateMatchScores);
+router.put("/updateJobPost/:jobId", jobController.updateJobPost);
 
 // You will also add the route for recruiters to POST new jobs here
 // const { createJobPost } = require('../controllers/jobController');

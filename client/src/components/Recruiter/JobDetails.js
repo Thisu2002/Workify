@@ -467,7 +467,7 @@ const JobDetails = ({
         <Box display="flex" gap={1}>
           <Button onClick={handleClose}>Cancel</Button>
           {isEditing ? (
-            <Button variant="contained" onClick={handleSave}>
+            <Button variant="contained" onClick={() => handleSave(editedJob)}>
               Save
             </Button>
           ) : (

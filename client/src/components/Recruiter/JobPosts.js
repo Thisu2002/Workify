@@ -46,6 +46,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedJob, setEditedJob] = useState(null);
+  const [jobs, setJobs] = useState([]);
   const [openJobs, setOpenJobs] = useState([]);
   const [closedJobs, setClosedJobs] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -79,19 +80,25 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
       const res = await axios.get("http://localhost:5000/recruiter/jobPosts", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const posts = res.data.map((p) => {
         const daysAgo = Math.floor(
           (Date.now() - new Date(p.date_posted)) / (1000 * 60 * 60 * 24)
         );
+        let postedAgo;
+        if(daysAgo < 0) postedAgo = "today";
+        else if(daysAgo === 1) postedAgo = "yesterday";
+        else postedAgo = `${daysAgo} days ago`;
         return {
           ...p,
           id: p._id,
           rate: p.salary ? p.salary : "",
           numApplicants: p.num_applicants,
-          postedAgo: daysAgo,
+          postedAgo,
           postedDate: new Date(p.date_posted),
         };
       });
+      setJobs(posts);
       setOpenJobs(posts.filter((p) => p.status === "Open"));
       setClosedJobs(posts.filter((p) => p.status === "Closed"));
     } catch (err) {
@@ -126,13 +133,108 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
 
   const handleEditToggle = () => setIsEditing(true);
 
-  const handleChange = (e) =>
-    setEditedJob({ ...editedJob, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+  const { name, value } = e.target;
+  const keys = name.split(".");
 
-  const handleSave = () => {
+  // Special handling for qualifications and preferred_qualifications
+  if (name === "qualifications" || name === "preferred_qualifications") {
+    const qualArray = value.split(",").map((q) => ({
+      name: q.trim(),
+      required: name === "qualifications",
+    }));
+
+    setEditedJob({
+      ...editedJob,
+      [name]: qualArray,
+    });
+  } else {
+    setEditedJob((prev) => {
+    const updated = { ...prev };
+    let current = updated;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (!current[key]) {
+        current[key] = isNaN(keys[i + 1]) ? {} : [];
+      }
+      current = current[key];
+    }
+
+    const lastKey = keys[keys.length - 1];
+    current[lastKey] = value;
+
+    return updated;
+  });
+  }
+};
+
+
+
+  // const handleSave = () => {
+  //   setSelectedJob(editedJob);
+  //   setIsEditing(false);
+  // };
+
+  const handleSave = async (updatedJob) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    // Prepare payload
+    const payload = {
+      title: updatedJob.title,
+      description: updatedJob.description,
+      location: updatedJob.location,
+      salary: updatedJob.salary,
+      jobType: updatedJob.jobType,
+      deadline: updatedJob.deadline,
+      skills: updatedJob.skills, // array of IDs
+
+      education_requirements: updatedJob.education_requirements?.map(e => ({
+        level: e.level,
+        field: e.field,
+      })) || [],
+
+      experience: {
+        years: updatedJob.experience?.years,
+        description: updatedJob.experience?.description,
+      },
+
+      qualifications: updatedJob.qualifications?.map(q => ({
+        name: q.name,
+        required: true, // since these are required ones
+      })) || [],
+
+      preferred_qualifications: updatedJob.preferred_qualifications?.map(q => ({
+        name: q.name,
+        required: false,
+      })) || [],
+
+      comments: updatedJob.comments,
+    };
+
+    // PUT request
+    const res = await axios.put(
+      `http://localhost:5000/api/jobs/updateJobPost/${updatedJob._id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    toast.success("Job post updated successfully");
+
+    await fetchPosts();
     setSelectedJob(editedJob);
     setIsEditing(false);
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error(err.response?.data?.error || "Failed to update job post");
+  }
+};
+
 
   const handleDelete = async (jobId) => {
     try {
@@ -327,7 +429,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
               {job.role}
             </Typography>
             <Typography sx={{ fontSize: "0.85rem", color: "#666" }}>
-              {job.numApplicants} applicants • Posted {job.postedAgo} days ago
+              {job.numApplicants} applicants • Posted {job.postedAgo}
             </Typography>
           </Box>
         </Box>

@@ -298,6 +298,11 @@ exports.postJob = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiter_id = decoded.id;
 
+    const recruiter = await Recruiter.findById(recruiter_id).select("company_id");
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
+
     const newPost = new Post({
       title,
       description,
@@ -312,6 +317,7 @@ exports.postJob = async (req, res) => {
       preferred_qualifications,
       comments,
       recruiter_id,
+      company_id: recruiter.company_id,
       interview_rounds,
       quiz,
     });

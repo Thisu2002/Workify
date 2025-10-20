@@ -11,23 +11,24 @@ import {
   Grid,
   MenuItem,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 
-const dummySkills = [
-  { id: 1, name: "JavaScript" },
-  { id: 2, name: "React" },
-  { id: 3, name: "Node.js" },
-  { id: 4, name: "MongoDB" },
-  { id: 5, name: "UI/UX" },
-  { id: 6, name: "Figma" },
-  { id: 7, name: "SQL" },
-  { id: 8, name: "Azure" },
-  { id: 9, name: "API Design" },
-  { id: 10, name: "Cloud" },
-  { id: 11, name: "AWS" },
-];
+// const fetchedSkills = [
+//   { id: 1, name: "JavaScript" },
+//   { id: 2, name: "React" },
+//   { id: 3, name: "Node.js" },
+//   { id: 4, name: "MongoDB" },
+//   { id: 5, name: "UI/UX" },
+//   { id: 6, name: "Figma" },
+//   { id: 7, name: "SQL" },
+//   { id: 8, name: "Azure" },
+//   { id: 9, name: "API Design" },
+//   { id: 10, name: "Cloud" },
+//   { id: 11, name: "AWS" },
+// ];
 
 const dummyQuizzes = [
   "UI Developer Fundamentals Quiz",
@@ -37,7 +38,7 @@ const dummyQuizzes = [
   "CSS & Design Systems Quiz",
 ];
 
-const PostJob = ({setShowJobForm, fetchPosts}) => {
+const PostJob = ({ setShowJobForm, fetchPosts }) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -60,9 +61,25 @@ const PostJob = ({setShowJobForm, fetchPosts}) => {
     { roundNumber: 1, panelId: "", roundName: "" },
   ]);
   const [panels, setPanels] = useState([]);
-  const [customSkill, setCustomSkill] = useState("");
+  const [fetchedSkills, setFetchedSkills] = useState([]);
 
   useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "http://localhost:5000/recruiter/fetchSkills",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setFetchedSkills(res.data);
+        //console.log("Skills fetched:", res.data);
+      } catch (err) {
+        console.error("Error fetching posts", err);
+      }
+    };
+
     const fetchPanels = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -86,6 +103,7 @@ const PostJob = ({setShowJobForm, fetchPosts}) => {
       }
     };
 
+    fetchSkills();
     fetchPanels();
   }, []);
 
@@ -405,31 +423,35 @@ const PostJob = ({setShowJobForm, fetchPosts}) => {
             <Typography variant="subtitle1" gutterBottom>
               Select Required Skills
             </Typography>
-            <Grid container spacing={1} alignItems="center">
-              {dummySkills.map((skill) => (
-                <Grid item key={skill.id}>
+            <Autocomplete
+              multiple
+              options={fetchedSkills}
+              getOptionLabel={(option) => option.name}
+              value={fetchedSkills.filter((skill) =>
+                selectedSkills.includes(skill.id)
+              )}
+              onChange={(event, newValue) => {
+                setSelectedSkills(newValue.map((skill) => skill.id));
+              }}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
                   <Chip
-                    label={skill.name}
-                    color={
-                      selectedSkills.includes(skill.id) ? "primary" : "default"
-                    }
-                    onClick={() => toggleSkill(skill.id)}
-                    clickable
-                    sx={{ fontSize: 14 }}
+                    label={option.name}
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    sx={{ fontWeight: 500 }}
                   />
-                </Grid>
-              ))}
-              <Grid item xs={12} sm={6} md={4}>
+                ))
+              }
+              renderInput={(params) => (
                 <TextField
-                  label="Add Custom Skill"
-                  value={customSkill}
-                  onChange={(e) => setCustomSkill(e.target.value)}
-                  fullWidth
-                  margin="normal"
-                  size="small"
+                  {...params}
+                  label="Skills"
+                  placeholder="Select skills"
                 />
-              </Grid>
-            </Grid>
+              )}
+              sx={{ mt: 1 }}
+            />
           </Box>
 
           <Button

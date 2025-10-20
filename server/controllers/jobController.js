@@ -209,3 +209,25 @@ exports.updateMatchScores = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.updateJobPost = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const updateData = req.body;
+
+    //console.log("Update data received:", jobId, updateData);
+
+    const updatedJob = await JobPost.findByIdAndUpdate(jobId, updateData, {
+      new: true,
+    });
+
+    if (!updatedJob) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    res.json(updatedJob);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update job post" });
+  }
+};
