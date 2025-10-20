@@ -23,4 +23,4 @@ const registrationRequestSchema = new mongoose.Schema({
   passkey: { type: String, required: true }
 }, { timestamps: true });
 
-module.exports = mongoosee.model('RegistrationRequest', registrationRequestSchema);
+module.exports = mongoose.model('RegistrationRequest', registrationRequestSchema);
