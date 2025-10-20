@@ -167,7 +167,7 @@ const JobPostings = () => {
               </li>
             ))}
           </ul>
-          {/* <Box mt={2}>
+          <Box mt={2}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Skills Required:</Typography>
             <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mt: 1 }}>
               {selectedJob?.skills?.map((skill, idx) => (
@@ -175,7 +175,7 @@ const JobPostings = () => {
                   sx={{ borderRadius: "16px", fontWeight: 500, fontSize: "0.97rem", borderColor: "#d1d5db", color: "#222", mb: 0.5 }} />
               ))}
             </Stack>
-          </Box> */}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>

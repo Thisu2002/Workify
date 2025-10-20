@@ -8,6 +8,8 @@ const Mentor = require('../models/Mentor');
 const SubscriptionPlan = require('../models/SubscriptionPlan');
 const RegistrationRequest = require('../models/RegistrationRequest');
 const BusinessManager = require('../models/BusinessManager');
+const Skill = require('../models/Skill');
+
 
 
 console.log('managerController loaded'); // debug
@@ -15,6 +17,7 @@ console.log('managerController loaded'); // debug
 // Get job posts with selected fields only
 exports.getJobPosts = async (req, res) => {
   try {
+    // Fetch all job posts
     const posts = await Post.find({})
       .select({
         _id: 1,
@@ -27,12 +30,29 @@ exports.getJobPosts = async (req, res) => {
         education_requirements: 1,
         date_posted: 1,
         status: 1,
+        skills: 1, // include skill IDs
       })
       .sort({ date_posted: -1 })
       .lean();
 
     console.log('managerController.getJobPosts -> found', posts.length, 'posts');
-    res.status(200).json(posts);
+
+    // Fetch all skills once for mapping
+    const allSkills = await Skill.find({}).lean();
+    const skillMap = {};
+    allSkills.forEach(skill => {
+      skillMap[skill.id] = skill.name;
+    });
+
+    // Map skill IDs to skill names for each post
+    const postsWithSkillNames = posts.map(post => ({
+      ...post,
+      skills: Array.isArray(post.skills)
+        ? post.skills.map(skillId => skillMap[skillId] || `Unknown(${skillId})`)
+        : [],
+    }));
+
+    res.status(200).json(postsWithSkillNames);
   } catch (err) {
     console.error('getJobPosts error:', err);
     res.status(500).json({
@@ -41,6 +61,7 @@ exports.getJobPosts = async (req, res) => {
     });
   }
 };
+
 
 exports.getCompanies = async (req, res) => {
   try {
