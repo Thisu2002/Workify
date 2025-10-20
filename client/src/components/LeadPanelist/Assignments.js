@@ -18,7 +18,17 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Paper
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl
 } from "@mui/material";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -243,6 +253,20 @@ const Assignments = () => {
   // Add panelMembers to new assignments
   const [openPanelDetails, setOpenPanelDetails] = useState(null); // assignment id or null
   
+  // Candidate modal states
+  const [openCandidateModal, setOpenCandidateModal] = useState(null); // assignment id or null
+  const [candidates, setCandidates] = useState([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [openFeedbackModal, setOpenFeedbackModal] = useState(null); // candidate id or null
+  const [feedbackText, setFeedbackText] = useState('');
+  const [candidateResults, setCandidateResults] = useState({}); // { candidateId: 'Selected'/'Rejected' }
+  const [candidateFeedbacks, setCandidateFeedbacks] = useState({}); // { candidateId: 'feedback text' }
+  
+  // Interview details modal states
+  const [openInterviewDetailsModal, setOpenInterviewDetailsModal] = useState(null); // assignment id or null
+  const [interviewResults, setInterviewResults] = useState([]);
+  const [loadingInterviewResults, setLoadingInterviewResults] = useState(false);
+  
   // New state for all assignments fetched from API
   const [allAssignments, setAllAssignments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -402,6 +426,182 @@ const Assignments = () => {
       console.error('Error sending availability:', error);
       alert('Error sending availability dates: ' + (error.response?.data?.error || 'Unknown error'));
     }
+  };
+
+  // Fetch candidates for a specific job
+  const fetchCandidatesForJob = async (jobId) => {
+    setLoadingCandidates(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      console.log('Fetching candidates for job:', jobId);
+      const response = await axios.get(
+        `http://localhost:5000/leadpanelist/job-candidates/${jobId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setCandidates(response.data.data || []);
+        console.log('Fetched candidates:', response.data.data);
+      } else {
+        alert('Failed to fetch candidates');
+        setCandidates([]);
+      }
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+      alert('Error fetching candidates: ' + (error.response?.data?.error || 'Unknown error'));
+      setCandidates([]);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  // Handle opening candidate modal
+  const handleOpenCandidateModal = (jobId) => {
+    setOpenCandidateModal(jobId);
+    fetchCandidatesForJob(jobId);
+  };
+
+  // Handle closing candidate modal
+  const handleCloseCandidateModal = () => {
+    setOpenCandidateModal(null);
+    setCandidates([]);
+    setCandidateResults({});
+    setCandidateFeedbacks({});
+  };
+
+  // Handle opening feedback modal
+  const handleOpenFeedbackModal = (candidateId) => {
+    setOpenFeedbackModal(candidateId);
+    setFeedbackText(candidateFeedbacks[candidateId] || '');
+  };
+
+  // Handle closing feedback modal
+  const handleCloseFeedbackModal = () => {
+    setOpenFeedbackModal(null);
+    setFeedbackText('');
+  };
+
+  // Handle saving feedback
+  const handleSaveFeedback = () => {
+    if (openFeedbackModal) {
+      setCandidateFeedbacks(prev => ({
+        ...prev,
+        [openFeedbackModal]: feedbackText
+      }));
+      handleCloseFeedbackModal();
+    }
+  };
+
+  // Handle result change
+  const handleResultChange = (candidateId, result) => {
+    setCandidateResults(prev => ({
+      ...prev,
+      [candidateId]: result
+    }));
+  };
+
+  // Handle finishing interviews
+  const handleFinishInterviews = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      const candidateData = candidates.map(candidate => ({
+        candidateJobId: candidate._id,
+        feedback: candidateFeedbacks[candidate._id] || '',
+        result: candidateResults[candidate._id] || ''
+      }));
+
+      console.log('Finishing interviews with data:', candidateData);
+
+      const response = await axios.post(
+        'http://localhost:5000/leadpanelist/finish-interviews',
+        {
+          jobId: openCandidateModal,
+          candidateData: candidateData
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        alert('Interview results saved successfully!');
+        handleCloseCandidateModal();
+        // Refresh assignments
+        window.location.reload();
+      } else {
+        alert('Failed to save interview results');
+      }
+    } catch (error) {
+      console.error('Error saving interview results:', error);
+      alert('Error saving interview results: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+  };
+
+  // Fetch interview results for completed job
+  const fetchInterviewResults = async (jobId) => {
+    setLoadingInterviewResults(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      console.log('Fetching interview results for job:', jobId);
+      const response = await axios.get(
+        `http://localhost:5000/leadpanelist/interview-results/${jobId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setInterviewResults(response.data.data || []);
+        console.log('Fetched interview results:', response.data.data);
+      } else {
+        alert('Failed to fetch interview results');
+        setInterviewResults([]);
+      }
+    } catch (error) {
+      console.error('Error fetching interview results:', error);
+      alert('Error fetching interview results: ' + (error.response?.data?.error || 'Unknown error'));
+      setInterviewResults([]);
+    } finally {
+      setLoadingInterviewResults(false);
+    }
+  };
+
+  // Handle opening interview details modal
+  const handleOpenInterviewDetailsModal = (jobId) => {
+    setOpenInterviewDetailsModal(jobId);
+    fetchInterviewResults(jobId);
+  };
+
+  // Handle closing interview details modal
+  const handleCloseInterviewDetailsModal = () => {
+    setOpenInterviewDetailsModal(null);
+    setInterviewResults([]);
   };
 
   // For the 'New' tab, ensure 3 cards per row (fill with empty Grid items if needed)
@@ -609,9 +809,9 @@ const Assignments = () => {
                         size="small"
                         variant="contained"
                         sx={{ backgroundColor: "#3B5998" }}
-                        onClick={() => navigate('/lead-panelist/candidates')}
+                        onClick={() => handleOpenCandidateModal(assignment.id)}
                       >
-                        Candidate View
+                        View Candidates
                       </Button>
                     </Box>
                   </CardContent>
@@ -665,24 +865,22 @@ const Assignments = () => {
                       </Box>
                     </Stack>
                     
-                    {/* Action Buttons */}
-                    <Box display="flex" gap={1} justifyContent="flex-end" alignItems="center" mt={2}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        sx={{ borderColor: "#3B5998", color: "#3B5998" }}
-                        onClick={() => handleOpenCalendar(assignment.id)}
+                    {/* Status Label */}
+                    <Box display="flex" justifyContent="center" alignItems="center" mt={2}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: "#FFA726", 
+                          fontWeight: 600,
+                          backgroundColor: "#FFF3E0",
+                          px: 2,
+                          py: 1,
+                          borderRadius: 2,
+                          border: "1px solid #FFE0B2"
+                        }}
                       >
-                        View Details
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        sx={{ backgroundColor: "#3B5998" }}
-                        onClick={() => setOpenPanelDetails(assignment.id)}
-                      >
-                        Request Panel
-                      </Button>
+                        Waiting for Final Date
+                      </Typography>
                     </Box>
                   </CardContent>
                 </Card>
@@ -738,6 +936,18 @@ const Assignments = () => {
                         </Typography>
                       </Box>
                     </Stack>
+                    
+                    {/* Action Button */}
+                    <Box display="flex" justifyContent="center" alignItems="center" mt={2}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{ backgroundColor: "#3B5998" }}
+                        onClick={() => handleOpenInterviewDetailsModal(assignment.id)}
+                      >
+                        View Interview Details
+                      </Button>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
@@ -802,6 +1012,237 @@ const Assignments = () => {
           </DialogActions>
         </Dialog>
       ))}
+
+      {/* Candidate Modal */}
+      <Dialog
+        open={openCandidateModal !== null}
+        onClose={handleCloseCandidateModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            minHeight: 500,
+            boxShadow: '0 8px 32px rgba(60,72,100,0.10)',
+            background: '#fff',
+            border: '1px solid #e3e8ee',
+          }
+        }}
+      >
+        <DialogTitle>Interview Candidates</DialogTitle>
+        <DialogContent>
+          {loadingCandidates ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>Loading candidates...</Typography>
+            </Box>
+          ) : candidates.length === 0 ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>No candidates found for this interview.</Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><Typography fontWeight={600}>Name</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Email</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Feedback</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Result</Typography></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {candidates.map((candidate) => (
+                    <TableRow key={candidate._id}>
+                      <TableCell>
+                        <Typography variant="body2">{candidate.candidateName || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{candidate.candidateEmail || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleOpenFeedbackModal(candidate._id)}
+                          sx={{ borderColor: "#3B5998", color: "#3B5998" }}
+                        >
+                          Add Feedback
+                        </Button>
+                        {candidateFeedbacks[candidate._id] && (
+                          <Typography variant="caption" display="block" color="success.main">
+                            Feedback added
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <FormControl component="fieldset">
+                          <RadioGroup
+                            row
+                            value={candidateResults[candidate._id] || ''}
+                            onChange={(e) => handleResultChange(candidate._id, e.target.value)}
+                          >
+                            <FormControlLabel 
+                              value="Selected" 
+                              control={<Radio size="small" />} 
+                              label="Selected" 
+                            />
+                            <FormControlLabel 
+                              value="Rejected" 
+                              control={<Radio size="small" />} 
+                              label="Rejected" 
+                            />
+                          </RadioGroup>
+                        </FormControl>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCandidateModal} variant="outlined" sx={{ borderRadius: 2, px: 4, fontWeight: 600, color: '#3B5998', borderColor: '#3B5998' }}>
+            Close
+          </Button>
+          <Button 
+            onClick={handleFinishInterviews} 
+            variant="contained" 
+            sx={{ borderRadius: 2, px: 4, fontWeight: 600, background: '#3B5998' }}
+            disabled={candidates.length === 0}
+          >
+            Finish Interviews
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Interview Details Modal for Completed Tab */}
+      <Dialog
+        open={openInterviewDetailsModal !== null}
+        onClose={handleCloseInterviewDetailsModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            minHeight: 360,
+            boxShadow: '0 8px 32px rgba(60,72,100,0.10)',
+            background: '#fff',
+            border: '1px solid #e3e8ee',
+          }
+        }}
+      >
+        <DialogTitle>Interview Results</DialogTitle>
+        <DialogContent>
+          {loadingInterviewResults ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>Loading interview results...</Typography>
+            </Box>
+          ) : interviewResults.length === 0 ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>No interview results found for this job.</Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><Typography fontWeight={600}>Name</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Email</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Feedback</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Result</Typography></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {interviewResults.map((row) => (
+                    <TableRow key={row._id}>
+                      <TableCell>
+                        <Typography variant="body2">{row.candidateName || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{row.candidateEmail || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 200 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical'
+                          }}
+                          title={row.feedback || 'No feedback'}
+                        >
+                          {row.feedback || 'No feedback'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={row.result || 'N/A'} 
+                          size="small"
+                          color={row.result === 'Selected' ? 'success' : row.result === 'Rejected' ? 'error' : 'default'}
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInterviewDetailsModal} variant="outlined" sx={{ borderRadius: 2, px: 4, fontWeight: 600, color: '#3B5998', borderColor: '#3B5998' }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Feedback Modal */}
+      <Dialog
+        open={openFeedbackModal !== null}
+        onClose={handleCloseFeedbackModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            boxShadow: '0 8px 32px rgba(60,72,100,0.10)',
+            background: '#fff',
+            border: '1px solid #e3e8ee',
+          }
+        }}
+      >
+        <DialogTitle>Add Feedback</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            placeholder="Enter your feedback for this candidate..."
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            variant="outlined"
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseFeedbackModal} variant="outlined" sx={{ borderRadius: 2, px: 4, fontWeight: 600, color: '#3B5998', borderColor: '#3B5998' }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveFeedback} 
+            variant="contained" 
+            sx={{ borderRadius: 2, px: 4, fontWeight: 600, background: '#3B5998' }}
+          >
+            Save Feedback
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

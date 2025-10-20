@@ -423,3 +423,229 @@ exports.testEndpoint = async (req, res) => {
   console.log('Test endpoint called');
   return res.json({ message: 'Test endpoint working' });
 };
+
+// Get candidates for a specific job with status "interviewScheduled"
+exports.getJobCandidates = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const leadPanelistId = req.user._id;
+
+    console.log('=== DEBUG: Fetching candidates for job:', jobId);
+
+    // Verify user has lead_panelist role
+    if (!req.user || !req.user.user_roles.includes('lead_panelist')) {
+      return res.status(403).json({ error: 'Access denied. User is not a lead panelist.' });
+    }
+
+    // Import CandidateJob model
+    const CandidateJob = require('../models/Candidate_Job');
+    const Candidate = require('../models/Candidate');
+    const User = require('../models/User');
+
+    // First, let's check what candidates exist for this job with any status
+    const allCandidatesForJob = await CandidateJob.find({
+      job_id: jobId
+    }).select('current_status candidate_id');
+    
+    console.log('=== DEBUG: All candidates for this job:', allCandidatesForJob.map(c => ({
+      id: c._id,
+      status: c.current_status,
+      candidateId: c.candidate_id
+    })));
+
+    // Fetch only candidates with status "1_interviewScheduled"
+    const candidateJobs = await CandidateJob.find({
+      job_id: jobId,
+      current_status: '1_interviewScheduled'
+    });
+    
+    console.log('=== DEBUG: Found', candidateJobs.length, 'candidates with status: 1_interviewScheduled');
+
+    console.log('=== DEBUG: Final candidate jobs found:', candidateJobs.length);
+
+    // Format the response using data directly from Candidate_Job model
+    const candidates = candidateJobs.map(candidateJob => ({
+      _id: candidateJob._id,
+      candidateName: `${candidateJob.firstName} ${candidateJob.lastName}`.trim() || 'N/A',
+      candidateEmail: candidateJob.contact?.email || 'N/A',
+      currentRound: candidateJob.round_status.length > 0 ? candidateJob.round_status.length : 1,
+      roundStatus: candidateJob.round_status
+    }));
+
+    res.json({
+      success: true,
+      data: candidates
+    });
+
+  } catch (error) {
+    console.error('=== ERROR in getJobCandidates:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error: ' + error.message
+    });
+  }
+};
+
+// Finish interviews and save feedback/results
+exports.finishInterviews = async (req, res) => {
+  try {
+    const { jobId, candidateData } = req.body;
+    const leadPanelistId = req.user._id;
+
+    console.log('=== DEBUG: Finishing interviews for job:', jobId);
+    console.log('=== DEBUG: Candidate data:', candidateData);
+
+    // Verify user has lead_panelist role
+    if (!req.user || !req.user.user_roles.includes('lead_panelist')) {
+      return res.status(403).json({ error: 'Access denied. User is not a lead panelist.' });
+    }
+
+    if (!jobId || !candidateData || !Array.isArray(candidateData)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Job ID and candidate data are required'
+      });
+    }
+
+    // Import CandidateJob model
+    const CandidateJob = require('../models/Candidate_Job');
+
+    // Process each candidate's feedback and result
+    for (const candidate of candidateData) {
+      const { candidateJobId, feedback, result } = candidate;
+
+      if (!candidateJobId) continue;
+
+      const candidateJob = await CandidateJob.findById(candidateJobId);
+      if (!candidateJob) {
+        console.log('=== DEBUG: Candidate job not found:', candidateJobId);
+        continue;
+      }
+
+      // Get the current round index
+      const currentRoundIndex = candidateJob.round_status.length > 0 ? candidateJob.round_status.length - 1 : 0;
+
+      // Update or create round status entry
+      if (candidateJob.round_status.length === 0) {
+        candidateJob.round_status.push({
+          round_feedback: feedback || '',
+          round_result: result || ''
+        });
+      } else {
+        candidateJob.round_status[currentRoundIndex].round_feedback = feedback || '';
+        candidateJob.round_status[currentRoundIndex].round_result = result || '';
+      }
+
+      // Update overall status based on result using the correct format
+      if (result === 'Selected') {
+        // Change from any "interviewScheduled" status to "selected" with round number
+        if (candidateJob.current_status.includes('interviewScheduled')) {
+          candidateJob.current_status = candidateJob.current_status.replace('interviewScheduled', 'selected');
+        } else {
+          candidateJob.current_status = '1_selected'; // fallback
+        }
+      } else if (result === 'Rejected') {
+        // Change from any "interviewScheduled" status to "rejected" with round number
+        if (candidateJob.current_status.includes('interviewScheduled')) {
+          candidateJob.current_status = candidateJob.current_status.replace('interviewScheduled', 'rejected');
+        } else {
+          candidateJob.current_status = '1_rejected'; // fallback
+        }
+      }
+
+      await candidateJob.save();
+      console.log('=== DEBUG: Updated candidate job:', candidateJobId);
+    }
+
+    // Update the job post status from "scheduled" to "completed"
+    const JobPost = require('../models/JobPost');
+    const jobPost = await JobPost.findById(jobId);
+    
+    if (jobPost) {
+      // Change current_status from any "scheduled" to "completed" (regardless of round number)
+      if (jobPost.current_status.includes('scheduled')) {
+        const newStatus = jobPost.current_status.replace('scheduled', 'completed');
+        console.log('=== DEBUG: Updating job status from', jobPost.current_status, 'to', newStatus);
+        jobPost.current_status = newStatus;
+        await jobPost.save();
+        console.log('=== DEBUG: Job post status updated successfully');
+      } else {
+        console.log('=== DEBUG: Job post status does not contain "scheduled":', jobPost.current_status);
+      }
+    } else {
+      console.log('=== DEBUG: Job post not found:', jobId);
+    }
+
+    res.json({
+      success: true,
+      message: 'Interview results saved successfully'
+    });
+
+  } catch (error) {
+    console.error('=== ERROR in finishInterviews:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error: ' + error.message
+    });
+  }
+};
+
+// Get interview results for a completed job
+exports.getInterviewResults = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const leadPanelistId = req.user._id;
+
+    console.log('=== DEBUG: Fetching interview results for job:', jobId);
+
+    // Verify user has lead_panelist role
+    if (!req.user || !req.user.user_roles.includes('lead_panelist')) {
+      return res.status(403).json({ error: 'Access denied. User is not a lead panelist.' });
+    }
+
+    // Import CandidateJob model
+    const CandidateJob = require('../models/Candidate_Job');
+
+    // Find all candidates for this job with status "selected" or "rejected" (any round)
+    const candidateJobs = await CandidateJob.find({
+      job_id: jobId,
+      $or: [
+        { current_status: { $regex: /selected/i } },
+        { current_status: { $regex: /rejected/i } }
+      ]
+    });
+
+    console.log('=== DEBUG: Found candidate jobs with selected/rejected status:', candidateJobs.length);
+
+    // Format the response
+    const interviewResults = candidateJobs.map(candidateJob => {
+      // Get the latest round status (most recent feedback/result)
+      const latestRoundStatus = candidateJob.round_status.length > 0 
+        ? candidateJob.round_status[candidateJob.round_status.length - 1]
+        : null;
+
+      return {
+        _id: candidateJob._id,
+        candidateName: `${candidateJob.firstName} ${candidateJob.lastName}`.trim() || 'N/A',
+        candidateEmail: candidateJob.contact?.email || 'N/A',
+        feedback: latestRoundStatus?.round_feedback || 'No feedback provided',
+        result: latestRoundStatus?.round_result || (candidateJob.current_status.includes('selected') ? 'Selected' : 'Rejected'),
+        currentStatus: candidateJob.current_status
+      };
+    });
+
+    console.log('=== DEBUG: Formatted interview results:', interviewResults.length);
+
+    res.json({
+      success: true,
+      data: interviewResults
+    });
+
+  } catch (error) {
+    console.error('=== ERROR in getInterviewResults:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error: ' + error.message
+    });
+  }
+};
