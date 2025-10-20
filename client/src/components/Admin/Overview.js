@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -14,9 +16,10 @@ import {
   Divider,
   Zoom
 } from "@mui/material";
-import { Group, Person, BarChart, AssignmentInd, Schedule, Feedback, WorkOutline,FiberManualRecord as OnlineIcon } from "@mui/icons-material";
+import { Group, Person, FiberManualRecord as OnlineIcon } from "@mui/icons-material";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { alpha } from '@mui/material/styles'; // For background color
+import { SupervisorAccount as MentorIcon, Work as RecruiterIcon } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
 import "../../styles/Admin.css";
 
 // Sample usage data for chart
@@ -29,22 +32,7 @@ const usageData = [
   { name: 'Jun', users: 1200 },
 ];
 
-// Total users stat
-const totalUsers = 1200;
-
-// Sample users with lastActive field
-const users = [
-  { name: "Gaveshika Peiris", role: "Recruiter", avatar: "https://randomuser.me/api/portraits/men/75.jpg", lastActive: "2025-07-14T09:30:00" },
-  { name: "Priya Sharma", role: "Mentor", avatar: "https://randomuser.me/api/portraits/women/65.jpg", lastActive: "2025-07-14T08:45:00" },
-  { name: "Rasha Peiris", role: "Lead Panelist", avatar: "https://randomuser.me/api/portraits/men/32.jpg", lastActive: "2025-07-13T17:20:00" }
-];
-
-// Sort and get the 10 most recently active users
-const recentActiveUsers = [...users]
-  .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive))
-  .slice(0, 10);
-
-
+// ✅ Stat Card Component
 const AdminStatCard = ({ icon, title, value, change, color = '#96BEC5', loading = false }) => (
   <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
     <Card className="admin-stat-card">
@@ -73,41 +61,101 @@ const AdminStatCard = ({ icon, title, value, change, color = '#96BEC5', loading 
 );
 
 const Overview = () => {
+  // ✅ These must be INSIDE your component
   const [activeTab, setActiveTab] = useState('overview');
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsersToday, setActiveUsersToday] = useState(0);
+  const [recentActiveUsers, setRecentActiveUsers] = useState([]);
+  const navigate = useNavigate();
+  const [usageData, setUsageData] = useState([]);
+  const [adminName, setAdminName] = useState('');
+  const [adminLastLogin, setAdminLastLogin] = useState(null);
+
+
+    useEffect(() => {
+    const fetchRecentActiveUsers = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/admin/recent-active-users');
+        setRecentActiveUsers(res.data);
+      } catch (err) {
+        console.error('Error fetching recent active users:', err);
+      }
+    };
+    fetchRecentActiveUsers();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/admin/user-count');
+        setTotalUsers(res.data.totalUsers);
+      } catch (err) {
+        console.error('Error fetching user count:', err);
+      }
+    };
+    fetchUserCount();
+  }, []);
+
+  useEffect(() => {
+  const fetchActiveUsersToday = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/admin/active-users-today');
+      setActiveUsersToday(res.data.activeUsersToday);
+    } catch (err) {
+      console.error('Error fetching active users today:', err);
+    }
+  };
+  fetchActiveUsersToday();
+}, []);
+
+  useEffect(() => {
+  const fetchUsageData = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/admin/platform-usage');
+      setUsageData(res.data);
+    } catch (err) {
+      console.error('Error fetching platform usage:', err);
+    }
+  };
+  fetchUsageData();
+}, []);
+
+  useEffect(() => {
+  const fetchAdminInfo = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/admin/admin-user');
+      setAdminName(`${res.data.firstName} ${res.data.lastName}`);
+      setAdminLastLogin(res.data.lastLogin ? new Date(res.data.lastLogin) : null);
+    } catch (err) {
+      console.error('Error fetching admin info:', err);
+    }
+  };
+  fetchAdminInfo();
+}, []);
+
+
+
+  // const recentActiveUsers = [...users]
+  //   .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive))
+  //   .slice(0, 10);
 
   return (
     <Box className="admin-dashboard-container">
-      {/* Navigation Bar */}
-      {/* <Paper className="admin-navigation" elevation={0}>
-        <Box className="admin-nav-container">
-          {adminTabs.map(tab => (
-            <button
-              key={tab.id}
-              className={`admin-nav-tab${activeTab === tab.id ? ' active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <span style={{ marginRight: 8 }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </Box>
-      </Paper> */}
 
       {/* Header */}
       <Paper className="admin-dashboard-header" elevation={0}>
-        <Box className="admin-header-content" >
+        <Box className="admin-header-content">
           <Box display="flex" alignItems="center" gap={3}>
             <Box position="relative">
-              <Avatar 
+              <Avatar
                 src=""
                 sx={{ width: 80, height: 80, border: '3px solid #96BEC5' }}
               />
-              <OnlineIcon 
+              <OnlineIcon
                 className="online-indicator"
-                sx={{ 
-                  position: 'absolute', 
-                  bottom: 5, 
+                sx={{
+                  position: 'absolute',
+                  bottom: 5,
                   right: 5,
                   color: '#10b981',
                   backgroundColor: '#0F2445',
@@ -117,15 +165,20 @@ const Overview = () => {
                 }}
               />
             </Box>
-            <Box  sx={{ minHeight: '200px' }}>
-              <Typography variant="h4" className="admin-welcome-text"  sx={{ mt: 6 }}>
-                Welcome back,<br />Gaveshika!
+            <Box sx={{ minHeight: '200px' }}>
+              <Typography variant="h4" className="admin-welcome-text" sx={{ mt: 6 }}>
+                Welcome back,<br />{adminName || 'Admin'}!
               </Typography>
+              <Typography variant="body2" color="text.secondary">
+  {adminLastLogin 
+    ? `Last login: ${adminLastLogin.toLocaleString()}`
+    : 'Welcome to the platform'}
+</Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
-                Technical Manager • 3 years experience
+                Technical Manager • Workify Platform
               </Typography>
             </Box>
-            {/* Admin Stat Card */}
+            {/* ✅ Dynamic User Count */}
             <AdminStatCard
               icon={<Group sx={{ fontSize: 40, color: "#96BEC5" }} />}
               title="Total Users"
@@ -133,48 +186,63 @@ const Overview = () => {
               change="+45 this month"
               color="#96BEC5"
             />
+            <AdminStatCard
+              icon={<Person sx={{ fontSize: 40, color: "#f59e0b" }} />}
+              title="Active Users Today"
+              value={activeUsersToday}
+              change="+5% since yesterday"
+              color="#f59e0b"
+            />
+
           </Box>
         </Box>
       </Paper>
 
-      {/* Usage Chart and Total Users */}
-      <Box sx={{ display: 'flex', gap: 3, mb: 3 , mt: 5}}>
-  <Paper className="admin-usage-chart" sx={{ flex: 1, p: 2, height: 250, maxWidth: 800 }}>
-    <Typography variant="h6" sx={{ mb: 2 }}>Platform Usage</Typography>
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={usageData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey="users" stroke="#96BEC5" strokeWidth={3} />
-      </LineChart>
-    </ResponsiveContainer>
-  </Paper>
-</Box>
+      {/* Usage Chart */}
+      <Box sx={{ display: 'flex', gap: 3, mb: 3, mt: 5 }}>
+        <Paper className="admin-usage-chart" sx={{ flex: 1, p: 2, height: 250, maxWidth: 800 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Platform Usage</Typography>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={usageData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="users" stroke="#96BEC5" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </Paper>
+      </Box>
 
-
-
-      {/* Recent Active Users Section */}
+      {/* Active Users */}
       <Paper className="admin-active-users" sx={{ p: 2 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Recent Active Users</Typography>
         <List className="admin-user-list">
-          {recentActiveUsers.map((user, idx) => (
-            <React.Fragment key={idx}>
-              <ListItem>
-                <ListItemAvatar>
-                  <Avatar src={""} />
-                </ListItemAvatar>
-                <ListItemText
-                  primary={user.name}
-                  secondary={`${user.role} • Active ${new Date(user.lastActive).toLocaleString()}`}
-                />
-                <Chip label={user.role} size="small" />
-              </ListItem>
-              {idx < recentActiveUsers.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-        </List>
+  {recentActiveUsers.map((user, idx) => (
+    <React.Fragment key={user.id}>
+      <ListItem
+        button
+          onClick={() => navigate('/admin/users', { state: { selectedUserId: user.id } })}
+      >
+        <ListItemAvatar>
+          {/* Use role-based icon */}
+          <Avatar>
+            {user.role.toLowerCase() === 'mentor' && <MentorIcon />}
+            {user.role.toLowerCase() === 'recruiter' && <RecruiterIcon />}
+            {user.role.toLowerCase() !== 'mentor' && user.role.toLowerCase() !== 'recruiter' && <Person />}
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText
+          primary={user.name}
+          secondary={`${user.role} • Active ${new Date(user.lastActive).toLocaleString()}`}
+        />
+        <Chip label={user.role} size="small" />
+      </ListItem>
+      {idx < recentActiveUsers.length - 1 && <Divider />}
+    </React.Fragment>
+  ))}
+</List>
+
       </Paper>
     </Box>
   );

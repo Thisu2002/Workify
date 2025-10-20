@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import "../../styles/users.css";
 
 const UserCard = ({ user, onClick }) => (
@@ -54,6 +55,8 @@ const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
+  const location = useLocation();
+  const selectedUserIdFromState = location.state?.selectedUserId;
 
   const actors = ['recruiters', 'candidates', 'mentors', 'business_managers'];
 
@@ -68,6 +71,20 @@ const UsersPage = () => {
     };
     fetchUsers();
   }, []);
+
+    useEffect(() => {
+    if (selectedUserIdFromState && allUsers) {
+      // flatten all users
+      const all = [
+        ...allUsers.recruiters,
+        ...allUsers.candidates,
+        ...allUsers.mentors,
+        ...allUsers.business_managers
+      ];
+      const user = all.find(u => u.id === selectedUserIdFromState);
+      if (user) setSelectedUser(user);
+    }
+  }, [selectedUserIdFromState, allUsers]);
 
   const uniqueCompanies = useMemo(() => {
     const companies = allUsers.recruiters.map((r) => r.company);
