@@ -19,7 +19,7 @@ import {
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
 
-const CandidateDetails = ({ candidate, skills, currentRound, onClose, onStatusChange }) => {
+const CandidateDetails = ({ candidate, skills, onClose, onStatusChange }) => {
   if (!candidate) return null;
 
   const handleStatusChange = async (newStatus) => {
@@ -33,9 +33,7 @@ const CandidateDetails = ({ candidate, skills, currentRound, onClose, onStatusCh
           },
           body: JSON.stringify({
             candidateId: candidate._id,
-            newCurrentStatus: `${currentRound}_${newStatus}`,
-            currentRound,
-            roundResult: newStatus,
+            newCurrentStatus: newStatus,
           }),
         }
       );

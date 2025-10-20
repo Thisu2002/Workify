@@ -52,8 +52,13 @@ const Candidates = () => {
       if (job.current_status) {
         const roundMatch = job.current_status.match(/^(\d+)_/);
         const roundNumber = roundMatch ? parseInt(roundMatch[1], 10) : null;
-        setCurrentRound(roundNumber);
-        if (roundNumber) {
+
+        if (job.current_status === "1_new") {
+          // Before any interviews — mark initial rejection filter as default
+          setCurrentRound(null);
+          setRoundFilters({ initialReject: true });
+        } else if (roundNumber) {
+          setCurrentRound(roundNumber);
           setRoundFilters({ [roundNumber]: true });
         }
       }
@@ -128,13 +133,11 @@ const Candidates = () => {
     await fetchJobPost();
   };
 
-  const changeJobStatus = async () => {
+  const changeJobStatus = async (newStatus) => {
     try {
       await axios.put(
         `http://localhost:5000/api/jobs/changeJobStatus/${jobId}`,
-        {
-          new_status: `${currentRound}_panelRequested`,
-        }
+        { new_status: newStatus }
       );
       fetchJobPost();
       toast.success("Panel availability requested successfully.");
@@ -153,6 +156,9 @@ const Candidates = () => {
         return status === "new";
 
       case "shortlisted":
+        return status !== "new" && status !== "rejected";
+
+      case "selected":
         return candidate.round_status?.some(
           (r) =>
             r.round_result !== "rejected" &&
@@ -161,8 +167,9 @@ const Candidates = () => {
         );
 
       case "rejected":
-        return candidate.round_status?.some(
-          (r) => r.round_result === "rejected"
+        return (
+          status === "rejected" ||
+          candidate.round_status?.some((r) => r.round_result === "rejected")
         );
 
       case "hired":
@@ -175,7 +182,7 @@ const Candidates = () => {
 
   // Apply round filters for Shortlisted / Rejected
   const roundFilteredCandidates = filteredCandidates.filter((candidate) => {
-    if (activeTab === "shortlisted" || activeTab === "rejected") {
+    if (activeTab === "selected" || activeTab === "rejected") {
       const selectedRounds = Object.keys(roundFilters).filter(
         (r) => roundFilters[r]
       );
@@ -186,19 +193,28 @@ const Candidates = () => {
         const roundNum = r.round_number?.toString();
         const result = r.round_result?.trim()?.toLowerCase();
 
-        if (!selectedRounds.includes(roundNum) || !result) return false;
-
-        if (activeTab === "shortlisted") {
+        if (activeTab === "selected") {
+          // For selected tab, only those not rejected in selected rounds
+          if (!selectedRounds.includes(roundNum) || !result) return false;
           return result !== "rejected";
         }
 
         if (activeTab === "rejected") {
+          // Handle initial rejection filter
+          if (
+            selectedRounds.includes("initialReject") &&
+            candidate.current_status === "rejected"
+          ) {
+            return true;
+          }
+          if (!selectedRounds.includes(roundNum) || !result) return false;
           return result === "rejected";
         }
 
         return false;
       });
     }
+
     return true;
   });
 
@@ -314,6 +330,7 @@ const Candidates = () => {
                 { key: "all", label: "All Candidates" },
                 { key: "toReview", label: "To Review" },
                 { key: "shortlisted", label: "Shortlisted" },
+                { key: "selected", label: "Selected" },
                 { key: "rejected", label: "Rejected" },
                 { key: "hired", label: "Hired" },
               ].map((tab) => (
@@ -374,11 +391,32 @@ const Candidates = () => {
           </Box>
 
           {/* Round Filters */}
-          {(activeTab === "shortlisted" || activeTab === "rejected") && (
+          {(activeTab === "selected" || activeTab === "rejected") && (
             <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
               <Typography variant="body2" sx={{ mr: 2 }}>
                 Filter by round:
               </Typography>
+
+              {/* Initial Shortlisting Rejects — only visible in Rejected tab */}
+              {activeTab === "rejected" && (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={!!roundFilters.initialReject}
+                      onChange={(e) =>
+                        setRoundFilters({
+                          ...roundFilters,
+                          initialReject: e.target.checked,
+                        })
+                      }
+                    />
+                  }
+                  label="Initial Shortlisting"
+                />
+              )}
+
+              {/* Normal rounds (visible in both Selected and Rejected) */}
               {jobPost?.interview_rounds?.map((round) => (
                 <FormControlLabel
                   key={round.round_number}
@@ -475,17 +513,23 @@ const Candidates = () => {
             ))}
           </Box>
 
-          {/* Button shown only if Shortlisted tab and only current round selected */}
-          {activeTab === "shortlisted" &&
-            currentRound &&
-            roundFilters[currentRound] &&
-            Object.keys(roundFilters).filter((r) => roundFilters[r]).length ===
-              1 && (
+          {(activeTab === "shortlisted" || activeTab === "selected") && (
               <Box display="flex" justifyContent="flex-end">
                 <Button
                   variant="contained"
-                  onClick={changeJobStatus}
-                  disabled={jobPost?.current_status?.includes("panelRequested")}
+                  disabled={
+                    activeTab === "shortlisted"
+                      ? jobPost?.current_status !== "1_new"
+                      : !jobPost?.current_status?.includes("completed")
+                  }
+                  onClick={() => {
+                    const newStatus =
+                      activeTab === "shortlisted"
+                        ? "1_panelRequested"
+                        : `${currentRound + 1}_panelRequested`;
+
+                    changeJobStatus(newStatus);
+                  }}
                 >
                   Check Panel Availability
                 </Button>
@@ -496,7 +540,6 @@ const Candidates = () => {
         <CandidateDetails
           candidate={selectedCandidate}
           skills={skills}
-          currentRound={currentRound}
           onClose={() => setSelectedCandidate(null)}
           onStatusChange={refreshCandidates}
         />

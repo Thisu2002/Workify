@@ -134,9 +134,9 @@ exports.changeJobStatus = async (req, res) => {
 
 exports.changeApplicationStatus = async (req, res) => {
   try {
-    const { candidateId, newCurrentStatus, currentRound, roundResult } = req.body;
+    const { candidateId, newCurrentStatus } = req.body;
 
-    if (!candidateId || !newCurrentStatus || !currentRound || !roundResult) {
+    if (!candidateId || !newCurrentStatus) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
@@ -147,19 +147,19 @@ exports.changeApplicationStatus = async (req, res) => {
 
     candidate.current_status = newCurrentStatus;
 
-    const roundIndex = candidate.round_status.findIndex(
-      (r) => r.round_number === currentRound
-    );
+    // const roundIndex = candidate.round_status.findIndex(
+    //   (r) => r.round_number === currentRound
+    // );
 
-    if (roundIndex !== -1) {
-      candidate.round_status[roundIndex].round_result = roundResult;
-    } else {
-      candidate.round_status.push({
-        round_number: currentRound,
-        round_result: roundResult,
-        round_feedback: "",
-      });
-    }
+    // if (roundIndex !== -1) {
+    //   candidate.round_status[roundIndex].round_result = roundResult;
+    // } else {
+    //   candidate.round_status.push({
+    //     round_number: currentRound,
+    //     round_result: roundResult,
+    //     round_feedback: "",
+    //   });
+    // }
 
     await candidate.save();
 
