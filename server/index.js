@@ -28,6 +28,10 @@ app.use('/api/mentoring', require('./routes/mentoring'));
 const mentorRoutes = require('./routes/mentors');
 app.use('/api/mentors', mentorRoutes);
 
+// Application tracking routes
+const applicationTrackerRoutes = require('./routes/applicationTracker');
+app.use('/api/applicationTracker', applicationTrackerRoutes);
+
 //app.use('/user', require('./routes/user')); // Assuming you have a user route
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

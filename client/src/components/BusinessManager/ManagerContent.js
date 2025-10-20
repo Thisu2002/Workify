@@ -8,6 +8,7 @@ import BlacklistRequest from "./BlacklistRequest";
 import SubscriptionPlans from "./SubscriptionPlans";
 import JobPostings from "./jobpostings";
 import ManagerFeedback from "./ManagerFeedback";
+import Analytics from "./Analytics";
 import { Box } from "@mui/material";
 
 const ManagerContent = ({showJobForm, setShowJobForm}) => {
@@ -25,6 +26,7 @@ const ManagerContent = ({showJobForm, setShowJobForm}) => {
       {location.pathname === "/manager/subscription-plans" && <SubscriptionPlans />}
       {location.pathname === "/manager/jobPosts" && <JobPostings />}
       {location.pathname === "/manager/feedback" && <ManagerFeedback />}
+      {location.pathname === "/manager/analytics" && <Analytics />}
       {/* {location.pathname === "/admin/analytics" && <Analytics />} */}
       {/* {location.pathname.startsWith("/pet-owners/view-owner/") && (
             <ViewOwner />
