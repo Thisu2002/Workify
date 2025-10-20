@@ -1,57 +1,70 @@
 // server/controllers/authController.js
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const Candidate = require('../models/Candidate');
-const Mentor = require('../models/Mentor');
-const Recruiter = require('../models/Recruiter');
-const SubscriptionPlan = require('../models/SubscriptionPlan');
-const RegistrationRequest = require('../models/RegistrationRequest');
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const Candidate = require("../models/Candidate");
+const MentorVerification = require("../models/MentorVerification");
+const Recruiter = require("../models/Recruiter");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
+const RegistrationRequest = require("../models/RegistrationRequest");
 
 exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: 'User not found' });
+  try {
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Check password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
 
-        // Prioritize role
-        let prioritizedRole = 'user';
-        if (user.user_roles.includes('mentor')) prioritizedRole = 'mentor';
-        else prioritizedRole = user.user_roles[0] || 'user';
+    // Prioritize role
+    let prioritizedRole = "user";
+    if (user.user_roles.includes("mentor")) prioritizedRole = "mentor";
+    else prioritizedRole = user.user_roles[0] || "user";
 
-        // Create token
-        const token = jwt.sign(
-            { id: user._id, role: prioritizedRole },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
+    // Create token
+    const token = jwt.sign(
+      { id: user._id, role: prioritizedRole },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-        // Send response
-        res.json({
-            token,
-            userDetails: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-            },
-            role: prioritizedRole,
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
+    // Send response
+    res.json({
+      token,
+      userDetails: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      },
+      role: prioritizedRole,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 exports.signup = async (req, res) => {
-  const { firstName, lastName, email, password, role, address, companyId } = req.body.formData;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    role,
+    address,
+    companyId,
+    contactNumber,
+    field,
+    experience,
+    bio,
+    linkedin,
+  } = req.body.formData;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -61,48 +74,47 @@ exports.signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      user_roles: [role],
-    });
-
-    await newUser.save();
-
-    //After user creation, add to role-specific collections
-    if (role === "candidate") {
-      const newCandidate = new Candidate({
-        _id: newUser._id,
-      });
-      await newCandidate.save();
-    } else if (role === "mentor") {
-      const newMentor = new Mentor({
-        _id: newUser._id,
-        name: `${firstName} ${lastName}`,
+    if (role === "candidate" || role === "recruiter") {
+      const newUser = new User({
+        firstName,
+        lastName,
         email,
+        password: hashedPassword,
+        user_roles: [role],
       });
-      await newMentor.save();
-    } else if (role === "recruiter") {
-      const newRecruiter = new Recruiter({
-        _id: newUser._id,
-        address: address,
-        company_id: companyId,
-      });
-      await newRecruiter.save();
+      await newUser.save();
+
+      if (role === "candidate") {
+        await new Candidate({ _id: newUser._id }).save();
+      } else {
+        await new Recruiter({
+          _id: newUser._id,
+          address: address || "",
+          company_id: companyId || null,
+        }).save();
+      }
+    } else if (role === "mentor") {
+      await new MentorVerification({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        contactNumber,
+        field,
+        experience,
+        bio: bio || "",
+        linkedin: linkedin || "",
+      }).save();
     }
 
     res.status(201).json({
       message: "User registered successfully",
-      userId: newUser._id,
     });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Signup failed", error: err.message });
   }
 };
-
 
 // POST /auth/check-email
 exports.checkEmail = async (req, res) => {
@@ -112,14 +124,24 @@ exports.checkEmail = async (req, res) => {
     const user = await User.findOne({ email });
     res.json({ exists: !!user });
   } catch (err) {
-    res.status(500).json({ message: 'Error checking email' });
+    res.status(500).json({ message: "Error checking email" });
   }
 };
 
 exports.companyRegister = async (req, res) => {
   try {
-    const { 
-      companyName, contactPerson, email, phone, website, industry, companySize, address, description, passkey, subscriptionPlan
+    const {
+      companyName,
+      contactPerson,
+      email,
+      phone,
+      website,
+      industry,
+      companySize,
+      address,
+      description,
+      passkey,
+      subscriptionPlan,
     } = req.body.formData;
 
     let planDetails = null;
@@ -140,21 +162,25 @@ exports.companyRegister = async (req, res) => {
       companyName,
       contactPerson,
       email,
-      phone: phone || '',
-      website: website || '',
-      industry: industry || '',
-      companySize: companySize || '',
+      phone: phone || "",
+      website: website || "",
+      industry: industry || "",
+      companySize: companySize || "",
       address,
-      description: description || '',
+      description: description || "",
       passkey: hashedPasskey,
       subscriptionPlan: planDetails || null,
     });
 
     await newRequest.save();
 
-    res.status(201).json({ message: 'Company registration request submitted successfully!' });
+    res
+      .status(201)
+      .json({
+        message: "Company registration request submitted successfully!",
+      });
   } catch (err) {
-    console.error('Company registration failed:', err);
-    res.status(500).json({ message: 'Server error. Please try again.' });
+    console.error("Company registration failed:", err);
+    res.status(500).json({ message: "Server error. Please try again." });
   }
 };
