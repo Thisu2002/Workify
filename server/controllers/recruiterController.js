@@ -2,6 +2,245 @@ const Post = require('../models/JobPost');
 const jwt = require('jsonwebtoken');
 const Panel = require('../models/Panel');
 const Skill = require('../models/Skill');
+const CandidateJob = require('../models/Candidate_Job');
+const Recruiter = require('../models/Recruiter');
+const Company = require('../models/Company');
+const User = require('../models/User');
+
+// Dashboard Statistics
+exports.getDashboardStats = async (req, res) => {
+  try {
+    // Get recruiter ID from authenticated user
+    const recruiterId = req.user.id;
+
+    // Get filter parameter (default to 'weekly')
+    const { filter = 'weekly', acquisitionMonth = 'current' } = req.query;
+
+    // Get recruiter with company info and user info
+    const recruiter = await Recruiter.findById(recruiterId).populate('company_id');
+    if (!recruiter) {
+      return res.status(404).json({ message: 'Recruiter not found' });
+    }
+
+    // Get user details for profile
+    const user = await User.findById(recruiterId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get all job posts for this recruiter
+    const allJobs = await Post.find({ recruiter_id: recruiterId });
+    const jobIds = allJobs.map(job => job._id);
+
+    // 1. Job Posts Count (Open)
+    const openJobsCount = allJobs.filter(job => job.status === 'Open').length;
+
+    // 2. Applications Count (New this month)
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const newApplicationsCount = await CandidateJob.countDocuments({
+      job_id: { $in: jobIds },
+      date_applied: { $gte: firstDayOfMonth }
+    });
+
+    // 3. Scheduled Interviews Count (only scheduled, not completed)
+    // Include: scheduled, interviewPending, interviewScheduled, candidatesNotified (exclude interviewCompleted)
+    const scheduledInterviewsCount = await CandidateJob.countDocuments({
+      job_id: { $in: jobIds },
+      current_status: { $regex: /(scheduled|interviewPending|interviewScheduled|candidatesNotified)(?!.*completed)/i }
+    });    // 4. Top Active Jobs (with filter: daily, weekly, monthly)
+    let filterDate = new Date();
+    if (filter === 'daily') {
+      filterDate.setHours(0, 0, 0, 0); // Start of today
+    } else if (filter === 'weekly') {
+      filterDate.setDate(filterDate.getDate() - 7); // Last 7 days
+    } else if (filter === 'monthly') {
+      filterDate.setMonth(filterDate.getMonth() - 1); // Last 30 days
+    }
+
+    const topJobs = await Promise.all(
+      allJobs.slice(0, 10).map(async (job) => {
+        const applications = await CandidateJob.countDocuments({
+          job_id: job._id,
+          date_applied: { $gte: filterDate }
+        });
+        const shortlisted = await CandidateJob.countDocuments({
+          job_id: job._id,
+          current_status: { $regex: /shortlisted/i }
+        });
+        const rejected = await CandidateJob.countDocuments({
+          job_id: job._id,
+          current_status: { $regex: /rejected/i }
+        });
+
+        return {
+          jobId: job._id,
+          jobTitle: job.title,
+          applications,
+          shortlisted,
+          rejected
+        };
+      })
+    );
+
+    // Sort by applications and get top jobs
+    const sortedTopJobs = topJobs.sort((a, b) => b.applications - a.applications).slice(0, 5);
+
+    // Get daily application data for chart
+    const applicationsByDate = await CandidateJob.aggregate([
+      {
+        $match: {
+          job_id: { $in: jobIds },
+          date_applied: { $gte: filterDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$date_applied" }
+          },
+          applications: { $sum: 1 },
+          shortlisted: {
+            $sum: {
+              $cond: [{ $regexMatch: { input: "$current_status", regex: /shortlisted/i } }, 1, 0]
+            }
+          },
+          rejected: {
+            $sum: {
+              $cond: [{ $regexMatch: { input: "$current_status", regex: /rejected/i } }, 1, 0]
+            }
+          }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Fill in missing dates with zero values
+    const daysToShow = filter === 'daily' ? 7 : filter === 'weekly' ? 7 : 30;
+    const chartData = [];
+    const today = new Date();
+    
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const existingData = applicationsByDate.find(d => d._id === dateStr);
+      
+      chartData.push({
+        date: dateStr,
+        applications: existingData ? existingData.applications : 0,
+        shortlisted: existingData ? existingData.shortlisted : 0,
+        rejected: existingData ? existingData.rejected : 0
+      });
+    }
+
+    // 5. Acquisitions (Application Funnel - with month filter)
+    // Calculate the month range based on acquisitionMonth parameter
+    const now = new Date();
+    let acquisitionStartDate, acquisitionEndDate;
+    let monthLabel;
+    
+    if (acquisitionMonth === 'current') {
+      // Current month (October 2025)
+      acquisitionStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      acquisitionEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      monthLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    } else {
+      // Parse month offset (e.g., "1" for last month, "2" for 2 months ago, etc.)
+      const monthsAgo = parseInt(acquisitionMonth) || 0;
+      const targetMonth = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+      acquisitionStartDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
+      acquisitionEndDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0, 23, 59, 59);
+      monthLabel = targetMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+    
+    const totalApplicationsFiltered = await CandidateJob.countDocuments({
+      job_id: { $in: jobIds },
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
+    });
+
+    const shortlistedFiltered = await CandidateJob.countDocuments({
+      job_id: { $in: jobIds },
+      current_status: { $regex: /shortlisted/i },
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
+    });
+
+    const onHoldFiltered = await CandidateJob.countDocuments({
+      job_id: { $in: jobIds },
+      current_status: { $regex: /on-hold/i },
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
+    });
+
+    const rejectedFiltered = await CandidateJob.countDocuments({
+      job_id: { $in: jobIds },
+      current_status: { $regex: /rejected/i },
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
+    });
+
+    const acquisitions = {
+      applicationsPercentage: totalApplicationsFiltered > 0 ? Math.round((totalApplicationsFiltered / totalApplicationsFiltered) * 100) : 0,
+      shortlistedPercentage: totalApplicationsFiltered > 0 ? Math.round((shortlistedFiltered / totalApplicationsFiltered) * 100) : 0,
+      onHoldPercentage: totalApplicationsFiltered > 0 ? Math.round((onHoldFiltered / totalApplicationsFiltered) * 100) : 0,
+      rejectedPercentage: totalApplicationsFiltered > 0 ? Math.round((rejectedFiltered / totalApplicationsFiltered) * 100) : 0,
+      // Add actual counts
+      applicationsCount: totalApplicationsFiltered,
+      shortlistedCount: shortlistedFiltered,
+      onHoldCount: onHoldFiltered,
+      rejectedCount: rejectedFiltered,
+      monthLabel: monthLabel
+    };
+
+    // 6. New Applicants (Latest 10 applicants, not just today)
+    const newApplicants = await CandidateJob.find({
+      job_id: { $in: jobIds }
+    })
+      .populate('job_id', 'title')
+      .sort({ date_applied: -1 })
+      .limit(10);
+
+    const applicantsList = newApplicants.map(app => ({
+      name: `${app.firstName} ${app.lastName}`,
+      jobTitle: app.job_id?.title || 'Unknown Job',
+      appliedDate: app.date_applied
+    }));
+
+    // 7. Company Profile
+    const companyProfile = {
+      name: recruiter.company_id?.name || 'Unknown Company',
+      location: recruiter.company_id?.location || 'Unknown Location',
+      description: recruiter.company_id?.description || '',
+      verified: true,
+      badge: 'Expert'
+    };
+
+    // 8. User Profile Details
+    const userProfile = {
+      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+      email: user.email || '',
+      role: 'Hiring Manager',
+      experience: '3 years experience'
+    };
+
+    res.status(200).json({
+      jobPosts: openJobsCount,
+      applications: newApplicationsCount,
+      interviews: scheduledInterviewsCount,
+      topActiveJobs: sortedTopJobs,
+      topActiveJobsFilter: filter,
+      chartData: chartData, // Add actual date-based chart data
+      acquisitions,
+      newApplicants: applicantsList,
+      companyProfile,
+      userProfile
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching dashboard stats', error: err.message });
+  }
+};
 
 exports.getJobPosts = async (req, res) => {
     try {
