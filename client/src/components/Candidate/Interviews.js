@@ -210,15 +210,6 @@ const Interviews = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box>
-        {/* Header with Refresh Button */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            My Interviews
-          </Typography>
-          <Button variant="outlined" onClick={fetchInterviews} disabled={isLoading}>
-            {isLoading ? <CircularProgress size={20} /> : 'Refresh'}
-          </Button>
-        </Box>
 
         {/* Upcoming Interviews Section */}
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
