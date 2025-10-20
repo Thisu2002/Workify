@@ -356,6 +356,54 @@ const Assignments = () => {
     });
   };
 
+  const handleSendAvailability = async (assignmentId) => {
+    try {
+      const dates = selectedDates[assignmentId] || [];
+      const validDates = dates.filter(date => date !== null && date !== undefined);
+      
+      if (validDates.length === 0) {
+        alert('Please select at least one date before sending availability.');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      console.log('Sending availability for assignment:', assignmentId);
+      console.log('Selected dates:', validDates);
+
+      const response = await axios.post(
+        'http://localhost:5000/leadpanelist/send-availability',
+        {
+          jobId: assignmentId,
+          availableDates: validDates.map(date => date.toISOString())
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        alert('Availability dates sent successfully!');
+        handleCloseCalendar();
+        
+        // Refresh the assignments to reflect the updated status
+        window.location.reload();
+      } else {
+        alert('Failed to send availability dates. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending availability:', error);
+      alert('Error sending availability dates: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+  };
+
   // For the 'New' tab, ensure 3 cards per row (fill with empty Grid items if needed)
   const isNewTab = currentTab === 0;
   const cardsToShow = isNewTab ? 3 : filteredAssignments.length;
@@ -484,6 +532,13 @@ const Assignments = () => {
                           </DialogContent>
                           <DialogActions>
                             <Button onClick={handleCloseCalendar}>Close</Button>
+                            <Button 
+                              onClick={() => handleSendAvailability(assignment.id)}
+                              variant="contained"
+                              sx={{ backgroundColor: "#3B5998" }}
+                            >
+                              Send Availability
+                            </Button>
                           </DialogActions>
                         </Dialog>
                       </LocalizationProvider>

@@ -319,6 +319,105 @@ exports.getPendingAssignments = async (req, res) => {
   }
 };
 
+// Send availability dates for a job post
+exports.sendAvailability = async (req, res) => {
+  try {
+    const { jobId, availableDates } = req.body;
+    const leadPanelistId = req.user._id;
+    
+    console.log('=== DEBUG: Sending availability for job:', {
+      jobId,
+      availableDates,
+      leadPanelistId
+    });
+    
+    // Validate input
+    if (!jobId || !availableDates || !Array.isArray(availableDates)) {
+      return res.status(400).json({ 
+        error: 'Invalid input. Job ID and available dates array are required.' 
+      });
+    }
+    
+    // Filter out null/empty dates and validate
+    const validDates = availableDates
+      .filter(date => date && date.trim() !== '')
+      .map(date => new Date(date));
+    
+    if (validDates.length === 0) {
+      return res.status(400).json({ 
+        error: 'At least one valid date must be provided.' 
+      });
+    }
+    
+    console.log('=== DEBUG: Valid dates:', validDates);
+    
+    // Find the job post
+    const jobPost = await JobPost.findById(jobId);
+    if (!jobPost) {
+      return res.status(404).json({ error: 'Job post not found.' });
+    }
+    
+    // Verify user has lead_panelist role
+    if (!req.user || !req.user.user_roles.includes('lead_panelist')) {
+      return res.status(403).json({ error: 'Access denied. User is not a lead panelist.' });
+    }
+    
+    // Find the panel for this lead panelist
+    const Panel = require('../models/Panel');
+    const panel = await Panel.findOne({ lead_panelist: leadPanelistId });
+    if (!panel) {
+      return res.status(403).json({ error: 'No panel found for this lead panelist.' });
+    }
+    
+    console.log('=== DEBUG: Found panel:', panel._id);
+    
+    // Find the relevant interview round that uses this panel
+    const relevantRoundIndex = jobPost.interview_rounds.findIndex(round => 
+      round.panel_id && round.panel_id.toString() === panel._id.toString()
+    );
+    
+    if (relevantRoundIndex === -1) {
+      return res.status(403).json({ 
+        error: 'This panel is not assigned to any round for this job post.' 
+      });
+    }
+    
+    console.log('=== DEBUG: Found relevant round at index:', relevantRoundIndex);
+    
+    // Update the available_dates for the relevant round
+    jobPost.interview_rounds[relevantRoundIndex].available_dates = validDates.map(date => ({ date }));
+    
+    // Update current_status from "panelRequested" to "panelConfirmed"
+    // Handle different round numbers (1_panelRequested -> 1_panelConfirmed, etc.)
+    const currentStatus = jobPost.current_status;
+    if (currentStatus.includes('panelRequested')) {
+      jobPost.current_status = currentStatus.replace('panelRequested', 'panelConfirmed');
+      console.log('=== DEBUG: Updated status from', currentStatus, 'to', jobPost.current_status);
+    } else {
+      console.log('=== DEBUG: Current status does not contain "panelRequested":', currentStatus);
+    }
+    
+    // Save the updated job post
+    await jobPost.save();
+    
+    console.log('=== DEBUG: Successfully updated job post');
+    
+    res.status(200).json({
+      success: true,
+      message: 'Availability dates saved successfully.',
+      data: {
+        jobId: jobPost._id,
+        updatedStatus: jobPost.current_status,
+        availableDates: jobPost.interview_rounds[relevantRoundIndex].available_dates
+      }
+    });
+    
+  } catch (err) {
+    console.error('=== ERROR in sendAvailability:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+};
+
 // Add a simple test endpoint to verify route setup
 exports.testEndpoint = async (req, res) => {
   console.log('Test endpoint called');
