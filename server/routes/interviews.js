@@ -14,7 +14,7 @@ router.get('/upcoming', auth, async (req, res) => {
   try {
     const candidateId = req.user.id;
     
-    console.log('🔍 Fetching upcoming interviews for candidate:', candidateId);
+    console.log('Fetching upcoming interviews for candidate:', candidateId);
     
     // Step 1: Find candidate_job records with interviewPending status
     const candidateJobs = await Candidate_Job.find({ 
@@ -22,10 +22,9 @@ router.get('/upcoming', auth, async (req, res) => {
       current_status: { $regex: /interviewPending/i }
     });
     
-    console.log('✅ Found candidate jobs with interviewPending status:', candidateJobs.length);
+    console.log('Found candidate jobs with interviewPending status:', candidateJobs.length);
     
     if (candidateJobs.length === 0) {
-      console.log('❌ No candidate jobs found with interviewPending status');
       return res.status(200).json({
         success: true,
         data: [],
@@ -35,16 +34,14 @@ router.get('/upcoming', auth, async (req, res) => {
     
     // Step 2: Find corresponding Interview records
     const candidateJobIds = candidateJobs.map(cj => cj._id);
-    console.log('🔎 Looking for interviews with candidate_job_ids:', candidateJobIds.map(id => id.toString()));
     
     const interviews = await Interview.find({ 
       candidate_job_id: { $in: candidateJobIds }
     }).sort({ scheduled_date: 1 });
     
-    console.log('📅 Found scheduled interview records:', interviews.length);
+    console.log('Found scheduled interview records:', interviews.length);
     
     if (interviews.length === 0) {
-      console.log('❌ No interview records found in interviews table');
       return res.status(200).json({
         success: true,
         data: [],
@@ -61,16 +58,14 @@ router.get('/upcoming', auth, async (req, res) => {
           );
           
           if (!candidateJob) {
-            console.log(`❌ Candidate_Job not found for interview ${interview._id}`);
+            console.log(`Candidate_Job not found for interview ${interview._id}`);
             return null;
           }
-          
-          console.log(`✅ Processing interview for candidate_job: ${candidateJob._id}, status: ${candidateJob.current_status}`);
           
           // Get job and company details
           const jobPost = await JobPost.findById(candidateJob.job_id);
           if (!jobPost) {
-            console.log(`❌ Job post not found for ID: ${candidateJob.job_id}`);
+            console.log(`Job post not found for ID: ${candidateJob.job_id}`);
             return {
               id: interview._id,
               applicationId: candidateJob._id,
@@ -101,8 +96,6 @@ router.get('/upcoming', auth, async (req, res) => {
           else if (round === 2) roundLabel = '2nd Round'; 
           else if (round >= 3) roundLabel = 'Final Round';
           
-          console.log(`✅ Successfully processed interview: ${jobPost.title} at ${company?.name || 'Unknown Company'} - ${roundLabel}`);
-          
           return {
             id: interview._id,
             applicationId: candidateJob._id,
@@ -119,7 +112,7 @@ router.get('/upcoming', auth, async (req, res) => {
             candidate_job_status: candidateJob.current_status
           };
         } catch (error) {
-          console.error(`❌ Error processing interview ${interview._id}:`, error);
+          console.error(`Error processing interview ${interview._id}:`, error);
           return null;
         }
       })
@@ -127,7 +120,7 @@ router.get('/upcoming', auth, async (req, res) => {
     
     const validInterviews = upcomingInterviews.filter(interview => interview !== null);
     
-    console.log('🎉 Successfully formatted upcoming interviews:', validInterviews.length);
+    console.log('Successfully formatted upcoming interviews:', validInterviews.length);
     
     return res.status(200).json({
       success: true,
@@ -135,7 +128,7 @@ router.get('/upcoming', auth, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Error fetching upcoming interviews:', error);
+    console.error('Error fetching upcoming interviews:', error);
     return res.status(500).json({
       success: false,
       message: 'Error fetching interviews',
@@ -149,7 +142,7 @@ router.get('/past', auth, async (req, res) => {
   try {
     const candidateId = req.user.id;
     
-    console.log('🔍 Fetching past interviews for candidate:', candidateId);
+    console.log('Fetching past interviews for candidate:', candidateId);
     
     // Step 1: Find candidate_job records that have completed interviews or are rejected
     const candidateJobs = await Candidate_Job.find({ 
@@ -161,7 +154,7 @@ router.get('/past', auth, async (req, res) => {
       ]
     });
     
-    console.log('✅ Found candidate jobs for past interviews:', candidateJobs.length);
+    console.log('Found candidate jobs for past interviews:', candidateJobs.length);
     
     if (candidateJobs.length === 0) {
       return res.status(200).json({
@@ -176,7 +169,7 @@ router.get('/past', auth, async (req, res) => {
       candidate_job_id: { $in: candidateJobIds }
     }).sort({ scheduled_date: -1 });
     
-    console.log('📅 Found past interview records:', interviews.length);
+    console.log('Found past interview records:', interviews.length);
     
     const pastInterviews = await Promise.all(
       interviews.map(async (interview) => {
@@ -214,7 +207,7 @@ router.get('/past', auth, async (req, res) => {
             candidate_job_status: candidateJob.current_status
           };
         } catch (error) {
-          console.error(`❌ Error processing past interview ${interview._id}:`, error);
+          console.error(`Error processing past interview ${interview._id}:`, error);
           return null;
         }
       })
@@ -222,7 +215,7 @@ router.get('/past', auth, async (req, res) => {
     
     const validPastInterviews = pastInterviews.filter(interview => interview !== null);
     
-    console.log('🎉 Successfully formatted past interviews:', validPastInterviews.length);
+    console.log('Successfully formatted past interviews:', validPastInterviews.length);
     
     return res.status(200).json({
       success: true,
@@ -230,77 +223,11 @@ router.get('/past', auth, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Error fetching past interviews:', error);
+    console.error('Error fetching past interviews:', error);
     return res.status(500).json({
       success: false,
       message: 'Error fetching past interviews',
       error: error.message
-    });
-  }
-});
-
-// Create test interview with REAL candidate_job_id
-router.post('/create-test-interview', auth, async (req, res) => {
-  try {
-    const candidateId = req.user.id;
-    
-    // Find a real candidate_job with interviewPending status
-    const candidateJob = await Candidate_Job.findOne({ 
-      candidate_id: candidateId,
-      current_status: { $regex: /interviewPending/i }
-    });
-    
-    if (!candidateJob) {
-      return res.status(400).json({
-        success: false,
-        message: 'No candidate job found with interviewPending status. Please make sure you have an application with "1_interviewPending" status.'
-      });
-    }
-    
-    console.log('✅ Found candidate_job:', candidateJob._id, 'with status:', candidateJob.current_status);
-    
-    // Check if interview already exists
-    const existingInterview = await Interview.findOne({
-      candidate_job_id: candidateJob._id
-    });
-    
-    if (existingInterview) {
-      return res.json({
-        success: true,
-        message: 'Interview already exists for this application',
-        interview: existingInterview
-      });
-    }
-    
-    // Create new interview with the REAL candidate_job_id
-    const testInterview = new Interview({
-      candidate_job_id: candidateJob._id,
-      scheduled_date: new Date('2025-01-15T14:00:00.000Z'),
-      scheduled_time: '2:00 PM',
-      meeting_link: 'https://meet.google.com/abc-def-ghi',
-      location: null,
-      interviewer_notes: 'Technical interview focusing on React, Node.js, and system design'
-    });
-    
-    const savedInterview = await testInterview.save();
-    
-    console.log('🎉 Test interview created with ID:', savedInterview._id);
-    
-    return res.json({
-      success: true,
-      message: 'Test interview created successfully',
-      interview: savedInterview,
-      candidateJob: {
-        id: candidateJob._id,
-        status: candidateJob.current_status
-      }
-    });
-    
-  } catch (error) {
-    console.error('❌ Error creating test interview:', error);
-    return res.status(500).json({ 
-      success: false,
-      error: error.message 
     });
   }
 });
