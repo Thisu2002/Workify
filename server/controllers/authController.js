@@ -2,6 +2,11 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Candidate = require('../models/Candidate');
+const Mentor = require('../models/Mentor');
+const Recruiter = require('../models/Recruiter');
+const SubscriptionPlan = require('../models/SubscriptionPlan');
+const RegistrationRequest = require('../models/RegistrationRequest');
 
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
@@ -45,15 +50,13 @@ exports.loginUser = async (req, res) => {
     }
 };
 
-// POST /auth/signup
 exports.signup = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, role, address, companyId } = req.body.formData;
 
   try {
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already registered' });
+      return res.status(400).json({ message: "Email already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -63,16 +66,43 @@ exports.signup = async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      user_roles: ['candidate'],
+      user_roles: [role],
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    //After user creation, add to role-specific collections
+    if (role === "candidate") {
+      const newCandidate = new Candidate({
+        _id: newUser._id,
+      });
+      await newCandidate.save();
+    } else if (role === "mentor") {
+      const newMentor = new Mentor({
+        _id: newUser._id,
+        name: `${firstName} ${lastName}`,
+        email,
+      });
+      await newMentor.save();
+    } else if (role === "recruiter") {
+      const newRecruiter = new Recruiter({
+        _id: newUser._id,
+        address: address,
+        company_id: companyId,
+      });
+      await newRecruiter.save();
+    }
+
+    res.status(201).json({
+      message: "User registered successfully",
+      userId: newUser._id,
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Signup failed', error: err.message });
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Signup failed", error: err.message });
   }
 };
+
 
 // POST /auth/check-email
 exports.checkEmail = async (req, res) => {
@@ -83,5 +113,46 @@ exports.checkEmail = async (req, res) => {
     res.json({ exists: !!user });
   } catch (err) {
     res.status(500).json({ message: 'Error checking email' });
+  }
+};
+
+exports.companyRegister = async (req, res) => {
+  try {
+    const { 
+      companyName, contactPerson, email, phone, website, industry, companySize, address, description, passkey, subscriptionPlan
+    } = req.body.formData;
+
+    let planDetails = null;
+    if (subscriptionPlan) {
+      const plan = await SubscriptionPlan.findById(subscriptionPlan);
+      if (plan) {
+        planDetails = {
+          planId: plan._id,
+          name: plan.name,
+          price: plan.price,
+        };
+      }
+    }
+
+    const newRequest = new RegistrationRequest({
+      companyName,
+      contactPerson,
+      email,
+      phone: phone || '',
+      website: website || '',
+      industry: industry || '',
+      companySize: companySize || '',
+      address,
+      description: description || '',
+      passkey,
+      subscriptionPlan: planDetails || null,
+    });
+
+    await newRequest.save();
+
+    res.status(201).json({ message: 'Company registration request submitted successfully!' });
+  } catch (err) {
+    console.error('Company registration failed:', err);
+    res.status(500).json({ message: 'Server error. Please try again.' });
   }
 };

@@ -1,3 +1,4 @@
+/* ---------------------- Layout & Container ---------------------- */
 .login-page {
   display: flex;
   justify-content: center;
@@ -41,6 +42,7 @@
   background-color: #0f2445;
 }
 
+/* ---------------------- Titles & Forms ---------------------- */
 .login-title {
   font-size: 32px;
   margin-bottom: 30px;
@@ -55,6 +57,8 @@
 }
 
 .login-form input,
+.login-form select,
+.login-form textarea,
 .role-select {
   padding: 12px 16px;
   border: none;
@@ -64,6 +68,7 @@
   color: #000000;
   outline: none;
   transition: border-left 0.1s ease;
+  margin-bottom: 10px;
 }
 
 .login-form input::placeholder {
@@ -72,57 +77,56 @@
 
 .login-form input:focus,
 .role-select:focus {
-  border-left: #96bec5 5px solid;
+  border-left: 5px solid #96bec5;
 }
 
-.msg,
-.error-icon {
-  margin: 0;
-  color: orange;
-  font-size: 14px;
-  margin-top: -15px;
-}
-
+/* ---------------------- Grouped Inputs ---------------------- */
+.row-inputs,
 .name-inputs {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
 }
 
+.row-inputs input,
+.row-inputs .password-input,
 .name-inputs input {
-  padding-right: 40px;
+  flex: 1;
 }
 
+/* ---------------------- Password Inputs ---------------------- */
 .password-input {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   border-radius: 8px;
-  font-size: 16px;
   background-color: #ffffff;
 }
 
+.password-input input {
+  flex: 1;
+  padding-right: 40px;
+  border: none;
+  border-radius: 8px;
+}
+
 .visibility {
-  text-align: right;
+  position: absolute;
+  right: 5px;
   padding: 0;
-  right: 0px;
-}
-
-.forgot-password {
   text-align: right;
-  font-size: 14px;
-  color: #dddddd;
-  text-decoration: none;
-  margin-top: -10px;
 }
 
-.forgot-password:hover,
-a:hover {
-  text-decoration: underline;
+/* ---------------------- Messages & Links ---------------------- */
+.msg,
+.error-icon {
+  color: orange;
+  font-size: 14px;
+  margin-top: -10px;
 }
 
 .redirect-link {
-  margin: 0;
-  margin-top: -10px;
   text-align: center;
+  margin-top: -10px;
 }
 
 .signup-link {
@@ -131,6 +135,27 @@ a:hover {
   font-style: italic;
 }
 
+.forgot-password {
+  color: #96bec5;
+  text-decoration: none;
+  font-style: italic;
+}
+
+.signup-link:hover,
+a:hover,
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------- Subscription Plans ---------------------- */
+.plan-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+
+/* ---------------------- Animation ---------------------- */
 @keyframes fadeInUp {
   from {
     transform: translateY(30px);
@@ -140,16 +165,16 @@ a:hover {
   }
 }
 
+/* ---------------------- Responsive Design ---------------------- */
 @media (max-width: 768px) {
   .login-container {
-    flex-direction: column; /* Stack vertically on small screens */
+    flex-direction: column;
     width: 90%;
     max-width: none;
   }
 
   .left-side,
   .right-side {
-    flex: none;
     width: 100%;
     padding: 20px;
   }
@@ -165,17 +190,14 @@ a:hover {
     padding: 10px 14px;
   }
 
+  .row-inputs,
   .name-inputs {
     flex-direction: column;
-    gap: 10px;
-  }
-
-  .name-inputs input {
-    padding-right: 0;
   }
 
   .forgot-password {
     font-size: 13px;
+    text-decoration: none !important;
   }
 }
 

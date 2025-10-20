@@ -1,10 +1,11 @@
-const Post = require('../models/JobPost');
-const jwt = require('jsonwebtoken');
-const Panel = require('../models/Panel');
-const Skill = require('../models/Skill');
+const Post = require("../models/JobPost");
+const jwt = require("jsonwebtoken");
+const Panel = require("../models/Panel");
+const Skill = require("../models/Skill");
+const Company = require("../models/Company");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 const CandidateJob = require('../models/Candidate_Job');
 const Recruiter = require('../models/Recruiter');
-const Company = require('../models/Company');
 const User = require('../models/User');
 
 // Dashboard Statistics
@@ -243,16 +244,18 @@ exports.getDashboardStats = async (req, res) => {
 };
 
 exports.getJobPosts = async (req, res) => {
-    try {
-        //const posts = await Post.find().populate('recruiter_id');
-        const posts = await Post.find(); // Without populate
+  try {
+    //const posts = await Post.find().populate('recruiter_id');
+    const posts = await Post.find(); // Without populate
 
-        //console.log("Fetched Job Posts:", posts);
-        res.status(200).json(posts);
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching job posts', error: err.message });
-    }
-}
+    //console.log("Fetched Job Posts:", posts);
+    res.status(200).json(posts);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching job posts", error: err.message });
+  }
+};
 
 exports.postJob = async (req, res) => {
   const {
@@ -269,7 +272,7 @@ exports.postJob = async (req, res) => {
     preferred_qualifications,
     comments,
     interview_rounds,
-    quiz
+    quiz,
   } = req.body;
 
   //console.log("Received Job Post Data:", req.body);
@@ -277,7 +280,9 @@ exports.postJob = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -299,7 +304,7 @@ exports.postJob = async (req, res) => {
       comments,
       recruiter_id,
       interview_rounds,
-      quiz
+      quiz,
     });
 
     await newPost.save();
@@ -311,58 +316,91 @@ exports.postJob = async (req, res) => {
 };
 
 exports.changeJobStatus = async (req, res) => {
-  const {jobId, status} = req.body;
+  const { jobId, status } = req.body;
   try {
     const post = await Post.findById(jobId);
     if (!post) {
-      return res.status(404).json({ message: 'Job post not found' });
+      return res.status(404).json({ message: "Job post not found" });
     }
     post.status = status;
     await post.save();
-    res.status(200).json({ message: 'Job status updated successfully' });
+    res.status(200).json({ message: "Job status updated successfully" });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating job status', error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error updating job status", error: err.message });
   }
 };
 
 exports.fetchPanels = async (req, res) => {
   try {
-    const panels = await Panel.find().select('_id name');
+    const panels = await Panel.find().select("_id name");
     res.status(200).json(panels);
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching panels', error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching panels", error: err.message });
   }
 };
 
 exports.fetchSkills = async (req, res) => {
   try {
-    const skills = await Skill.find().select('id name');
+    const skills = await Skill.find().select("id name");
     res.status(200).json(skills);
-  }
-  catch (err) {
-    res.status(500).json({ message: 'Error fetching skills', error: err.message });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching skills", error: err.message });
   }
 };
+
+exports.fetchCompanies = async (req, res) => {
+  try {
+    const companies = await Company.find().select("_id name passkey");
+    res.status(200).json(companies);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching companies", error: err.message });
+  }
+};
+
+exports.fetchSubscriptionPlans = async (req, res) => {
+  try {
+    const plans = await SubscriptionPlan.find();
+    res.status(200).json(plans);
+  } catch (err) {
+    res
+      .status(500)
+      .json({
+        message: "Error fetching subscription plans",
+        error: err.message,
+      });
+  }
+};
+
 // Get all unique candidates who applied to jobs from recruiter's company
 exports.getAllCandidates = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiterId = decoded.id;
 
-    const { jobId } = req.query; 
+    const { jobId } = req.query;
 
     // Get recruiter to find company
-    const Recruiter = require('../models/Recruiter');
+    const Recruiter = require("../models/Recruiter");
     const recruiter = await Recruiter.findById(recruiterId);
-    
+
     if (!recruiter) {
-      return res.status(404).json({ message: 'Recruiter not found' });
+      return res.status(404).json({ message: "Recruiter not found" });
     }
 
     // Find all job posts for this recruiter
@@ -370,21 +408,21 @@ exports.getAllCandidates = async (req, res) => {
     if (jobId) {
       jobQuery._id = jobId; // Filter by specific job if provided
     }
-    const jobPosts = await Post.find(jobQuery).select('_id');
-    const jobIds = jobPosts.map(job => job._id);
+    const jobPosts = await Post.find(jobQuery).select("_id");
+    const jobIds = jobPosts.map((job) => job._id);
 
     // Find all applications for these jobs
-    const CandidateJob = require('../models/Candidate_Job');
-    const User = require('../models/User');
-    const Skill = require('../models/Skill');
-    
+    const CandidateJob = require("../models/Candidate_Job");
+    const User = require("../models/User");
+    const Skill = require("../models/Skill");
+
     const applications = await CandidateJob.find({ job_id: { $in: jobIds } })
-      .populate('candidate_id', 'avatarUrl contact about')
-      .populate('job_id', 'title');
+      .populate("candidate_id", "avatarUrl contact about")
+      .populate("job_id", "title");
 
     // Fetch all skills once to map skill IDs to names
     const allSkills = await Skill.find();
-    
+
     // Create a map with both numeric IDs and ObjectId strings for compatibility
     const skillMap = new Map();
     allSkills.forEach((skill, index) => {
@@ -398,9 +436,11 @@ exports.getAllCandidates = async (req, res) => {
     const mapSkillsToNames = (skillIds) => {
       if (!skillIds || !Array.isArray(skillIds)) return [];
       return skillIds
-        .map(id => {
+        .map((id) => {
           // Try both the ID directly and as string
-          return skillMap.get(id) || skillMap.get(id.toString()) || `Skill ${id}`;
+          return (
+            skillMap.get(id) || skillMap.get(id.toString()) || `Skill ${id}`
+          );
         })
         .filter(Boolean);
     };
@@ -410,25 +450,25 @@ exports.getAllCandidates = async (req, res) => {
 
     for (const app of applications) {
       const candidateId = app.candidate_id._id.toString();
-      
+
       if (!candidateMap.has(candidateId)) {
         // Fetch user email from User model
-        const user = await User.findById(candidateId).select('email');
-        
+        const user = await User.findById(candidateId).select("email");
+
         candidateMap.set(candidateId, {
           _id: candidateId,
           firstName: app.firstName,
           lastName: app.lastName,
-          email: user?.email || '',
-          phone: app.candidate_id.contact?.phone || '',
-          avatarUrl: app.candidate_id.avatarUrl || '',
-          about: app.candidate_id.about || '',
+          email: user?.email || "",
+          phone: app.candidate_id.contact?.phone || "",
+          avatarUrl: app.candidate_id.avatarUrl || "",
+          about: app.candidate_id.about || "",
           experience: app.experience,
           skills: mapSkillsToNames(app.skills), // Map skill IDs to names
           totalApplications: 0,
           applications: [],
           // Determine overall status priority
-          overallStatus: 'new'
+          overallStatus: "new",
         });
       }
 
@@ -441,23 +481,32 @@ exports.getAllCandidates = async (req, res) => {
         appliedDate: app.date_applied,
         quizScore: app.quiz_score,
         matchScore: app.match_score,
-        roundStatus: app.round_status
+        roundStatus: app.round_status,
       });
 
       // Update overall status based on priority
       // Priority: selected > completed > interviewScheduled > shortlisted > new > rejected
-      const statusPriority = { 
-        '1_selected': 10, '2_selected': 10, '3_selected': 10,
-        '1_completed': 8, '2_completed': 8, '3_completed': 8,
-        '1_interviewScheduled': 6, '2_interviewScheduled': 6,
-        '1_interviewPending': 5, '2_interviewPending': 5,
-        '1_shortlisted': 4, '2_shortlisted': 4,
-        'new': 2,
-        '1_rejected': 1, '2_rejected': 1, '3_rejected': 1
+      const statusPriority = {
+        "1_selected": 10,
+        "2_selected": 10,
+        "3_selected": 10,
+        "1_completed": 8,
+        "2_completed": 8,
+        "3_completed": 8,
+        "1_interviewScheduled": 6,
+        "2_interviewScheduled": 6,
+        "1_interviewPending": 5,
+        "2_interviewPending": 5,
+        "1_shortlisted": 4,
+        "2_shortlisted": 4,
+        new: 2,
+        "1_rejected": 1,
+        "2_rejected": 1,
+        "3_rejected": 1,
       };
       const currentPriority = statusPriority[candidate.overallStatus] || 0;
       const newPriority = statusPriority[app.current_status] || 0;
-      
+
       if (newPriority > currentPriority) {
         candidate.overallStatus = app.current_status;
       }
@@ -465,15 +514,16 @@ exports.getAllCandidates = async (req, res) => {
 
     const candidates = Array.from(candidateMap.values());
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
       count: candidates.length,
-      candidates 
+      candidates,
     });
-
   } catch (err) {
-    console.error('Error fetching candidates:', err);
-    res.status(500).json({ message: 'Error fetching candidates', error: err.message });
+    console.error("Error fetching candidates:", err);
+    res
+      .status(500)
+      .json({ message: "Error fetching candidates", error: err.message });
   }
 };
 
@@ -482,7 +532,9 @@ exports.getApplicationsByStatus = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -496,8 +548,8 @@ exports.getApplicationsByStatus = async (req, res) => {
     if (jobId) {
       jobQuery._id = jobId; // Filter by specific job if provided
     }
-    const jobPosts = await Post.find(jobQuery).select('_id');
-    const jobIds = jobPosts.map(job => job._id);
+    const jobPosts = await Post.find(jobQuery).select("_id");
+    const jobIds = jobPosts.map((job) => job._id);
 
     // Build query
     const query = { job_id: { $in: jobIds } };
@@ -506,18 +558,18 @@ exports.getApplicationsByStatus = async (req, res) => {
     }
 
     // Find applications
-    const CandidateJob = require('../models/Candidate_Job');
-    const User = require('../models/User');
-    const Skill = require('../models/Skill');
-    
+    const CandidateJob = require("../models/Candidate_Job");
+    const User = require("../models/User");
+    const Skill = require("../models/Skill");
+
     const applications = await CandidateJob.find(query)
-      .populate('candidate_id', 'avatarUrl contact about')
-      .populate('job_id', 'title')
+      .populate("candidate_id", "avatarUrl contact about")
+      .populate("job_id", "title")
       .sort({ date_applied: -1 });
 
     // Fetch all skills once to map skill IDs to names
     const allSkills = await Skill.find();
-    
+
     // Create a map with both numeric IDs and ObjectId strings for compatibility
     const skillMap = new Map();
     allSkills.forEach((skill, index) => {
@@ -531,50 +583,55 @@ exports.getApplicationsByStatus = async (req, res) => {
     const mapSkillsToNames = (skillIds) => {
       if (!skillIds || !Array.isArray(skillIds)) return [];
       return skillIds
-        .map(id => {
+        .map((id) => {
           // Try both the ID directly and as string
-          return skillMap.get(id) || skillMap.get(id.toString()) || `Skill ${id}`;
+          return (
+            skillMap.get(id) || skillMap.get(id.toString()) || `Skill ${id}`
+          );
         })
         .filter(Boolean);
     };
 
     // Format response with full application details
-    const formattedApplications = await Promise.all(applications.map(async (app) => {
-      // Fetch user email from User model
-      const user = await User.findById(app.candidate_id._id).select('email');
-      
-      return {
-        _id: app._id,
-        candidateId: app.candidate_id._id,
-        firstName: app.firstName,
-        lastName: app.lastName,
-        email: user?.email || '',
-        phone: app.candidate_id.contact?.phone || '',
-        avatarUrl: app.candidate_id.avatarUrl || '',
-        about: app.about,
-        jobId: app.job_id._id,
-        jobTitle: app.job_id.title,
-        experience: app.experience,
-        skills: mapSkillsToNames(app.skills), // Map skill IDs to names
-        education: app.education,
-        currentStatus: app.current_status,
-        roundStatus: app.round_status,
-        appliedDate: app.date_applied,
-        quizScore: app.quiz_score,
-        matchScore: app.match_score
-      };
-    }));
+    const formattedApplications = await Promise.all(
+      applications.map(async (app) => {
+        // Fetch user email from User model
+        const user = await User.findById(app.candidate_id._id).select("email");
 
-    res.status(200).json({ 
+        return {
+          _id: app._id,
+          candidateId: app.candidate_id._id,
+          firstName: app.firstName,
+          lastName: app.lastName,
+          email: user?.email || "",
+          phone: app.candidate_id.contact?.phone || "",
+          avatarUrl: app.candidate_id.avatarUrl || "",
+          about: app.about,
+          jobId: app.job_id._id,
+          jobTitle: app.job_id.title,
+          experience: app.experience,
+          skills: mapSkillsToNames(app.skills), // Map skill IDs to names
+          education: app.education,
+          currentStatus: app.current_status,
+          roundStatus: app.round_status,
+          appliedDate: app.date_applied,
+          quizScore: app.quiz_score,
+          matchScore: app.match_score,
+        };
+      })
+    );
+
+    res.status(200).json({
       success: true,
       count: formattedApplications.length,
-      status: status || 'all',
-      applications: formattedApplications 
+      status: status || "all",
+      applications: formattedApplications,
     });
-
   } catch (err) {
-    console.error('Error fetching applications:', err);
-    res.status(500).json({ message: 'Error fetching applications', error: err.message });
+    console.error("Error fetching applications:", err);
+    res
+      .status(500)
+      .json({ message: "Error fetching applications", error: err.message });
   }
 };
 
@@ -583,7 +640,9 @@ exports.getInterviewsByStatus = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -593,14 +652,16 @@ exports.getInterviewsByStatus = async (req, res) => {
     // Find all job posts for this recruiter
     const jobPosts = await Post.find({ recruiter_id: recruiterId })
       .populate({
-        path: 'interview_rounds.panel_id',
-        select: 'name members lead_panelist',
+        path: "interview_rounds.panel_id",
+        select: "name members lead_panelist",
         populate: {
-          path: 'members lead_panelist',
-          select: 'firstName lastName avatarUrl'
-        }
+          path: "members lead_panelist",
+          select: "firstName lastName avatarUrl",
+        },
       })
-      .select('title current_status interview_rounds num_applicants date_posted')
+      .select(
+        "title current_status interview_rounds num_applicants date_posted"
+      )
       .sort({ date_posted: -1 });
 
     // Classify job posts into tabs based on current_status
@@ -608,12 +669,12 @@ exports.getInterviewsByStatus = async (req, res) => {
       new: [],
       pending: [],
       scheduled: [],
-      completed: []
+      completed: [],
     };
 
     // Import Candidate_Job model
-    const CandidateJob = require('../models/Candidate_Job');
-    const User = require('../models/User');
+    const CandidateJob = require("../models/Candidate_Job");
+    const User = require("../models/User");
 
     // Process each job and fetch candidates based on job status
     for (const job of jobPosts) {
@@ -622,75 +683,95 @@ exports.getInterviewsByStatus = async (req, res) => {
       let tabType;
 
       // Determine which candidates to fetch based on job status and final_date
-      if (status.includes('panelRequested') || status.includes('panelConfirmed')) {
+      if (
+        status.includes("panelRequested") ||
+        status.includes("panelConfirmed")
+      ) {
         // New tab: fetch shortlisted candidates
         candidateStatusQuery = { $regex: /shortlisted/i };
-        tabType = 'new';
-      } else if (status.includes('candidatesNotified')) {
+        tabType = "new";
+      } else if (status.includes("candidatesNotified")) {
         // Pending tab: fetch interviewPending or interviewScheduled candidates
-        candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled)/i };
-        tabType = 'pending';
-      } else if (status.includes('scheduled')) {
+        candidateStatusQuery = {
+          $regex: /(interviewPending|interviewScheduled)/i,
+        };
+        tabType = "pending";
+      } else if (status.includes("scheduled")) {
         // Check if the interview date has passed
-        const currentRound = job.interview_rounds && job.interview_rounds.length > 0 
-          ? job.interview_rounds[job.interview_rounds.length - 1] 
-          : null;
-        
+        const currentRound =
+          job.interview_rounds && job.interview_rounds.length > 0
+            ? job.interview_rounds[job.interview_rounds.length - 1]
+            : null;
+
         const finalDate = currentRound?.final_date;
         const currentDate = new Date();
-        
+
         if (finalDate && new Date(finalDate) < currentDate) {
           // Interview date has passed - move to completed tab
-          candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled|interviewCompleted|selected|rejected)/i };
-          tabType = 'completed';
+          candidateStatusQuery = {
+            $regex:
+              /(interviewPending|interviewScheduled|interviewCompleted|selected|rejected)/i,
+          };
+          tabType = "completed";
         } else {
           // Interview date is upcoming - keep in scheduled tab
-          candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled)/i };
-          tabType = 'scheduled';
+          candidateStatusQuery = {
+            $regex: /(interviewPending|interviewScheduled)/i,
+          };
+          tabType = "scheduled";
         }
-      } else if (status.includes('completed')) {
+      } else if (status.includes("completed")) {
         // Completed tab: fetch all interview candidates (pending, scheduled, completed, selected, rejected)
-        candidateStatusQuery = { $regex: /(interviewPending|interviewScheduled|interviewCompleted|selected|rejected)/i };
-        tabType = 'completed';
+        candidateStatusQuery = {
+          $regex:
+            /(interviewPending|interviewScheduled|interviewCompleted|selected|rejected)/i,
+        };
+        tabType = "completed";
       }
 
       let relevantCandidates = [];
-      
+
       if (candidateStatusQuery) {
         // Fetch candidates based on the determined status query
         const candidateApplications = await CandidateJob.find({
           job_id: job._id,
-          current_status: candidateStatusQuery
-        }).populate('candidate_id', 'avatarUrl');
+          current_status: candidateStatusQuery,
+        }).populate("candidate_id", "avatarUrl");
 
         // Format candidate data
-        const candidatePromises = candidateApplications.map(app => {
+        const candidatePromises = candidateApplications.map((app) => {
           // Get user email from User model for this candidate
-          return User.findById(app.candidate_id._id).select('email').then(user => {
-            // Determine overall result status for completed tab
-            let overallResult = 'Not Interviewed'; // Default for pending/scheduled
-            if (app.current_status.toLowerCase().includes('selected')) {
-              overallResult = 'Selected';
-            } else if (app.current_status.toLowerCase().includes('rejected')) {
-              overallResult = 'Rejected';
-            } else if (app.current_status.toLowerCase().includes('interviewcompleted')) {
-              overallResult = 'Completed'; // For completed but not yet selected/rejected
-            }
+          return User.findById(app.candidate_id._id)
+            .select("email")
+            .then((user) => {
+              // Determine overall result status for completed tab
+              let overallResult = "Not Interviewed"; // Default for pending/scheduled
+              if (app.current_status.toLowerCase().includes("selected")) {
+                overallResult = "Selected";
+              } else if (
+                app.current_status.toLowerCase().includes("rejected")
+              ) {
+                overallResult = "Rejected";
+              } else if (
+                app.current_status.toLowerCase().includes("interviewcompleted")
+              ) {
+                overallResult = "Completed"; // For completed but not yet selected/rejected
+              }
 
-            return {
-              candidateId: app.candidate_id._id,
-              firstName: app.firstName,
-              lastName: app.lastName,
-              email: user?.email || app.contact?.email || '',
-              phone: app.contact?.phone || '',
-              avatarUrl: app.candidate_id.avatarUrl || '',
-              applicationId: app._id,
-              currentStatus: app.current_status,
-              dateApplied: app.date_applied,
-              overallResult: overallResult,
-              roundStatus: app.round_status || [] // Include round_status array
-            };
-          });
+              return {
+                candidateId: app.candidate_id._id,
+                firstName: app.firstName,
+                lastName: app.lastName,
+                email: user?.email || app.contact?.email || "",
+                phone: app.contact?.phone || "",
+                avatarUrl: app.candidate_id.avatarUrl || "",
+                applicationId: app._id,
+                currentStatus: app.current_status,
+                dateApplied: app.date_applied,
+                overallResult: overallResult,
+                roundStatus: app.round_status || [], // Include round_status array
+              };
+            });
         });
 
         // Wait for all candidate data to be resolved
@@ -698,93 +779,126 @@ exports.getInterviewsByStatus = async (req, res) => {
       }
 
       // Classification logic based on current_status
-      if (tabType === 'new') {
-        classifiedInterviews.new.push(formatJobForInterview(job, 'new', relevantCandidates));
-      } else if (tabType === 'pending') {
-        classifiedInterviews.pending.push(formatJobForInterview(job, 'pending', relevantCandidates));
-      } else if (tabType === 'scheduled') {
-        classifiedInterviews.scheduled.push(formatJobForInterview(job, 'scheduled', relevantCandidates));
-      } else if (tabType === 'completed') {
-        classifiedInterviews.completed.push(formatJobForInterview(job, 'completed', relevantCandidates));
+      if (tabType === "new") {
+        classifiedInterviews.new.push(
+          formatJobForInterview(job, "new", relevantCandidates)
+        );
+      } else if (tabType === "pending") {
+        classifiedInterviews.pending.push(
+          formatJobForInterview(job, "pending", relevantCandidates)
+        );
+      } else if (tabType === "scheduled") {
+        classifiedInterviews.scheduled.push(
+          formatJobForInterview(job, "scheduled", relevantCandidates)
+        );
+      } else if (tabType === "completed") {
+        classifiedInterviews.completed.push(
+          formatJobForInterview(job, "completed", relevantCandidates)
+        );
       }
     }
 
     res.status(200).json({
       success: true,
-      data: classifiedInterviews
+      data: classifiedInterviews,
     });
-
   } catch (err) {
-    console.error('Error fetching interviews:', err);
-    res.status(500).json({ message: 'Error fetching interviews', error: err.message });
+    console.error("Error fetching interviews:", err);
+    res
+      .status(500)
+      .json({ message: "Error fetching interviews", error: err.message });
   }
 };
 
 // Helper function to format job data for interview display
 const formatJobForInterview = (job, status, relevantCandidates = []) => {
-  const currentRound = job.interview_rounds && job.interview_rounds.length > 0 
-    ? job.interview_rounds[job.interview_rounds.length - 1] // Get the latest round
-    : null;
+  const currentRound =
+    job.interview_rounds && job.interview_rounds.length > 0
+      ? job.interview_rounds[job.interview_rounds.length - 1] // Get the latest round
+      : null;
 
   let formattedJob = {
     id: job._id,
     jobTitle: job.title,
-    round: currentRound ? `Round ${currentRound.round_number}: ${currentRound.round_name}` : 'Round not defined',
-    panel: currentRound?.panel_id?.name || 'Panel not assigned',
+    round: currentRound
+      ? `Round ${currentRound.round_number}: ${currentRound.round_name}`
+      : "Round not defined",
+    panel: currentRound?.panel_id?.name || "Panel not assigned",
     panelId: currentRound?.panel_id?._id || null,
     applicationCount: job.num_applicants || 0,
     shortlistedCandidatesCount: relevantCandidates.length, // This now represents relevant candidates for each tab
     shortlistedCandidates: relevantCandidates, // This now contains relevant candidates for each tab
-    currentStatus: job.current_status
+    currentStatus: job.current_status,
   };
 
   // Add status-specific fields
-  if (status === 'new') {
+  if (status === "new") {
     // For new interviews, show panel availability
-    if (currentRound?.available_dates && currentRound.available_dates.length > 0) {
+    if (
+      currentRound?.available_dates &&
+      currentRound.available_dates.length > 0
+    ) {
       const dates = currentRound.available_dates
-        .filter(d => d.date)
-        .map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      formattedJob.panelAvailability = dates.length > 0 ? dates.join(', ') : 'Waiting for available dates';
+        .filter((d) => d.date)
+        .map((d) =>
+          new Date(d.date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })
+        );
+      formattedJob.panelAvailability =
+        dates.length > 0 ? dates.join(", ") : "Waiting for available dates";
     } else {
-      formattedJob.panelAvailability = 'Waiting for available dates';
+      formattedJob.panelAvailability = "Waiting for available dates";
     }
-  } else if (status === 'pending' || status === 'scheduled') {
+  } else if (status === "pending" || status === "scheduled") {
     // For pending/scheduled, show the final interview date
     if (currentRound?.final_date) {
-      formattedJob.interviewDate = new Date(currentRound.final_date).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
+      formattedJob.interviewDate = new Date(
+        currentRound.final_date
+      ).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
       });
     } else {
-      formattedJob.interviewDate = 'Date TBD';
+      formattedJob.interviewDate = "Date TBD";
     }
-    
+
     // Add panel members info if available
     if (currentRound?.panel_id?.members) {
-      formattedJob.panelMembers = currentRound.panel_id.members.map(member => ({
-        name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'Unknown',
-        avatar: member.avatarUrl || null
-      }));
+      formattedJob.panelMembers = currentRound.panel_id.members.map(
+        (member) => ({
+          name:
+            `${member.firstName || ""} ${member.lastName || ""}`.trim() ||
+            "Unknown",
+          avatar: member.avatarUrl || null,
+        })
+      );
     }
-  } else if (status === 'completed') {
+  } else if (status === "completed") {
     // For completed interviews, show the date it was completed
     if (currentRound?.final_date) {
-      formattedJob.interviewDate = new Date(currentRound.final_date).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
+      formattedJob.interviewDate = new Date(
+        currentRound.final_date
+      ).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       });
     } else {
-      formattedJob.interviewDate = 'Date not available';
+      formattedJob.interviewDate = "Date not available";
     }
-    
+
     // Add panel members info if available for completed interviews too
     if (currentRound?.panel_id?.members) {
-      formattedJob.panelMembers = currentRound.panel_id.members.map(member => ({
-        name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'Unknown',
-        avatar: member.avatarUrl || null
-      }));
+      formattedJob.panelMembers = currentRound.panel_id.members.map(
+        (member) => ({
+          name:
+            `${member.firstName || ""} ${member.lastName || ""}`.trim() ||
+            "Unknown",
+          avatar: member.avatarUrl || null,
+        })
+      );
     }
   }
 
@@ -796,7 +910,9 @@ exports.notifyCandidates = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -806,43 +922,62 @@ exports.notifyCandidates = async (req, res) => {
     const { jobId, finalDate } = req.body;
 
     if (!jobId || !finalDate) {
-      return res.status(400).json({ message: "Job ID and final date are required" });
+      return res
+        .status(400)
+        .json({ message: "Job ID and final date are required" });
     }
 
     // Find the job post and verify it belongs to this recruiter
-    const jobPost = await Post.findOne({ _id: jobId, recruiter_id: recruiterId });
+    const jobPost = await Post.findOne({
+      _id: jobId,
+      recruiter_id: recruiterId,
+    });
     if (!jobPost) {
-      return res.status(404).json({ message: "Job post not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Job post not found or unauthorized" });
     }
 
     // Verify the job is in the correct status (panelConfirmed)
-    if (!jobPost.current_status.includes('panelConfirmed')) {
-      return res.status(400).json({ message: "Job is not in the correct status for candidate notification" });
+    if (!jobPost.current_status.includes("panelConfirmed")) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Job is not in the correct status for candidate notification",
+        });
     }
 
     // Update job status to candidatesNotified
-    jobPost.current_status = jobPost.current_status.replace('panelConfirmed', 'candidatesNotified');
+    jobPost.current_status = jobPost.current_status.replace(
+      "panelConfirmed",
+      "candidatesNotified"
+    );
 
     // Update the final date for the current round
     if (jobPost.interview_rounds && jobPost.interview_rounds.length > 0) {
-      const currentRound = jobPost.interview_rounds[jobPost.interview_rounds.length - 1];
+      const currentRound =
+        jobPost.interview_rounds[jobPost.interview_rounds.length - 1];
       currentRound.final_date = new Date(finalDate);
     }
 
     await jobPost.save();
 
     // Update all shortlisted candidates' status from shortlisted to interviewPending
-    const CandidateJob = require('../models/Candidate_Job');
-    
+    const CandidateJob = require("../models/Candidate_Job");
+
     // Get all shortlisted candidates first
     const shortlistedCandidates = await CandidateJob.find({
       job_id: jobId,
-      current_status: { $regex: /shortlisted/i }
+      current_status: { $regex: /shortlisted/i },
     });
 
     // Update each candidate individually to preserve round number
     for (const candidate of shortlistedCandidates) {
-      candidate.current_status = candidate.current_status.replace(/shortlisted/i, 'interviewPending');
+      candidate.current_status = candidate.current_status.replace(
+        /shortlisted/i,
+        "interviewPending"
+      );
       await candidate.save();
     }
 
@@ -850,12 +985,13 @@ exports.notifyCandidates = async (req, res) => {
       success: true,
       message: "Candidates have been notified successfully",
       updatedCandidates: shortlistedCandidates.length,
-      finalDate: finalDate
+      finalDate: finalDate,
     });
-
   } catch (err) {
-    console.error('Error notifying candidates:', err);
-    res.status(500).json({ message: 'Error notifying candidates', error: err.message });
+    console.error("Error notifying candidates:", err);
+    res
+      .status(500)
+      .json({ message: "Error notifying candidates", error: err.message });
   }
 };
 
@@ -864,7 +1000,9 @@ exports.proceedToInterviews = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -878,28 +1016,41 @@ exports.proceedToInterviews = async (req, res) => {
     }
 
     // Find the job post and verify it belongs to this recruiter
-    const jobPost = await Post.findOne({ _id: jobId, recruiter_id: recruiterId });
+    const jobPost = await Post.findOne({
+      _id: jobId,
+      recruiter_id: recruiterId,
+    });
     if (!jobPost) {
-      return res.status(404).json({ message: "Job post not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Job post not found or unauthorized" });
     }
 
     // Verify the job is in the correct status (candidatesNotified)
-    if (!jobPost.current_status.includes('candidatesNotified')) {
-      return res.status(400).json({ message: "Job is not in the correct status to proceed to interviews" });
+    if (!jobPost.current_status.includes("candidatesNotified")) {
+      return res
+        .status(400)
+        .json({
+          message: "Job is not in the correct status to proceed to interviews",
+        });
     }
 
     // Update job status from candidatesNotified to scheduled (preserve round number)
-    jobPost.current_status = jobPost.current_status.replace('candidatesNotified', 'scheduled');
+    jobPost.current_status = jobPost.current_status.replace(
+      "candidatesNotified",
+      "scheduled"
+    );
     await jobPost.save();
 
     res.status(200).json({
       success: true,
       message: "Successfully proceeded to interviews",
-      newStatus: jobPost.current_status
+      newStatus: jobPost.current_status,
     });
-
   } catch (err) {
-    console.error('Error proceeding to interviews:', err);
-    res.status(500).json({ message: 'Error proceeding to interviews', error: err.message });
+    console.error("Error proceeding to interviews:", err);
+    res
+      .status(500)
+      .json({ message: "Error proceeding to interviews", error: err.message });
   }
 };

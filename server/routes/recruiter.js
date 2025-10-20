@@ -14,6 +14,8 @@ router.post('/changeJobStatus', recruiterController.changeJobStatus);
 router.get('/fetchPanels', recruiterController.fetchPanels);
 router.get('/fetchCandidates/:jobId', jobController.fetchCandidates);
 router.get('/fetchSkills', recruiterController.fetchSkills);
+router.get('/fetchCompanies', recruiterController.fetchCompanies);
+router.get('/fetchSubscriptionPlans', recruiterController.fetchSubscriptionPlans);
 
 // New candidate endpoints for /recruiter/candidates page
 router.get('/candidates/all', recruiterController.getAllCandidates);
