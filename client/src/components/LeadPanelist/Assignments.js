@@ -18,7 +18,17 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Paper
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl
 } from "@mui/material";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -242,149 +252,122 @@ const Assignments = () => {
 
   // Add panelMembers to new assignments
   const [openPanelDetails, setOpenPanelDetails] = useState(null); // assignment id or null
-  const [completedAssignments, setCompletedAssignments] = useState([]);
-  const [pendingAssignments, setPendingAssignments] = useState([]);
   
+  // Candidate modal states
+  const [openCandidateModal, setOpenCandidateModal] = useState(null); // assignment id or null
+  const [candidates, setCandidates] = useState([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [openFeedbackModal, setOpenFeedbackModal] = useState(null); // candidate id or null
+  const [feedbackText, setFeedbackText] = useState('');
+  const [candidateResults, setCandidateResults] = useState({}); // { candidateId: 'Selected'/'Rejected' }
+  const [candidateFeedbacks, setCandidateFeedbacks] = useState({}); // { candidateId: 'feedback text' }
+  
+  // Interview details modal states
+  const [openInterviewDetailsModal, setOpenInterviewDetailsModal] = useState(null); // assignment id or null
+  const [interviewResults, setInterviewResults] = useState([]);
+  const [loadingInterviewResults, setLoadingInterviewResults] = useState(false);
+  
+  // New state for all assignments fetched from API
+  const [allAssignments, setAllAssignments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Categorized assignments - now set directly from server response
+  const [categorizedAssignments, setCategorizedAssignments] = useState({
+    new: [],
+    pending: [],
+    scheduled: [],
+    completed: []
+  });
+  const [newAssignments, setNewAssignments] = useState([]);
+  const [pendingAssignments, setPendingAssignments] = useState([]);
+  const [scheduledAssignments, setScheduledAssignments] = useState([]);
+  const [completedAssignments, setCompletedAssignments] = useState([]);
+  
+  // Fetch all assignments and categorize them based on current_status
   useEffect(() => {
-    const fetchCompletedAssignments = async () => {
-      if (currentTab === 3) {
-        try {
-          const token = localStorage.getItem('token');
-          if (!token) return;
-
-          const res = await axios.get('http://localhost:5000/leadpanelist/completed-assignments', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          console.log('Raw API response:', res.data);
-
-          if (!res.data) {
-            console.log('No data received from API');
-            setCompletedAssignments([]);
-            return;
-          }
-
-          const transformedAssignments = res.data.map(job => ({
-            id: job._id,
-            jobName: job.title,
-            description: job.description,
-            location: job.location,
-            jobType: job.jobType,
-            deadline: job.deadline,
-            salary: job.salary,
-            status: "complete",
-            skills: job.skills || [],
-            date_posted: new Date(job.date_posted).toLocaleDateString()
-          }));
-
-          console.log('Transformed assignments:', transformedAssignments);
-          setCompletedAssignments(transformedAssignments);
-        } catch (err) {
-          console.error('Error:', err);
-          setCompletedAssignments([]);
+    const fetchAssignments = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('No authentication token found');
+          return;
         }
+
+        console.log('Fetching assignments for lead panelist...');
+        const res = await axios.get('http://localhost:5000/leadpanelist/assignments', {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('Raw API response:', res.data);
+
+        if (!res.data || !res.data.success || !res.data.data) {
+          console.log('No valid data received from API');
+          setAllAssignments([]);
+          setCategorizedAssignments({
+            new: [],
+            pending: [],
+            scheduled: [],
+            completed: []
+          });
+          return;
+        }
+
+        // The data is already categorized by the server, following recruiterController pattern
+        const categorizedData = res.data.data;
+        console.log('Received categorized data:', categorizedData);
+        console.log('Sample job from new category:', categorizedData.new?.[0]);
+        console.log('Sample job from pending category:', categorizedData.pending?.[0]);
+        console.log('Sample job from scheduled category:', categorizedData.scheduled?.[0]);
+        console.log('Sample job from completed category:', categorizedData.completed?.[0]);
+        
+        // Set the categorized assignments directly from server response
+        setNewAssignments(categorizedData.new || []);
+        setPendingAssignments(categorizedData.pending || []);
+        setScheduledAssignments(categorizedData.scheduled || []);
+        setCompletedAssignments(categorizedData.completed || []);
+        
+        // Also set all assignments for any other use
+        const allJobs = [
+          ...(categorizedData.new || []),
+          ...(categorizedData.pending || []),
+          ...(categorizedData.scheduled || []),
+          ...(categorizedData.completed || [])
+        ];
+        setAllAssignments(allJobs);
+
+      } catch (err) {
+        console.error('Error fetching assignments:', err);
+        setError(err.response?.data?.error || 'Failed to fetch assignments');
+        setAllAssignments([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchCompletedAssignments();
-  }, [currentTab]);
-
-  useEffect(() => {
-    const fetchPendingAssignments = async () => {
-      if (currentTab === 1) {
-        try {
-          console.log('Fetching pending assignments...');
-          const token = localStorage.getItem('token');
-          if (!token) {
-            console.log('No token found');
-            return;
-          }
-
-          // First try the test endpoint to verify server connectivity
-          try {
-            const testResponse = await axios.get('http://localhost:5000/leadpanelist/test');
-            console.log('Test endpoint response:', testResponse.data);
-          } catch (testErr) {
-            console.error('Test endpoint failed:', testErr);
-          }
-
-          const res = await axios.get('http://localhost:5000/leadpanelist/pending-assignments', {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          console.log('Pending assignments response status:', res.status);
-          console.log('Raw pending API response:', res.data);
-
-          if (!res.data) {
-            console.log('No pending data received from API');
-            setPendingAssignments([]);
-            return;
-          }
-
-          // Check if data is an array
-          if (!Array.isArray(res.data)) {
-            console.error('Expected array but got:', typeof res.data);
-            setPendingAssignments([]);
-            return;
-          }
-
-          const transformedAssignments = res.data.map(job => ({
-            id: job._id,
-            jobName: job.title,
-            round: job.interview_rounds && job.interview_rounds.length > 0 
-              ? `Round ${job.current_status?.split('_')[0] || '1'} - ${job.interview_rounds[0]?.name || 'Technical Interview'}`
-              : "Round 1 - Technical Interview",
-            status: "pending",
-            scheduledDate: job.date_posted ? new Date(job.date_posted).toLocaleDateString() : 'Not scheduled',
-            time: "10:00 AM - 11:00 AM", // Default time
-            panel: job.jobType || "Technical Panel",
-            type: job.interview_rounds && job.interview_rounds.length > 0 
-              ? job.interview_rounds[0]?.type || "Technical Assessment"
-              : "Technical Assessment",
-            duration: "1 hour",
-            description: job.description,
-            location: job.location,
-            salary: job.salary,
-            skills: job.skills || [],
-            deadline: job.deadline,
-            education: job.education_requirements,
-            experience: job.experience,
-            qualifications: job.qualifications,
-            preferred_qualifications: job.preferred_qualifications,
-            quiz: job.quiz
-          }));
-
-          console.log('Transformed pending assignments:', transformedAssignments);
-          setPendingAssignments(transformedAssignments);
-
-        } catch (err) {
-          console.error('Error fetching pending assignments:', err.response?.status || 'No status', 
-            err.response?.data || err.message);
-          setPendingAssignments([]);
-        }
-      }
-    };
-
-    fetchPendingAssignments();
-  }, [currentTab]);
+    fetchAssignments();
+  }, []);
 
   const filteredAssignments = useMemo(() => {
-    if (currentTab === 3) {
-      return completedAssignments;
+    switch (currentTab) {
+      case 0: // New tab
+        return newAssignments;
+      case 1: // Pending tab
+        return pendingAssignments;
+      case 2: // Scheduled tab
+        return scheduledAssignments;
+      case 3: // Completed tab
+        return completedAssignments;
+      default:
+        return [];
     }
-    if (currentTab === 1) {
-      return pendingAssignments;
-    }
-    return assignmentsData.filter(a => statusMap[a.status] === currentTab);
-  }, [currentTab, completedAssignments, pendingAssignments]);
-
-  // Remove the static completed assignments from assignmentsData
-  const staticAssignmentsData = useMemo(() => {
-    return assignmentsData.filter(a => a.status !== "complete");
-  }, []);
+  }, [currentTab, newAssignments, pendingAssignments, scheduledAssignments, completedAssignments]);
 
   const handleOpenCalendar = (id) => setOpenCalendar(id);
   const handleCloseCalendar = () => setOpenCalendar(null);
@@ -395,6 +378,230 @@ const Assignments = () => {
       newArr[idx] = date;
       return { ...prev, [id]: newArr };
     });
+  };
+
+  const handleSendAvailability = async (assignmentId) => {
+    try {
+      const dates = selectedDates[assignmentId] || [];
+      const validDates = dates.filter(date => date !== null && date !== undefined);
+      
+      if (validDates.length === 0) {
+        alert('Please select at least one date before sending availability.');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      console.log('Sending availability for assignment:', assignmentId);
+      console.log('Selected dates:', validDates);
+
+      const response = await axios.post(
+        'http://localhost:5000/leadpanelist/send-availability',
+        {
+          jobId: assignmentId,
+          availableDates: validDates.map(date => date.toISOString())
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        alert('Availability dates sent successfully!');
+        handleCloseCalendar();
+        
+        // Refresh the assignments to reflect the updated status
+        window.location.reload();
+      } else {
+        alert('Failed to send availability dates. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending availability:', error);
+      alert('Error sending availability dates: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+  };
+
+  // Fetch candidates for a specific job
+  const fetchCandidatesForJob = async (jobId) => {
+    setLoadingCandidates(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      console.log('Fetching candidates for job:', jobId);
+      const response = await axios.get(
+        `http://localhost:5000/leadpanelist/job-candidates/${jobId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setCandidates(response.data.data || []);
+        console.log('Fetched candidates:', response.data.data);
+      } else {
+        alert('Failed to fetch candidates');
+        setCandidates([]);
+      }
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+      alert('Error fetching candidates: ' + (error.response?.data?.error || 'Unknown error'));
+      setCandidates([]);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  // Handle opening candidate modal
+  const handleOpenCandidateModal = (jobId) => {
+    setOpenCandidateModal(jobId);
+    fetchCandidatesForJob(jobId);
+  };
+
+  // Handle closing candidate modal
+  const handleCloseCandidateModal = () => {
+    setOpenCandidateModal(null);
+    setCandidates([]);
+    setCandidateResults({});
+    setCandidateFeedbacks({});
+  };
+
+  // Handle opening feedback modal
+  const handleOpenFeedbackModal = (candidateId) => {
+    setOpenFeedbackModal(candidateId);
+    setFeedbackText(candidateFeedbacks[candidateId] || '');
+  };
+
+  // Handle closing feedback modal
+  const handleCloseFeedbackModal = () => {
+    setOpenFeedbackModal(null);
+    setFeedbackText('');
+  };
+
+  // Handle saving feedback
+  const handleSaveFeedback = () => {
+    if (openFeedbackModal) {
+      setCandidateFeedbacks(prev => ({
+        ...prev,
+        [openFeedbackModal]: feedbackText
+      }));
+      handleCloseFeedbackModal();
+    }
+  };
+
+  // Handle result change
+  const handleResultChange = (candidateId, result) => {
+    setCandidateResults(prev => ({
+      ...prev,
+      [candidateId]: result
+    }));
+  };
+
+  // Handle finishing interviews
+  const handleFinishInterviews = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      const candidateData = candidates.map(candidate => ({
+        candidateJobId: candidate._id,
+        feedback: candidateFeedbacks[candidate._id] || '',
+        result: candidateResults[candidate._id] || ''
+      }));
+
+      console.log('Finishing interviews with data:', candidateData);
+
+      const response = await axios.post(
+        'http://localhost:5000/leadpanelist/finish-interviews',
+        {
+          jobId: openCandidateModal,
+          candidateData: candidateData
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        alert('Interview results saved successfully!');
+        handleCloseCandidateModal();
+        // Refresh assignments
+        window.location.reload();
+      } else {
+        alert('Failed to save interview results');
+      }
+    } catch (error) {
+      console.error('Error saving interview results:', error);
+      alert('Error saving interview results: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+  };
+
+  // Fetch interview results for completed job
+  const fetchInterviewResults = async (jobId) => {
+    setLoadingInterviewResults(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      console.log('Fetching interview results for job:', jobId);
+      const response = await axios.get(
+        `http://localhost:5000/leadpanelist/interview-results/${jobId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setInterviewResults(response.data.data || []);
+        console.log('Fetched interview results:', response.data.data);
+      } else {
+        alert('Failed to fetch interview results');
+        setInterviewResults([]);
+      }
+    } catch (error) {
+      console.error('Error fetching interview results:', error);
+      alert('Error fetching interview results: ' + (error.response?.data?.error || 'Unknown error'));
+      setInterviewResults([]);
+    } finally {
+      setLoadingInterviewResults(false);
+    }
+  };
+
+  // Handle opening interview details modal
+  const handleOpenInterviewDetailsModal = (jobId) => {
+    setOpenInterviewDetailsModal(jobId);
+    fetchInterviewResults(jobId);
+  };
+
+  // Handle closing interview details modal
+  const handleCloseInterviewDetailsModal = () => {
+    setOpenInterviewDetailsModal(null);
+    setInterviewResults([]);
   };
 
   // For the 'New' tab, ensure 3 cards per row (fill with empty Grid items if needed)
@@ -417,9 +624,25 @@ const Assignments = () => {
           <Tab key={label} label={label} />
         ))}
       </Tabs>
-      <Grid container spacing={3}>
-        {isNewTab
-          ? rows[0].map((assignment, idx) => (
+      
+      {/* Loading State */}
+      {loading && (
+        <Box display="flex" justifyContent="center" p={4}>
+          <Typography>Loading assignments...</Typography>
+        </Box>
+      )}
+      
+      {/* Error State */}
+      {error && (
+        <Box display="flex" justifyContent="center" p={4}>
+          <Typography color="error">Error: {error}</Typography>
+        </Box>
+      )}
+      
+      {!loading && !error && (
+        <Grid container spacing={3}>
+          {isNewTab
+            ? rows[0].map((assignment, idx) => (
               <Grid item xs={12} md={4} key={assignment ? assignment.id : `empty-${idx}`}>
                 {assignment && (
                   <Card
@@ -439,7 +662,7 @@ const Assignments = () => {
                     <CardContent sx={{ p: 3 }}>
                       {/* Card Title and Round */}
                       <Typography variant="h6" sx={{ color: "#0F2445", fontWeight: 600, mb: 0.5 }}>
-                        {assignment.jobName}
+                        {assignment.jobTitle}
                       </Typography>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
                         {assignment.round}
@@ -449,13 +672,13 @@ const Assignments = () => {
                         <Box display="flex" alignItems="center" gap={1}>
                           <Schedule fontSize="small" sx={{ color: "#64748b" }} />
                           <Typography variant="body2" color="text.secondary">
-                            {assignment.time} • {assignment.date}
+                            {assignment.panelAvailability || "10:00 AM - 11:00 AM"} • {assignment.interviewDate || "Date TBD"}
                           </Typography>
                         </Box>
                         <Box display="flex" alignItems="center" gap={1}>
                           <GroupWork fontSize="small" sx={{ color: "#64748b" }} />
                           <Typography variant="body2" color="text.secondary">
-                            {assignment.panel} • {assignment.type}
+                            {assignment.panel} • Assessment
                           </Typography>
                         </Box>
                       </Stack>
@@ -509,6 +732,13 @@ const Assignments = () => {
                           </DialogContent>
                           <DialogActions>
                             <Button onClick={handleCloseCalendar}>Close</Button>
+                            <Button 
+                              onClick={() => handleSendAvailability(assignment.id)}
+                              variant="contained"
+                              sx={{ backgroundColor: "#3B5998" }}
+                            >
+                              Send Availability
+                            </Button>
                           </DialogActions>
                         </Dialog>
                       </LocalizationProvider>
@@ -537,7 +767,7 @@ const Assignments = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
                       <Typography variant="h6" sx={{ color: "#0F2445", fontWeight: 600 }}>
-                        {assignment.jobName}
+                        {assignment.jobTitle}
                       </Typography>
                       <Chip label="Scheduled" color="success" size="small" sx={{ fontWeight: 600 }} />
                     </Box>
@@ -548,13 +778,13 @@ const Assignments = () => {
                       <Box display="flex" alignItems="center" gap={1}>
                         <Schedule fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          {assignment.scheduledDate ? `Scheduled: ${assignment.scheduledDate}` : assignment.time}
+                          Scheduled: {assignment.interviewDate || "Date TBD"}
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center" gap={1}>
                         <GroupWork fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          {assignment.panel} • {assignment.type}
+                          {assignment.panel} • Assessment
                         </Typography>
                       </Box>
                       {assignment.duration && (
@@ -579,9 +809,9 @@ const Assignments = () => {
                         size="small"
                         variant="contained"
                         sx={{ backgroundColor: "#3B5998" }}
-                        onClick={() => navigate('/lead-panelist/candidates')}
+                        onClick={() => handleOpenCandidateModal(assignment.id)}
                       >
-                        Candidate View
+                        View Candidates
                       </Button>
                     </Box>
                   </CardContent>
@@ -609,13 +839,12 @@ const Assignments = () => {
                     {/* Card Title and Round */}
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
                       <Typography variant="h6" sx={{ color: "#0F2445", fontWeight: 600 }}>
-                        {assignment.jobName}
+                        {assignment.jobTitle}
                       </Typography>
                       <Chip label="Pending" color="warning" size="small" sx={{ fontWeight: 600 }} />
                     </Box>
-                    {/* Remove Round and Type */}
                     <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-                      {/* Removed content */}
+                      {assignment.round}
                     </Typography>
                     
                     {/* Scheduled Date */}
@@ -623,67 +852,35 @@ const Assignments = () => {
                       <Box display="flex" alignItems="center" gap={1}>
                         <Schedule fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          Requested Date: {assignment.scheduledDate}
+                          Interview Date: {assignment.interviewDate || "Date TBD"}
                         </Typography>
                       </Box>
                       
-                      {/* Job Type and Assessment Type */}
+                      {/* Panel Information */}
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Work fontSize="small" sx={{ color: "#64748b" }} />
+                        <GroupWork fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
                           {assignment.panel}
                         </Typography>
                       </Box>
-                      
-                      {/* Location if available */}
-                      {assignment.location && (
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body2" color="text.secondary">
-                            Location: {assignment.location}
-                          </Typography>
-                        </Box>
-                      )}
-                      
-                      {/* Show skills if available */}
-                      {assignment.skills && assignment.skills.length > 0 && (
-                        <Box>
-                          <Typography variant="body2" color="text.secondary" mb={1}>
-                            Skills:
-                          </Typography>
-                          <Box display="flex" flexWrap="wrap" gap={1}>
-                            {assignment.skills.slice(0, 3).map((skill, i) => (
-                              <Chip key={i} label={skill} size="small" />
-                            ))}
-                            {assignment.skills.length > 3 && (
-                              <Chip 
-                                label={`+${assignment.skills.length - 3} more`} 
-                                size="small" 
-                                variant="outlined" 
-                              />
-                            )}
-                          </Box>
-                        </Box>
-                      )}
                     </Stack>
                     
-                    {/* Action Buttons */}
-                    <Box display="flex" gap={1} justifyContent="flex-end" alignItems="center" mt={2}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        sx={{ borderColor: "#3B5998", color: "#3B5998" }}
-                        onClick={() => handleOpenCalendar(assignment.id)}
+                    {/* Status Label */}
+                    <Box display="flex" justifyContent="center" alignItems="center" mt={2}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: "#FFA726", 
+                          fontWeight: 600,
+                          backgroundColor: "#FFF3E0",
+                          px: 2,
+                          py: 1,
+                          borderRadius: 2,
+                          border: "1px solid #FFE0B2"
+                        }}
                       >
-                        View Details
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        sx={{ backgroundColor: "#3B5998" }}
-                        onClick={() => setOpenPanelDetails(assignment.id)}
-                      >
-                        Request Panel
-                      </Button>
+                        Waiting for Final Date
+                      </Typography>
                     </Box>
                   </CardContent>
                 </Card>
@@ -708,7 +905,7 @@ const Assignments = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
                       <Typography variant="h6" sx={{ color: "#0F2445", fontWeight: 600 }}>
-                        {assignment.jobName}
+                        {assignment.jobTitle}
                       </Typography>
                       <Chip 
                         label="Completed" 
@@ -716,48 +913,41 @@ const Assignments = () => {
                         sx={{ fontWeight: 600, backgroundColor: '#3B5998', color: '#fff' }} 
                       />
                     </Box>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+                      {assignment.round}
+                    </Typography>
                     <Stack spacing={2} mt={2}>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Work fontSize="small" sx={{ color: "#64748b" }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Job Type: {assignment.jobType}
-                        </Typography>
-                      </Box>
                       <Box display="flex" alignItems="center" gap={1}>
                         <Schedule fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          Completed Date: {assignment.date_posted}
+                          Completed Date: {assignment.interviewDate || "Date not available"}
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center" gap={1}>
                         <GroupWork fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          Location: {assignment.location}
+                          Panel: {assignment.panel}
                         </Typography>
                       </Box>
-                      {/* Only show first 2 skills if available */}
-                      {assignment.skills && assignment.skills.length > 0 && (
-                        <Box>
-                          <Box display="flex" flexWrap="wrap" gap={1}>
-                            {assignment.skills.slice(0, 2).map((skill, i) => (
-                              <Chip 
-                                key={i} 
-                                label={skill} 
-                                size="small"
-                                sx={{ backgroundColor: '#f0f2f5' }}
-                              />
-                            ))}
-                            {assignment.skills.length > 2 && (
-                              <Chip 
-                                label={`+${assignment.skills.length - 2}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
-                        </Box>
-                      )}
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Work fontSize="small" sx={{ color: "#64748b" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          Company: {assignment.company || "Unknown Company"}
+                        </Typography>
+                      </Box>
                     </Stack>
+                    
+                    {/* Action Button */}
+                    <Box display="flex" justifyContent="center" alignItems="center" mt={2}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{ backgroundColor: "#3B5998" }}
+                        onClick={() => handleOpenInterviewDetailsModal(assignment.id)}
+                      >
+                        View Interview Details
+                      </Button>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
@@ -767,11 +957,19 @@ const Assignments = () => {
           Array.from({ length: 3 - filteredAssignments.length }).map((_, idx) => (
             <Grid item xs={12} md={4} key={`empty-${idx}`} style={{ visibility: 'hidden' }} />
           ))}
-      </Grid>
-      {filteredAssignments.length === 0 && (
-        <Typography variant="body1" sx={{ mt: 4 }}>
-          No assignments in this category.
-        </Typography>
+        </Grid>
+      )}
+      
+      {/* No assignments message */}
+      {!loading && !error && filteredAssignments.length === 0 && (
+        <Box display="flex" justifyContent="center" p={4}>
+          <Typography variant="body1" color="text.secondary">
+            {currentTab === 0 && "No new assignments available."}
+            {currentTab === 1 && "No pending assignments."}
+            {currentTab === 2 && "No scheduled assignments."}
+            {currentTab === 3 && "No completed assignments."}
+          </Typography>
+        </Box>
       )}
       {/* Panel Modal */}
       {filteredAssignments.map((assignment) => (
@@ -814,6 +1012,237 @@ const Assignments = () => {
           </DialogActions>
         </Dialog>
       ))}
+
+      {/* Candidate Modal */}
+      <Dialog
+        open={openCandidateModal !== null}
+        onClose={handleCloseCandidateModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            minHeight: 500,
+            boxShadow: '0 8px 32px rgba(60,72,100,0.10)',
+            background: '#fff',
+            border: '1px solid #e3e8ee',
+          }
+        }}
+      >
+        <DialogTitle>Interview Candidates</DialogTitle>
+        <DialogContent>
+          {loadingCandidates ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>Loading candidates...</Typography>
+            </Box>
+          ) : candidates.length === 0 ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>No candidates found for this interview.</Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><Typography fontWeight={600}>Name</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Email</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Feedback</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Result</Typography></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {candidates.map((candidate) => (
+                    <TableRow key={candidate._id}>
+                      <TableCell>
+                        <Typography variant="body2">{candidate.candidateName || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{candidate.candidateEmail || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleOpenFeedbackModal(candidate._id)}
+                          sx={{ borderColor: "#3B5998", color: "#3B5998" }}
+                        >
+                          Add Feedback
+                        </Button>
+                        {candidateFeedbacks[candidate._id] && (
+                          <Typography variant="caption" display="block" color="success.main">
+                            Feedback added
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <FormControl component="fieldset">
+                          <RadioGroup
+                            row
+                            value={candidateResults[candidate._id] || ''}
+                            onChange={(e) => handleResultChange(candidate._id, e.target.value)}
+                          >
+                            <FormControlLabel 
+                              value="Selected" 
+                              control={<Radio size="small" />} 
+                              label="Selected" 
+                            />
+                            <FormControlLabel 
+                              value="Rejected" 
+                              control={<Radio size="small" />} 
+                              label="Rejected" 
+                            />
+                          </RadioGroup>
+                        </FormControl>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCandidateModal} variant="outlined" sx={{ borderRadius: 2, px: 4, fontWeight: 600, color: '#3B5998', borderColor: '#3B5998' }}>
+            Close
+          </Button>
+          <Button 
+            onClick={handleFinishInterviews} 
+            variant="contained" 
+            sx={{ borderRadius: 2, px: 4, fontWeight: 600, background: '#3B5998' }}
+            disabled={candidates.length === 0}
+          >
+            Finish Interviews
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Interview Details Modal for Completed Tab */}
+      <Dialog
+        open={openInterviewDetailsModal !== null}
+        onClose={handleCloseInterviewDetailsModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            minHeight: 360,
+            boxShadow: '0 8px 32px rgba(60,72,100,0.10)',
+            background: '#fff',
+            border: '1px solid #e3e8ee',
+          }
+        }}
+      >
+        <DialogTitle>Interview Results</DialogTitle>
+        <DialogContent>
+          {loadingInterviewResults ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>Loading interview results...</Typography>
+            </Box>
+          ) : interviewResults.length === 0 ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <Typography>No interview results found for this job.</Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><Typography fontWeight={600}>Name</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Email</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Feedback</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600}>Result</Typography></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {interviewResults.map((row) => (
+                    <TableRow key={row._id}>
+                      <TableCell>
+                        <Typography variant="body2">{row.candidateName || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{row.candidateEmail || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 200 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical'
+                          }}
+                          title={row.feedback || 'No feedback'}
+                        >
+                          {row.feedback || 'No feedback'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={row.result || 'N/A'} 
+                          size="small"
+                          color={row.result === 'Selected' ? 'success' : row.result === 'Rejected' ? 'error' : 'default'}
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInterviewDetailsModal} variant="outlined" sx={{ borderRadius: 2, px: 4, fontWeight: 600, color: '#3B5998', borderColor: '#3B5998' }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Feedback Modal */}
+      <Dialog
+        open={openFeedbackModal !== null}
+        onClose={handleCloseFeedbackModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            boxShadow: '0 8px 32px rgba(60,72,100,0.10)',
+            background: '#fff',
+            border: '1px solid #e3e8ee',
+          }
+        }}
+      >
+        <DialogTitle>Add Feedback</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            placeholder="Enter your feedback for this candidate..."
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            variant="outlined"
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseFeedbackModal} variant="outlined" sx={{ borderRadius: 2, px: 4, fontWeight: 600, color: '#3B5998', borderColor: '#3B5998' }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveFeedback} 
+            variant="contained" 
+            sx={{ borderRadius: 2, px: 4, fontWeight: 600, background: '#3B5998' }}
+          >
+            Save Feedback
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
