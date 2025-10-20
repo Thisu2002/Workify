@@ -437,3 +437,37 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({ message: 'Error fetching dashboard stats', error: err.message });
   }
 };
+
+// Get job posting count over time (grouped by month)
+exports.getJobPostingTrends = async (req, res) => {
+  try {
+    const jobPosts = await Post.aggregate([
+      {
+        $match: { status: 'Open' }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: { $toDate: "$date_posted" } },
+            month: { $month: { $toDate: "$date_posted" } }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 }
+      }
+    ]);
+
+    const formatted = jobPosts.map(item => ({
+      name: `${item._id.month}/${item._id.year}`,
+      postings: item.count
+    }));
+
+    res.status(200).json(formatted);
+  } catch (err) {
+    console.error('getJobPostingTrends error:', err);
+    res.status(500).json({ message: 'Error fetching job posting trends', error: err.message });
+  }
+};
+

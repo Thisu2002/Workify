@@ -135,14 +135,15 @@ const CareerAdvice = () => {
   const getMentorSessionStatus = (mentorId) => {
     const existingSession = sessions.find(session => {
       const sessionMentorId = session.mentorId || session.mentor?.id || session.mentor?._id;
-      return sessionMentorId === mentorId && 
-             (session.status === 'pending' || session.status === 'scheduled' || 
-              session.session?.status === 'pending' || session.session?.status === 'scheduled');
+      return (sessionMentorId === mentorId || sessionMentorId === mentorId.toString()) && 
+             (session.status === 'pending' || session.status === 'scheduled');
     });
     
     if (existingSession) {
-      return existingSession.status || existingSession.session?.status || null;
+      console.log(`Found existing session for mentor ${mentorId}:`, existingSession);
+      return existingSession.status;
     }
+    console.log(`No existing session found for mentor ${mentorId}`);
     return null;
   };
 
@@ -174,14 +175,29 @@ const CareerAdvice = () => {
   };
 
   // Handle successful session request
-  const handleSessionRequestSuccess = (mentor, requestData) => {
-    console.log('Session request success called');
+  const handleSessionRequestSuccess = async (mentor, requestData) => {
+    console.log('Session request success called with:', mentor, requestData);
     
-    // Refresh sessions from backend to get the latest data
-    fetchSessions();
+    // Immediately add the session to local state to update UI instantly
+    const newSession = {
+      _id: Date.now(), // Temporary ID
+      mentorId: mentor._id || mentor.id,
+      mentorName: mentor.name, // Use mentor.name, not candidate name
+      session_type: requestData.requestType || 'General Mentoring',
+      status: 'pending',
+      message: requestData.sessionGoals,
+      requestDate: new Date()
+    };
     
-    // Close the form
-    handleCloseRequestForm();
+    // Add to sessions immediately to update button state
+    setSessions(prevSessions => [newSession, ...prevSessions]);
+    console.log('Added session to local state, button should now be disabled');
+    
+    // Also refresh from backend to get the real data
+    setTimeout(async () => {
+      await fetchSessions();
+      console.log('Sessions refreshed from backend');
+    }, 1000);
   };
 
   const getStatusColor = (status) => {

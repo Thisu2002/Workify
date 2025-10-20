@@ -404,25 +404,35 @@ router.get('/my-sessions', auth, async (req, res) => {
   try {
     const candidateId = req.user.id;
     
-    console.log('Fetching sessions for candidate:', candidateId); // Debug log
-    
     const sessions = await MentoringSession.find({ candidateId })
-      .populate('mentorId', 'firstName lastName')
       .sort({ createdAt: -1 });
     
-    console.log('Found sessions:', sessions.length); // Debug log
-    
-    const formattedSessions = sessions.map(session => {
-      // Handle cases where mentor might not be populated or found
-      const mentorName = session.mentorId ? 
-        `${session.mentorId.firstName || ''} ${session.mentorId.lastName || ''}`.trim() : 
-        session.candidateName || 'Unknown Mentor';
+    const formattedSessions = await Promise.all(sessions.map(async (session) => {
+      let mentorName = 'Unknown Mentor';
+      
+      if (session.mentorId) {
+        try {
+          // First try Mentor collection
+          const mentor = await Mentor.findById(session.mentorId);
+          if (mentor) {
+            mentorName = mentor.name;
+          } else {
+            // Fallback to User collection
+            const mentorUser = await User.findById(session.mentorId);
+            if (mentorUser) {
+              mentorName = `${mentorUser.firstName || ''} ${mentorUser.lastName || ''}`.trim();
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching mentor details:', error);
+        }
+      }
       
       return {
         _id: session._id,
-        mentorId: session.mentorId ? session.mentorId._id : session.mentorId,
+        mentorId: session.mentorId,
         mentorName: mentorName,
-        mentorAvatar: session.candidateAvatar || '',
+        mentorAvatar: '',
         session_type: session.session_type,
         status: session.status,
         message: session.message,
@@ -432,9 +442,7 @@ router.get('/my-sessions', auth, async (req, res) => {
         duration: session.duration,
         notes: session.notes
       };
-    });
-    
-    console.log('Formatted sessions:', formattedSessions); // Debug log
+    }));
     
     return res.status(200).json({
       success: true,

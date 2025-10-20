@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const recruiterController = require('../controllers/recruiterController');
 const jobController = require('../controllers/jobController');
+const authMiddleware = require('../middleware/auth');
+
+// Dashboard
+router.get('/dashboard/stats', authMiddleware, recruiterController.getDashboardStats);
 
 //router.get('/login', recruiterController.loginUser);
 router.post('/postJob', recruiterController.postJob);
