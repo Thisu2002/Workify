@@ -237,7 +237,7 @@ const ApplicationTracker = ({ trackerTab, setTrackerTab }) => {
                   secondary={
                     <Box>
                       <Typography variant="body2" color="text.secondary">
-                        {app.job?.position || app.job?.job_title || 'Unknown Position'}
+                        {app.job?.title || 'Unknown Position'}  {/* Changed from position/job_title to title */}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Match Score: {app.match_score}% • Round: {app.current_round || 1}
