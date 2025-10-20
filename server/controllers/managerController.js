@@ -471,3 +471,124 @@ exports.getJobPostingTrends = async (req, res) => {
   }
 };
 
+exports.getAnalyticsData = async (req, res) => {
+  try {
+    const now = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 6);
+
+    // 1️⃣ Users: count by role (excluding admin & business_manager)
+    const userAggregation = await User.aggregate([
+      { $match: { user_roles: { $exists: true, $not: { $size: 0 } } } },
+      { $unwind: "$user_roles" },
+      {
+        $group: {
+          _id: "$user_roles",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // 2️⃣ Companies: registrations over time
+    const companyTrends = await Company.aggregate([
+      {
+        $match: { createdAt: { $gte: sixMonthsAgo } }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    // 3️⃣ Subscription Plans usage
+    const planStats = await Company.aggregate([
+      { $match: { "currentSubscription.plan": { $exists: true } } },
+      {
+        $lookup: {
+          from: "subscriptionplans",
+          localField: "currentSubscription.plan",
+          foreignField: "_id",
+          as: "planDetails"
+        }
+      },
+      { $unwind: "$planDetails" },
+      {
+        $group: {
+          _id: "$planDetails.name",
+          companies: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // 4️⃣ Job posts trend
+    const jobPostTrends = await Post.aggregate([
+      {
+        $match: { date_posted: { $gte: sixMonthsAgo } }
+      },
+      {
+        $group: {
+          _id: { $month: "$date_posted" },
+          jobsPosted: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    // 5️⃣ Mentor verifications trend
+    const mentorVerificationTrends = await MentorVerification.aggregate([
+      {
+        $match: { createdAt: { $gte: sixMonthsAgo } }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          total: { $sum: 1 },
+          accepted: {
+            $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    // 6️⃣ Registration requests trend
+    const registrationTrends = await RegistrationRequest.aggregate([
+      {
+        $match: { createdAt: { $gte: sixMonthsAgo } }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          total: { $sum: 1 },
+          accepted: {
+            $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    res.status(200).json({
+      users: userAggregation,
+      companies: companyTrends,
+      plans: planStats,
+      jobs: jobPostTrends,
+      mentorVerifications: mentorVerificationTrends,
+      registrationRequests: registrationTrends
+    });
+  } catch (err) {
+    console.error("getAnalyticsData error:", err);
+    res.status(500).json({ message: "Error fetching analytics", error: err.message });
+  }
+};
+
+

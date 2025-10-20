@@ -38,6 +38,9 @@ router.put('/:id', managerController.updateBusinessManager);
 
 router.get('/dashboardStats', managerController.getDashboardStats);
 
+router.get('/analytics', managerController.getAnalyticsData);
+
+
 
 
 
