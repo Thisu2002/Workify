@@ -40,6 +40,9 @@ router.get('/dashboardStats', managerController.getDashboardStats);
 
 router.get('/analytics', managerController.getAnalyticsData);
 
+router.get('/companies/:id/details', managerController.getCompanyDetails);
+
+
 
 
 
