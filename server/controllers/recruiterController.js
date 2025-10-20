@@ -86,6 +86,57 @@ exports.getDashboardStats = async (req, res) => {
     // Sort by applications and get top jobs
     const sortedTopJobs = topJobs.sort((a, b) => b.applications - a.applications).slice(0, 5);
 
+    // Get daily application data for chart
+    const applicationsByDate = await CandidateJob.aggregate([
+      {
+        $match: {
+          job_id: { $in: jobIds },
+          date_applied: { $gte: filterDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$date_applied" }
+          },
+          applications: { $sum: 1 },
+          shortlisted: {
+            $sum: {
+              $cond: [{ $regexMatch: { input: "$current_status", regex: /shortlisted/i } }, 1, 0]
+            }
+          },
+          rejected: {
+            $sum: {
+              $cond: [{ $regexMatch: { input: "$current_status", regex: /rejected/i } }, 1, 0]
+            }
+          }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Fill in missing dates with zero values
+    const daysToShow = filter === 'daily' ? 7 : filter === 'weekly' ? 7 : 30;
+    const chartData = [];
+    const today = new Date();
+    
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const existingData = applicationsByDate.find(d => d._id === dateStr);
+      
+      chartData.push({
+        date: dateStr,
+        applications: existingData ? existingData.applications : 0,
+        shortlisted: existingData ? existingData.shortlisted : 0,
+        rejected: existingData ? existingData.rejected : 0
+      });
+    }
+
     // 5. Acquisitions (Application Funnel This Month)
     const totalApplicationsThisMonth = await CandidateJob.countDocuments({
       job_id: { $in: jobIds },
@@ -154,6 +205,7 @@ exports.getDashboardStats = async (req, res) => {
       interviews: scheduledInterviewsCount,
       topActiveJobs: sortedTopJobs,
       topActiveJobsFilter: filter,
+      chartData: chartData, // Add actual date-based chart data
       acquisitions,
       newApplicants: applicantsList,
       companyProfile,

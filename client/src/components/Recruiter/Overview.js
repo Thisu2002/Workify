@@ -42,9 +42,12 @@ const Overview = ({ setActiveTab }) => {
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedJobFilter, setSelectedJobFilter] = useState('weekly');
   const [dashboardData, setDashboardData] = useState(null);
+  const [topActiveJobs, setTopActiveJobs] = useState(null);
+  const [chartData, setChartData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch dashboard data
+  // Fetch initial dashboard data (only once)
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -61,7 +64,10 @@ const Overview = ({ setActiveTab }) => {
         console.log('Dashboard data received:', response.data);
         console.log('User profile:', response.data.userProfile);
         console.log('Top active jobs:', response.data.topActiveJobs);
+        console.log('Chart data:', response.data.chartData);
         setDashboardData(response.data);
+        setTopActiveJobs(response.data.topActiveJobs);
+        setChartData(response.data.chartData || []);
         setError(null);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -72,87 +78,57 @@ const Overview = ({ setActiveTab }) => {
     };
 
     fetchDashboardData();
-  }, [selectedJobFilter]);
+  }, []); // Only run once on mount
 
-  // Generate chart data from API response
-  const generateChartData = () => {
-    if (!dashboardData?.topActiveJobs || dashboardData.topActiveJobs.length === 0) {
-      console.log('No topActiveJobs data available');
+  // Fetch only top active jobs when filter changes
+  useEffect(() => {
+    const fetchTopActiveJobs = async () => {
+      // Skip if this is the initial load (handled by the first useEffect)
+      if (!dashboardData) return;
+
+      try {
+        setChartLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `http://localhost:5000/recruiter/dashboard/stats?filter=${selectedJobFilter}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log('Updated top active jobs:', response.data.topActiveJobs);
+        console.log('Updated chart data:', response.data.chartData);
+        setTopActiveJobs(response.data.topActiveJobs);
+        setChartData(response.data.chartData || []);
+      } catch (err) {
+        console.error('Error fetching top active jobs:', err);
+      } finally {
+        setChartLoading(false);
+      }
+    };
+
+    fetchTopActiveJobs();
+  }, [selectedJobFilter, dashboardData]);
+
+  // Format chart data for display
+  const formatChartData = () => {
+    if (!chartData || chartData.length === 0) {
       return [];
     }
     
-    // Create time-series data based on filter
-    const daysToShow = selectedJobFilter === 'daily' ? 7 : 
-                       selectedJobFilter === 'weekly' ? 7 : 30;
-    
-    // Get totals from actual data
-    const totalApps = dashboardData.topActiveJobs.reduce((sum, job) => sum + job.applications, 0);
-    const totalShortlisted = dashboardData.topActiveJobs.reduce((sum, job) => sum + job.shortlisted, 0);
-    const totalRejected = dashboardData.topActiveJobs.reduce((sum, job) => sum + job.rejected, 0);
-    
-    console.log('Chart totals:', { totalApps, totalShortlisted, totalRejected, daysToShow, filter: selectedJobFilter });
-    
-    // If there's no data, return empty array
-    if (totalApps === 0 && totalShortlisted === 0 && totalRejected === 0) {
-      console.log('All totals are zero, returning empty chart');
-      return [];
-    }
-    
-    const chartData = [];
-    const today = new Date();
-    
-    // For realistic distribution, concentrate applications on recent days
-    // Applications typically come in bursts, not evenly distributed
-    const recentDays = Math.min(Math.ceil(daysToShow * 0.3), Math.max(3, totalApps)); // 30% of period or at least 3 days
-    
-    // Create application arrival pattern
-    let remainingApps = totalApps;
-    let remainingShort = totalShortlisted;
-    let remainingRej = totalRejected;
-    
-    for (let i = daysToShow - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
+    // Format dates for display (DD.MM format)
+    return chartData.map(item => {
+      const date = new Date(item.date);
       const dateStr = `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
       
-      let appValue = 0;
-      let shortValue = 0;
-      let rejValue = 0;
-      
-      // Recent days get more applications
-      if (i < recentDays && remainingApps > 0) {
-        // Distribute with some randomness
-        const portion = Math.random() * 0.4 + 0.3; // 30% to 70% of remaining
-        appValue = Math.min(Math.ceil(remainingApps * portion), remainingApps);
-        remainingApps -= appValue;
-        
-        // Shortlisted and rejected follow applications
-        if (totalShortlisted > 0 && remainingShort > 0 && Math.random() > 0.5) {
-          shortValue = Math.min(Math.ceil(Math.random() * 2), remainingShort);
-          remainingShort -= shortValue;
-        }
-        
-        if (totalRejected > 0 && remainingRej > 0 && Math.random() > 0.3) {
-          rejValue = Math.min(Math.ceil(Math.random() * 2), remainingRej);
-          remainingRej -= rejValue;
-        }
-      } else if (remainingApps > 0 && i === 0) {
-        // Last day gets remaining apps
-        appValue = remainingApps;
-        shortValue = remainingShort;
-        rejValue = remainingRej;
-      }
-      
-      chartData.push({
+      return {
         date: dateStr,
-        Applications: appValue,
-        Shortlisted: shortValue,
-        Rejected: rejValue
-      });
-    }
-    
-    console.log('Generated chart data:', chartData);
-    return chartData;
+        Applications: item.applications,
+        Shortlisted: item.shortlisted,
+        Rejected: item.rejected
+      };
+    });
   };
 
   // Initialize profile from dashboard data
@@ -347,9 +323,13 @@ const Overview = ({ setActiveTab }) => {
                 </Box>
               </Stack>
               {/* Line Chart */}
-              {generateChartData().length > 0 ? (
+              {chartLoading ? (
+                <Box display="flex" justifyContent="center" alignItems="center" height={140}>
+                  <CircularProgress size={30} />
+                </Box>
+              ) : formatChartData().length > 0 ? (
                 <ResponsiveContainer width="100%" height={140}>
-                  <LineChart data={generateChartData()}>
+                  <LineChart data={formatChartData()}>
                     <XAxis dataKey="date" />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
@@ -370,14 +350,20 @@ const Overview = ({ setActiveTab }) => {
                   <Typography variant="subtitle2" color="text.secondary">Job Title</Typography>
                   <Typography variant="subtitle2" color="text.secondary">Applications</Typography>
                 </Box>
-                {dashboardData?.topActiveJobs?.map((job, idx) => (
-                  <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" py={1} borderBottom={idx < dashboardData.topActiveJobs.length - 1 ? "1px solid #f0f0f0" : "none"}>
-                    <Typography variant="body1">{job.jobTitle}</Typography>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="body1" fontWeight="bold">{job.applications}</Typography>
-                    </Box>
+                {chartLoading ? (
+                  <Box display="flex" justifyContent="center" py={2}>
+                    <CircularProgress size={24} />
                   </Box>
-                ))}
+                ) : (
+                  topActiveJobs?.map((job, idx) => (
+                    <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" py={1} borderBottom={idx < topActiveJobs.length - 1 ? "1px solid #f0f0f0" : "none"}>
+                      <Typography variant="body1">{job.jobTitle}</Typography>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Typography variant="body1" fontWeight="bold">{job.applications}</Typography>
+                      </Box>
+                    </Box>
+                  ))
+                )}
               </Box>
             </Box>
           </Paper>
