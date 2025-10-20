@@ -36,35 +36,79 @@ import {
   School
 } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import axios from 'axios';
 import "../../styles/Recruiter.css";
 
 const Overview = React.memo(() => {
     const [loading, setLoading] = useState(false);
+    const [upcomingInterviewsCount, setUpcomingInterviewsCount] = useState(0);
+    const [jobsAppliedCount, setJobsAppliedCount] = useState(0);
     
-      const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
-        <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
-          <Card className="recruiter-stat-card">
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="body2" className="stat-title">
-                    {title}
-                  </Typography>
-                  <Typography variant="h3" className="stat-value" sx={{ color }}>
-                    {value}
-                  </Typography>
-                  <Typography variant="caption" className="stat-change">
-                    {change}
-                  </Typography>
-                </Box>
-                <Box className="stat-icon" sx={{ backgroundColor: alpha(color, 0.1) }}>
-                  {icon}
-                </Box>
+    // Fetch dashboard data
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // Fetch upcoming interviews (both pending and scheduled)
+        const interviewsResponse = await axios.get('http://localhost:5000/api/interviews/upcoming', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // Fetch job applications
+        const applicationsResponse = await axios.get('http://localhost:5000/api/applicationTracker/my-applications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (interviewsResponse.data.success) {
+          // Count only scheduled interviews (confirmed ones)
+          const scheduledInterviews = interviewsResponse.data.data.filter(interview => 
+            interview.candidate_job_status && interview.candidate_job_status.includes('Scheduled')
+          );
+          setUpcomingInterviewsCount(scheduledInterviews.length);
+        }
+
+        if (applicationsResponse.data.success) {
+          setJobsAppliedCount(applicationsResponse.data.data.length);
+        }
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Fetch data when component mounts
+    useEffect(() => {
+      fetchDashboardData();
+    }, []);
+    
+    const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
+      <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
+        <Card className="recruiter-stat-card">
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography variant="body2" className="stat-title">
+                  {title}
+                </Typography>
+                <Typography variant="h3" className="stat-value" sx={{ color }}>
+                  {loading ? '...' : value}
+                </Typography>
+                <Typography variant="caption" className="stat-change">
+                  {change}
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Zoom>
-      );
+              <Box className="stat-icon" sx={{ backgroundColor: alpha(color, 0.1) }}>
+                {icon}
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Zoom>
+    );
 
     return (
         <Box>
@@ -118,14 +162,14 @@ const Overview = React.memo(() => {
                 <StatCard 
                   icon={<AssignmentInd />}
                   title="Upcoming Interviews"
-                  value="8"
+                  value={upcomingInterviewsCount}
                 />
               </Grid>
               <Grid item xs={4}>
                 <StatCard 
                   icon={<WorkOutline />}
                   title="Jobs Applied"
-                  value="10"
+                  value={jobsAppliedCount}
                 />
               </Grid>
             </Grid>
