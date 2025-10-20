@@ -26,13 +26,11 @@ import {
 
 // Re-using cardColors from JobPostings for consistency if you like
 const cardColors = [
-  "#e3eaf7", // A soft blue
-  "#e5f3e5", // A soft green
-  "#f7e7d7", // A soft orange/peach
-  "#f0e3f0", // A soft purple
-  "#d7f7f3", // A soft teal
-  "#f7e5e5", // A soft red
+  "#e3eaf7",  "#e5f3e5",  "#f7e7d7",  "#f0e3f0",  "#d7f7f3",  "#f7e5e5",
 ];
+
+// professional default company icon (SVG data URL)
+const DEFAULT_COMPANY_LOGO = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect fill='%230d6efd' rx='20' width='120' height='120'/><g fill='%23fff' transform='translate(20,24)'><rect x='0' y='0' width='80' height='12' rx='3'/><rect x='0' y='20' width='80' height='12' rx='3'/><rect x='0' y='40' width='80' height='12' rx='3'/><rect x='8' y='64' width='24' height='28' rx='3'/><rect x='36' y='64' width='24' height='28' rx='3'/><rect x='64' y='64' width='16' height='28' rx='3'/></g></svg>";
 
 const CompanyGridView = ({ companies, searchTerm, onSearchChange, onSelectCompany }) => (
   <div className="company-grid-view">
@@ -57,8 +55,7 @@ const CompanyGridView = ({ companies, searchTerm, onSearchChange, onSelectCompan
         >
           <img
             src={
-              company.logo ||
-              "https://cdn-icons-png.flaticon.com/512/888/888859.png"
+              company.logo || DEFAULT_COMPANY_LOGO
             }
             alt={`${company.name} logo`}
             className="profile-logo"
@@ -153,8 +150,7 @@ const CompanyDetailView = ({ company, onBack }) => {
       >
         <img
           src={
-            company.logo ||
-            "https://cdn-icons-png.flaticon.com/512/888/888859.png"
+            company.logo || DEFAULT_COMPANY_LOGO
           }
           alt={`${company.name} logo`}
           className="detail-header-logo"
