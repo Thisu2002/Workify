@@ -32,6 +32,10 @@ app.use('/api/mentors', mentorRoutes);
 const applicationTrackerRoutes = require('./routes/applicationTracker');
 app.use('/api/applicationTracker', applicationTrackerRoutes);
 
+// Add interview routes
+const interviewRoutes = require('./routes/interviews');
+app.use('/api/interviews', interviewRoutes);
+
 //app.use('/user', require('./routes/user')); // Assuming you have a user route
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

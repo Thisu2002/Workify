@@ -8,6 +8,9 @@ const Mentor = require('../models/Mentor');
 const SubscriptionPlan = require('../models/SubscriptionPlan');
 const RegistrationRequest = require('../models/RegistrationRequest');
 const BusinessManager = require('../models/BusinessManager');
+const Skill = require('../models/Skill');
+const mongoose = require('mongoose');
+
 
 
 console.log('managerController loaded'); // debug
@@ -15,6 +18,7 @@ console.log('managerController loaded'); // debug
 // Get job posts with selected fields only
 exports.getJobPosts = async (req, res) => {
   try {
+    // Fetch all job posts
     const posts = await Post.find({})
       .select({
         _id: 1,
@@ -27,12 +31,31 @@ exports.getJobPosts = async (req, res) => {
         education_requirements: 1,
         date_posted: 1,
         status: 1,
+        company_id: 1,      // <-- include company reference
+        recruiter_id: 1,    // <-- include recruiter reference if present
+        skills: 1, // include skill IDs
       })
       .sort({ date_posted: -1 })
       .lean();
 
     console.log('managerController.getJobPosts -> found', posts.length, 'posts');
-    res.status(200).json(posts);
+
+    // Fetch all skills once for mapping
+    const allSkills = await Skill.find({}).lean();
+    const skillMap = {};
+    allSkills.forEach(skill => {
+      skillMap[skill.id] = skill.name;
+    });
+
+    // Map skill IDs to skill names for each post
+    const postsWithSkillNames = posts.map(post => ({
+      ...post,
+      skills: Array.isArray(post.skills)
+        ? post.skills.map(skillId => skillMap[skillId] || `Unknown(${skillId})`)
+        : [],
+    }));
+
+    res.status(200).json(postsWithSkillNames);
   } catch (err) {
     console.error('getJobPosts error:', err);
     res.status(500).json({
@@ -41,6 +64,7 @@ exports.getJobPosts = async (req, res) => {
     });
   }
 };
+
 
 exports.getCompanies = async (req, res) => {
   try {
@@ -489,14 +513,17 @@ exports.getAnalyticsData = async (req, res) => {
       }
     ]);
 
-    // 2️⃣ Companies: registrations over time
-    const companyTrends = await Company.aggregate([
+    // 2️⃣ Companies: registrations over time (use RegistrationRequest pending requests)
+    const companyTrends = await RegistrationRequest.aggregate([
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: { $ifNull: ["$createdAt", "$requestDate", { $toDate: "$_id" }] }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo }, status: "Pending" } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$createdAtAgg" },
           count: { $sum: 1 }
         }
       },
@@ -539,12 +566,21 @@ exports.getAnalyticsData = async (req, res) => {
 
     // 5️⃣ Mentor verifications trend
     const mentorVerificationTrends = await MentorVerification.aggregate([
+      // ensure we have a date field to work with (createdAt or ObjectId timestamp)
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: {
+            $ifNull: ["$createdAt", { $toDate: "$_id" }]
+          }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: {
+            year: { $year: "$createdAtAgg" },
+            month: { $month: "$createdAtAgg" }
+          },
           total: { $sum: 1 },
           accepted: {
             $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
@@ -554,17 +590,23 @@ exports.getAnalyticsData = async (req, res) => {
           }
         }
       },
-      { $sort: { "_id": 1 } }
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
     ]);
 
     // 6️⃣ Registration requests trend
     const registrationTrends = await RegistrationRequest.aggregate([
+      // ensure we have a date to work with: prefer createdAt, then requestDate, then ObjectId timestamp
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: {
+            $ifNull: ["$createdAt", "$requestDate", { $toDate: "$_id" }]
+          }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$createdAtAgg" },
           total: { $sum: 1 },
           accepted: {
             $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
@@ -588,6 +630,76 @@ exports.getAnalyticsData = async (req, res) => {
   } catch (err) {
     console.error("getAnalyticsData error:", err);
     res.status(500).json({ message: "Error fetching analytics", error: err.message });
+  }
+};
+
+
+exports.getCompanyDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Load company and populate recruiters and subscription plan if possible
+    const company = await Company.findById(id)
+      .populate({ path: 'recruiters', select: '_id name email contactNumber company firstName lastName' })
+      .populate({ path: 'currentSubscription.plan', model: 'SubscriptionPlan' })
+      .lean();
+
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+
+    // Fetch jobs for this company (ensure company_id exists on JobPost)
+    const jobs = await Post.find({ company_id: company._id })
+      .select({
+        _id: 1,
+        title: 1,
+        description: 1,
+        location: 1,
+        salary: 1,
+        jobType: 1,
+        deadline: 1,
+        education_requirements: 1,
+        date_posted: 1,
+        status: 1,
+        company_id: 1,
+        skills: 1,
+      })
+      .sort({ date_posted: -1 })
+      .lean();
+
+    // Clean recruiters array (filter out nulls and normalize name)
+    const recruiters = (company.recruiters || [])
+      .filter(Boolean)
+      .map((r) => ({
+        _id: r._id,
+        name: r.name || `${r.firstName || ''} ${r.lastName || ''}`.trim(),
+        email: r.email,
+        contactNumber: r.contactNumber,
+        company: r.company,
+      }));
+
+    // If currentSubscription.plan is an ObjectId (not populated), try to fetch the plan
+    let plan = null;
+    if (company.currentSubscription?.plan) {
+      if (typeof company.currentSubscription.plan === 'object' && company.currentSubscription.plan.name) {
+        plan = company.currentSubscription.plan;
+      } else {
+        // fetch plan by id as fallback
+        try {
+          plan = await SubscriptionPlan.findById(company.currentSubscription.plan).lean();
+        } catch (e) {
+          plan = null;
+        }
+      }
+    }
+
+    res.status(200).json({
+      ...company,
+      recruiters,
+      jobs,
+      subscriptionPlan: plan,
+    });
+  } catch (err) {
+    console.error('getCompanyDetails error:', err);
+    res.status(500).json({ message: 'Error fetching company details', error: err.message });
   }
 };
 
