@@ -29,12 +29,12 @@ const menuTabs = [
     path: "/admin/users",
     icon: <Group />,
   },
-  {
-    id: "analytics",
-    label: "Analytics",
-    path: "/admin/analytics",
-    icon: <Schedule />,
-  },
+  // {
+  //   id: "analytics",
+  //   label: "Analytics",
+  //   path: "/admin/analytics",
+  //   icon: <Schedule />,
+  // },
   // {
   //   id: "feedback",
   //   label: "Feedback",

@@ -66,7 +66,7 @@ function App() {
 
         <Route path="/admin" element={<AdminRoot />} />
         <Route path="/admin/overview" element={<AdminRoot />} />
-        <Route path="/admin/analytics" element={<AdminRoot />} />
+        {/* <Route path="/admin/analytics" element={<AdminRoot />} /> */}
         <Route path="/admin/users" element={<AdminRoot />} />
 
         <Route path="/manager" element={<BusinessManagerRoot />} />
@@ -78,7 +78,8 @@ function App() {
         <Route path="/manager/blacklist-requests" element={<BusinessManagerRoot />} />
         <Route path="/manager/subscription-plans" element={<BusinessManagerRoot />} />
         <Route path="/manager/jobPosts" element={<BusinessManagerRoot />} />
-        <Route path="/manager/feedback" element={<BusinessManagerRoot />} />
+        {/* <Route path="/manager/feedback" element={<BusinessManagerRoot />} /> */}
+        <Route path="/manager/analytics" element={<BusinessManagerRoot />} />
         <Route path="/manager/company-profiles/:companyId" element={<CompanyProfilesPage />} />
 
         {/* <Route path="/recruiter/job-posts" element={<JobPosts />} /> */}
