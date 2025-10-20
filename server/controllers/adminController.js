@@ -101,3 +101,107 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ message: 'Error fetching users', error: err.message });
   }
 };
+
+exports.getUserCount = async (req, res) => {
+  try {
+    const count = await User.countDocuments({});
+    res.status(200).json({ totalUsers: count });
+  } catch (err) {
+    console.error('Error fetching user count:', err);
+    res.status(500).json({ message: 'Error fetching user count', error: err.message });
+  }
+};
+
+// adminController.js
+exports.getActiveUsersToday = async (req, res) => {
+  try {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const activeCount = await User.countDocuments({
+      lastLogin: { $gte: startOfToday, $lte: endOfToday }
+    });
+
+    res.status(200).json({ activeUsersToday: activeCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching active users today' });
+  }
+};
+
+// Get recent active users (last 10 logins)
+exports.getRecentActiveUsers = async (req, res) => {
+  try {
+    // Fetch users who logged in, sorted by lastLogin descending
+    const users = await User.find({ lastLogin: { $ne: null } })
+      .sort({ lastLogin: -1 })
+      .limit(10)
+      .lean();
+
+    const recentActiveUsers = users.map(u => ({
+      id: u._id,
+      name: `${u.firstName} ${u.lastName}`,
+      role: u.user_roles[0] || 'User', // assuming first role
+      lastActive: u.lastLogin
+    }));
+
+    res.status(200).json(recentActiveUsers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching recent active users' });
+  }
+};
+
+// GET /admin/platform-usage
+exports.getPlatformUsage = async (req, res) => {
+  try {
+    // Aggregate users by month for the current year
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+    const endOfYear = new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999);
+
+    const usage = await User.aggregate([
+      { 
+        $match: { lastLogin: { $gte: startOfYear, $lte: endOfYear } } 
+      },
+      {
+        $group: {
+          _id: { $month: "$lastLogin" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    // Convert to chart format: { name: 'Jan', users: 123 }
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const chartData = months.map((m, i) => {
+      const monthData = usage.find(u => u._id === i + 1);
+      return { name: m, users: monthData ? monthData.count : 0 };
+    });
+
+    res.status(200).json(chartData);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching platform usage', error: err.message });
+  }
+};
+
+exports.getAdminUser = async (req, res) => {
+  try {
+    const admin = await User.findOne({ user_roles: 'admin' });
+    if (!admin) return res.status(404).json({ message: 'Admin user not found' });
+
+    res.status(200).json({ 
+      id: admin._id,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      lastLogin: admin.lastLogin  // include last login
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching admin user' });
+  }
+};

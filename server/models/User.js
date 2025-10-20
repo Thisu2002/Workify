@@ -27,7 +27,8 @@ const userSchema = new mongoose.Schema({
         type: [String],
         enum: ['admin', 'candidate', 'recruiter', 'mentor', 'business_manager', 'lead_panelist'],
         default: []
-    }
+    },
+    lastLogin: { type: Date } 
 });
 
 module.exports = mongoose.model('User', userSchema);
