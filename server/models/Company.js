@@ -21,7 +21,8 @@ const companySchema = new mongoose.Schema({
       endDate: { type: Date },
       status: { type: String, enum: ['active', 'expired'], default: 'expired' }
     }
-  ]
+  ],
+  passkey: { type: String, required: true }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Company', companySchema);

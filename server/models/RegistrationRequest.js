@@ -19,7 +19,8 @@ const registrationRequestSchema = new mongoose.Schema({
     price: Number,
     term: String
   },
-  declineReason: { type: String, default: '' }
+  declineReason: { type: String, default: '' },
+  passkey: { type: String, required: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('RegistrationRequest', registrationRequestSchema);
+module.exports = mongoosee.model('RegistrationRequest', registrationRequestSchema);
