@@ -100,18 +100,19 @@ const ApplyForm = ({ open, onClose, mentor, userProfile, onSuccess }) => {
       console.log('Response received:', response.data);
 
       if (response.data.success) {
+        // MOVE TO SUCCESS STEP FIRST - this was missing!
+        setActiveStep(steps.length);
+        
         enqueueSnackbar('Mentoring request sent successfully!', { variant: 'success' });
         
-        // Call the success callback BEFORE closing the form
+        // Call the success callback 
         if (onSuccess) {
           console.log('Calling onSuccess callback');
           onSuccess(mentor, requestData);
         }
         
-        // Reset form state
-        setSessionGoals('');
-        setRequestType('');
-        setActiveStep(0);
+        // Don't reset form state here - let user see success message
+        // The form will be reset when they close the dialog
       } else {
         enqueueSnackbar(response.data.message || 'Failed to send request', { variant: 'error' });
       }
@@ -127,16 +128,17 @@ const ApplyForm = ({ open, onClose, mentor, userProfile, onSuccess }) => {
   };
   
   const handleCloseDialog = () => {
-    // 4. Reset state specific to this form on close
-    setTimeout(() => {
-        setActiveStep(0);
-        setSessionGoals('');
-        setUserInfo({
-          name: userProfile?.name || '',
-          email: userProfile?.contact?.email || '',
-          phone: userProfile?.contact?.phone || ''
-        });
-    }, 300); // Delay to allow closing animation
+    // Reset all form state when closing
+    setActiveStep(0);
+    setSessionGoals('');
+    setRequestType('');
+    setIsSubmitting(false);
+    setUserInfo({
+      name: userProfile?.name || '',
+      email: userProfile?.contact?.email || '',
+      phone: userProfile?.contact?.phone || ''
+    });
+    
     onClose();
   };
 
@@ -251,13 +253,21 @@ const ApplyForm = ({ open, onClose, mentor, userProfile, onSuccess }) => {
         </Stepper>
 
         {activeStep === steps.length ? (
-          // 7. Custom success message for the session request
+          // Success message for the session request
           <Box sx={{ textAlign: 'center', p: 4 }}>
             <CheckCircle color="success" sx={{ fontSize: 60, mb: 2 }} />
-            <Typography variant="h5" gutterBottom>Request Sent!</Typography>
-            <Typography color="text.secondary">
-              {mentor?.name} has received your request. You will be notified once they respond. You can track the status in your "My Sessions" tab.
+            <Typography variant="h5" gutterBottom>Request Sent Successfully!</Typography>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              {mentor?.name} has received your request for a <strong>{requestType || 'General Mentoring'}</strong> session.
             </Typography>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              You will be notified once they respond. You can track the status in your "My Sessions" tab.
+            </Typography>
+            <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1, mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Your message:</strong> {sessionGoals}
+              </Typography>
+            </Box>
           </Box>
         ) : (
           <Box sx={{ mt: 2, mb: 1 }}>{getStepContent(activeStep)}</Box>

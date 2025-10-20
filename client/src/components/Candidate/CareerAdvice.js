@@ -135,14 +135,15 @@ const CareerAdvice = () => {
   const getMentorSessionStatus = (mentorId) => {
     const existingSession = sessions.find(session => {
       const sessionMentorId = session.mentorId || session.mentor?.id || session.mentor?._id;
-      return sessionMentorId === mentorId && 
-             (session.status === 'pending' || session.status === 'scheduled' || 
-              session.session?.status === 'pending' || session.session?.status === 'scheduled');
+      return (sessionMentorId === mentorId || sessionMentorId === mentorId.toString()) && 
+             (session.status === 'pending' || session.status === 'scheduled');
     });
     
     if (existingSession) {
-      return existingSession.status || existingSession.session?.status || null;
+      console.log(`Found existing session for mentor ${mentorId}:`, existingSession);
+      return existingSession.status;
     }
+    console.log(`No existing session found for mentor ${mentorId}`);
     return null;
   };
 
@@ -174,14 +175,16 @@ const CareerAdvice = () => {
   };
 
   // Handle successful session request
-  const handleSessionRequestSuccess = (mentor, requestData) => {
-    console.log('Session request success called');
+  const handleSessionRequestSuccess = async (mentor, requestData) => {
+    console.log('Session request success called with:', mentor, requestData);
     
-    // Refresh sessions from backend to get the latest data
-    fetchSessions();
+    // Add a small delay and then refresh sessions
+    setTimeout(async () => {
+      await fetchSessions();
+      console.log('Sessions refreshed, button states should update');
+    }, 1000);
     
-    // Close the form
-    handleCloseRequestForm();
+    // Don't close the form here - let the RequestForm handle it
   };
 
   const getStatusColor = (status) => {
