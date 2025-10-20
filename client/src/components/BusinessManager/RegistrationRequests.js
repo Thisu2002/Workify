@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { FaBuilding, FaEnvelope, FaPhone, FaLink, FaCalendarAlt, FaInfoCircle, FaStar } from 'react-icons/fa';
+import { useEffect } from 'react';
+import axios from 'axios';
 import '../../styles/RegistrationRequests.css'; // We will create this CSS file next
 
 // --- Sample Data: Now includes subscriptionPlan object ---
@@ -65,30 +67,53 @@ const initialRequests = [
 
 // --- Main Component ---
 const RegistrationRequests = () => {
-    const [requests, setRequests] = useState(initialRequests);
-    const [selectedRequest, setSelectedRequest] = useState(requests[0] || null);
+    const [requests, setRequests] = useState([]);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+
+    useEffect(() => {
+  const fetchRequests = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/manager/registrationRequests');
+      setRequests(res.data);
+      setSelectedRequest(res.data[0] || null);
+    } catch (err) {
+      console.error('Error fetching registration requests:', err);
+    }
+  };
+  fetchRequests();
+}, []);
+
+
 
     const handleSelectRequest = (request) => {
         setSelectedRequest(request);
     };
 
-    const handleAccept = (requestId) => {
-        console.log(`Accepted request ID: ${requestId}`);
-        setRequests(prev => prev.filter(r => r.id !== requestId));
-        if (selectedRequest && selectedRequest.id === requestId) {
-            const remainingRequests = requests.filter(r => r.id !== requestId);
-            setSelectedRequest(remainingRequests[0] || null);
-        }
-    };
+    const handleAccept = async (requestId) => {
+  if (!window.confirm('Are you sure you want to accept this request?')) return;
+  try {
+    await axios.post(`http://localhost:5000/manager/registrationRequests/accept/${requestId}`);
+    alert('Request accepted successfully!');
+    setRequests(prev => prev.filter(r => r._id !== requestId));
+  } catch (err) {
+    console.error(err);
+    alert('Error accepting request.');
+  }
+};
 
-    const handleDecline = (requestId) => {
-        console.log(`Declined request ID: ${requestId}`);
-        setRequests(prev => prev.filter(r => r.id !== requestId));
-        if (selectedRequest && selectedRequest.id === requestId) {
-            const remainingRequests = requests.filter(r => r.id !== requestId);
-            setSelectedRequest(remainingRequests[0] || null);
-        }
-    };
+const handleDecline = async (requestId) => {
+  const reason = prompt('Please enter a reason for declining:');
+  if (!reason) return;
+  try {
+    await axios.post(`http://localhost:5000/manager/registrationRequests/decline/${requestId}`, { reason });
+    alert('Request declined successfully!');
+    setRequests(prev => prev.filter(r => r._id !== requestId));
+  } catch (err) {
+    console.error(err);
+    alert('Error declining request.');
+  }
+};
+
 
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
@@ -107,8 +132,8 @@ const RegistrationRequests = () => {
                         {requests.length > 0 ? (
                             requests.map(req => (
                                 <div
-                                    key={req.id}
-                                    className={`request-item ${selectedRequest?.id === req.id ? 'active' : ''}`}
+                                    key={req._id || req.id}
+                                    className={`request-item ${selectedRequest?.id === req._id ? 'active' : ''}`}
                                     onClick={() => handleSelectRequest(req)}
                                 >
                                     <h3 className="request-item-company">{req.companyName}</h3>
@@ -178,10 +203,10 @@ const RegistrationRequests = () => {
                                 </div>
                             </div>
                             <div className="details-actions">
-                                <button className="btn btn-decline" onClick={() => handleDecline(selectedRequest.id)}>
+                                <button className="btn btn-decline" onClick={() => handleDecline(selectedRequest._id)}>
                                     Decline
                                 </button>
-                                <button className="btn btn-accept" onClick={() => handleAccept(selectedRequest.id)}>
+                                <button className="btn btn-accept" onClick={() => handleAccept(selectedRequest._id)}>
                                     Accept
                                 </button>
                             </div>

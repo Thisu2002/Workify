@@ -95,22 +95,12 @@ const jobPostSchema = new mongoose.Schema({
       available_dates: [{
         date: {
           type: Date,
+          default: null 
         },
-        time_slots: [{
-          start_time: String,
-          end_time: String,
-          available: {
-            type: Boolean,
-            default: true
-          }
-        }]
       }],
       final_date: {
-        date: {
-          type: Date,
-        },
-        start_time: String,
-        end_time: String
+        type: Date,
+        default: null
       }
     },
   ],

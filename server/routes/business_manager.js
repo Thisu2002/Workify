@@ -23,5 +23,22 @@ router.put('/subscriptionPlans/:id', managerController.updateSubscriptionPlan);
 router.patch('/subscriptionPlans/:id/toggle', managerController.toggleSubscriptionPlanStatus);
 router.get('/subscriptionPlans/:id/companies', managerController.getSubscribedCompanies);
 
+// Registration Requests
+router.get('/registrationRequests', managerController.getRegistrationRequests);
+router.post('/registrationRequests/accept/:id', managerController.acceptRegistrationRequest);
+router.post('/registrationRequests/decline/:id', managerController.declineRegistrationRequest);
+
+// Business Manager profile routes
+// Fetch active business manager
+router.get('/active', managerController.getActiveBusinessManager);
+
+// Update business manager
+router.put('/:id', managerController.updateBusinessManager);
+
+router.get('/dashboardStats', managerController.getDashboardStats);
+
+
+
+
 
 module.exports = router;

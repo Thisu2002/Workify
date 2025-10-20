@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -45,13 +47,40 @@ import "../../styles/BusinessManager.css";
 const Overview = ({ setActiveTab }) => {
     const [loading, setLoading] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
-    const [profile, setProfile] = useState({
-      name: "Sandaruwani Silva",
-      position: "Senior Business Manager",
-      industry: "IT and Business Services, workify",
-      description: "10+ years of experience in strategic business operations, growth planning, and client success. Based in USA."
+    const [profile, setProfile] = useState(null);
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    const [stats, setStats] = useState({
+      totalJobPosts: 0,
+      pendingMentorRequests: 0,
+      pendingCompanyRequests: 0
     });
+
     // const navigate = useNavigate();
+
+    useEffect(() => {
+  const fetchManager = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/manager/active');
+      setProfile(res.data);
+    } catch (err) {
+      console.error('Error fetching manager:', err);
+    }
+  };
+  fetchManager();
+}, []);
+
+    useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/manager/dashboardStats');
+      setStats(res.data);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+    }
+  };
+  fetchStats();
+}, []);
+
 
       const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
         <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
@@ -78,15 +107,27 @@ const Overview = ({ setActiveTab }) => {
         </Zoom>
       );
 
-      const handleEditOpen = () => setOpenEdit(true);
+      const handleEditOpen = () => {
+        if (!profile) return; // don't open editor when profile hasn't loaded
+        setOpenEdit(true);
+      };
       const handleEditClose = () => setOpenEdit(false);
       const handleProfileChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
       };
-      const handleSave = () => {
-        // Save logic here (API call, etc.)
-        setOpenEdit(false);
-      };
+      
+      const handleSave = async () => {
+        try {
+      if (!profile?._id) throw new Error('No profile id');
+      await axios.put(`http://localhost:5000/manager/${profile._id}`, profile);
+     alert('Profile updated successfully!');
+     setOpenEdit(false);
+   } catch (err) {
+     console.error('Error updating profile:', err);
+     alert('Failed to update profile');
+   }
+};
+
 
     return (
         <Box>
@@ -139,31 +180,31 @@ const Overview = ({ setActiveTab }) => {
           <Box display="flex" alignItems="center" gap={2}>
             <Grid container spacing={2} wrap="nowrap">
               <Grid item xs={4}>
-                <StatCard 
-                  icon={<WorkOutline />}
-                  title="Total Job Posts"
-                  value="28"
-                  change="+5 this month"
-                />
-              </Grid>
-              <Grid item>
-                <StatCard 
-                  icon={<AssignmentInd />}
-                  title="Mentor Verification Requests"
-                  value="14"
-                  change="New this month"
-                  color="#ffa502"
-                />
-              </Grid>
-              <Grid item>
-                <StatCard 
-                  icon={<Domain />}
-                  title="Company Registration Requests"
-                  value="20"
-                  change="New"
-                  color="#10b981"
-                />
-              </Grid>
+  <StatCard 
+    icon={<WorkOutline />}
+    title="Total Job Posts"
+    value={stats.totalJobPosts}
+  />
+</Grid>
+<Grid item>
+  <StatCard 
+    icon={<AssignmentInd />}
+    title="Mentor Verification Requests"
+    value={stats.pendingMentorRequests}
+    change="New this month"
+    color="#ffa502"
+  />
+</Grid>
+<Grid item>
+  <StatCard 
+    icon={<Domain />}
+    title="Company Registration Requests"
+    value={stats.pendingCompanyRequests}
+    change="New"
+    color="#10b981"
+  />
+</Grid>
+
             </Grid>
           </Box>
         </Box>
@@ -172,36 +213,40 @@ const Overview = ({ setActiveTab }) => {
       <Box className="manager-dashboard-content">
         <Box className="content-first-row" display="flex" flexDirection="row" alignItems="space-between" p={1}>
           <Paper className="manager-content-card manager-profile" elevation={2}>
-            <Box display="flex" flexDirection="column" alignItems="center" p={3}>
-                <Avatar
-                    src=""
-                    sx={{ width: 80, height: 80, mb: 2 }}
-                />
-                <Typography variant="h6" fontWeight="bold">
-                Jane Silva
-                </Typography>
-                <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1 }}>
-                    Business Manager, workify
-                </Typography>
-                <Chip 
-                    label="Manager Level: Senior" 
-                    className="it-services-chip"
-                    color="primary" 
-                    sx={{ mb: 2 }}
-                />
-                <Typography variant="body2" align="center" sx={{ mb: 2 }}>
-                    10+ years of experience in strategic business operations, growth planning, and client success. Based in Bangalore.
-                </Typography>
-                <Button
-                    className="new-button"
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    onClick={handleEditOpen}
-                >
-                    Edit Profile
-                </Button>
-            </Box>
+            {profile ? (
+  <Box display="flex" flexDirection="column" alignItems="center" p={3}>
+    <Avatar 
+      src={profile?.avatarUrl || ""} 
+      sx={{ width: 80, height: 80, mb: 2 }} 
+    />
+    <Typography variant="h6" fontWeight="bold">
+      {profile?.name || "—"}
+    </Typography>
+    <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1 }}>
+      {profile?.position || ""} {profile?.position && profile?.industry ? '•' : ''} {profile?.industry || ""}
+    </Typography>
+    <Box display="flex" gap={1} flexWrap="wrap" justifyContent="center" mb={1}>
+      <Chip label={`Email: ${profile?.email || ""}`} color="primary" size="small" />
+      <Chip label={`Contact: ${profile?.contactNumber || ""}`} color="primary" size="small" />
+      <Chip label={`Status: ${profile?.status || "N/A"}`} color={profile?.status === 'Active' ? 'success' : 'default'} size="small" />
+    </Box>
+    <Typography variant="body2" align="center" sx={{ mb: 2 }}>
+      {profile?.description || ""}
+    </Typography>
+    <Button
+      className="new-button"
+      variant="contained"
+      color="primary"
+      size="small"
+      onClick={handleEditOpen}
+    >
+      Edit Profile
+    </Button>
+  </Box>
+) : (
+  <Typography>Loading manager profile...</Typography>
+)}
+
         </Paper>
 
 
@@ -296,7 +341,7 @@ const Overview = ({ setActiveTab }) => {
             margin="normal"
             label="Company Name"
             name="name"
-            value={profile.name}
+            value={profile?.name || ''}
             onChange={handleProfileChange}
             fullWidth
           />
@@ -304,7 +349,7 @@ const Overview = ({ setActiveTab }) => {
             margin="normal"
             label="Position"
             name="position"
-            value={profile.position}
+            value={profile?.position || ''}
             onChange={handleProfileChange}
             fullWidth
           />
@@ -312,7 +357,7 @@ const Overview = ({ setActiveTab }) => {
             margin="normal"
             label="Industry"
             name="industry"
-            value={profile.industry}
+            value={profile?.industry || ''}
             onChange={handleProfileChange}
             fullWidth
           />
@@ -320,7 +365,7 @@ const Overview = ({ setActiveTab }) => {
             margin="normal"
             label="Description"
             name="description"
-            value={profile.description}
+            value={profile?.description || ''}
             onChange={handleProfileChange}
             fullWidth
             multiline

@@ -6,6 +6,9 @@ const Candidate = require('../models/Candidate');
 const MentorVerification = require('../models/MentorVerification');
 const Mentor = require('../models/Mentor');
 const SubscriptionPlan = require('../models/SubscriptionPlan');
+const RegistrationRequest = require('../models/RegistrationRequest');
+const BusinessManager = require('../models/BusinessManager');
+
 
 console.log('managerController loaded'); // debug
 
@@ -316,5 +319,121 @@ exports.getSubscribedCompanies = async (req, res) => {
   } catch (err) {
     console.error('getSubscribedCompanies error:', err);
     res.status(500).json({ message: 'Error fetching subscribed companies', error: err.message });
+  }
+};
+
+// Get all pending registration requests
+exports.getRegistrationRequests = async (req, res) => {
+  try {
+    const requests = await RegistrationRequest.find({ status: 'Pending' }).lean();
+    res.status(200).json(requests);
+  } catch (err) {
+    console.error('getRegistrationRequests error:', err);
+    res.status(500).json({ message: 'Error fetching registration requests', error: err.message });
+  }
+};
+
+// Accept registration request
+exports.acceptRegistrationRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await RegistrationRequest.findById(id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    // ✅ Create a new Company document
+    const newCompany = new Company({
+      name: request.companyName,
+      location: request.address || 'N/A',
+      description: request.description,
+      website: request.website,
+      currentSubscription: {
+        plan: request.subscriptionPlan.planId,
+        startDate: new Date(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)),
+        status: 'active'
+      }
+    });
+
+    await newCompany.save();
+
+    // Update request status
+    request.status = 'Accepted';
+    await request.save();
+
+    // (Optional: Send notification/email here)
+    res.status(200).json({ message: 'Registration request accepted', company: newCompany });
+  } catch (err) {
+    console.error('acceptRegistrationRequest error:', err);
+    res.status(500).json({ message: 'Error accepting registration request', error: err.message });
+  }
+};
+
+// Decline registration request
+exports.declineRegistrationRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const request = await RegistrationRequest.findById(id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    request.status = 'Declined';
+    request.declineReason = reason;
+    await request.save();
+
+    // (Optional: Send alert/email here)
+    res.status(200).json({ message: 'Registration request declined', request });
+  } catch (err) {
+    console.error('declineRegistrationRequest error:', err);
+    res.status(500).json({ message: 'Error declining registration request', error: err.message });
+  }
+};
+
+// Get active business manager
+exports.getActiveBusinessManager = async (req, res) => {
+  try {
+    const manager = await BusinessManager.findOne({ status: 'Active' }).lean();
+    if (!manager) return res.status(404).json({ message: 'No active manager found' });
+
+    res.status(200).json(manager);
+  } catch (err) {
+    console.error('getActiveBusinessManager error:', err);
+    res.status(500).json({ message: 'Error fetching active manager', error: err.message });
+  }
+};
+
+// Update manager profile
+exports.updateBusinessManager = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const manager = await BusinessManager.findById(id);
+    if (!manager) return res.status(404).json({ message: 'Manager not found' });
+
+    Object.assign(manager, updates);
+    await manager.save();
+
+    res.status(200).json({ message: 'Manager updated successfully', manager });
+  } catch (err) {
+    console.error('updateBusinessManager error:', err);
+    res.status(500).json({ message: 'Error updating manager', error: err.message });
+  }
+};
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalJobPosts = await Post.countDocuments({ status: 'Open' });
+    const pendingMentorRequests = await MentorVerification.countDocuments({ status: 'Pending' });
+    const pendingCompanyRequests = await RegistrationRequest.countDocuments({ status: 'Pending' });
+
+    res.status(200).json({
+      totalJobPosts,
+      pendingMentorRequests,
+      pendingCompanyRequests
+    });
+  } catch (err) {
+    console.error('getDashboardStats error:', err);
+    res.status(500).json({ message: 'Error fetching dashboard stats', error: err.message });
   }
 };
