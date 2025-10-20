@@ -232,4 +232,63 @@ router.get('/past', auth, async (req, res) => {
   }
 });
 
+// Confirm interview (change status from interviewPending to interviewScheduled)
+router.patch('/confirm/:candidateJobId', auth, async (req, res) => {
+  try {
+    const candidateJobId = req.params.candidateJobId;
+    const candidateId = req.user.id;
+    
+    console.log('Confirming interview for candidate_job:', candidateJobId);
+    
+    // Find and verify the candidate_job belongs to this user
+    const candidateJob = await Candidate_Job.findOne({
+      _id: candidateJobId,
+      candidate_id: candidateId
+    });
+    
+    if (!candidateJob) {
+      return res.status(404).json({
+        success: false,
+        message: 'Interview application not found'
+      });
+    }
+    
+    // Check if already confirmed
+    if (candidateJob.current_status.includes('Scheduled')) {
+      return res.json({
+        success: true,
+        message: 'Interview already confirmed',
+        status: candidateJob.current_status
+      });
+    }
+    
+    // Update status from Pending to Scheduled
+    const newStatus = candidateJob.current_status.replace('Pending', 'Scheduled');
+    
+    const updatedCandidateJob = await Candidate_Job.findByIdAndUpdate(
+      candidateJobId,
+      { current_status: newStatus },
+      { new: true }
+    );
+    
+    console.log('Interview confirmed. Status changed from:', candidateJob.current_status, 'to:', newStatus);
+    
+    return res.json({
+      success: true,
+      message: 'Interview confirmed successfully',
+      oldStatus: candidateJob.current_status,
+      newStatus: newStatus,
+      candidateJob: updatedCandidateJob
+    });
+    
+  } catch (error) {
+    console.error('Error confirming interview:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error confirming interview',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
