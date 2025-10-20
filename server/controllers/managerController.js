@@ -513,14 +513,17 @@ exports.getAnalyticsData = async (req, res) => {
       }
     ]);
 
-    // 2️⃣ Companies: registrations over time
-    const companyTrends = await Company.aggregate([
+    // 2️⃣ Companies: registrations over time (use RegistrationRequest pending requests)
+    const companyTrends = await RegistrationRequest.aggregate([
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: { $ifNull: ["$createdAt", "$requestDate", { $toDate: "$_id" }] }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo }, status: "Pending" } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$createdAtAgg" },
           count: { $sum: 1 }
         }
       },
@@ -563,12 +566,21 @@ exports.getAnalyticsData = async (req, res) => {
 
     // 5️⃣ Mentor verifications trend
     const mentorVerificationTrends = await MentorVerification.aggregate([
+      // ensure we have a date field to work with (createdAt or ObjectId timestamp)
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: {
+            $ifNull: ["$createdAt", { $toDate: "$_id" }]
+          }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: {
+            year: { $year: "$createdAtAgg" },
+            month: { $month: "$createdAtAgg" }
+          },
           total: { $sum: 1 },
           accepted: {
             $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
@@ -578,17 +590,23 @@ exports.getAnalyticsData = async (req, res) => {
           }
         }
       },
-      { $sort: { "_id": 1 } }
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
     ]);
 
     // 6️⃣ Registration requests trend
     const registrationTrends = await RegistrationRequest.aggregate([
+      // ensure we have a date to work with: prefer createdAt, then requestDate, then ObjectId timestamp
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: {
+            $ifNull: ["$createdAt", "$requestDate", { $toDate: "$_id" }]
+          }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$createdAtAgg" },
           total: { $sum: 1 },
           accepted: {
             $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }

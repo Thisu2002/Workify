@@ -15,6 +15,8 @@ const mentorVerificationSchema = new mongoose.Schema({
     default: 'Pending' 
   },
   reason: { type: String } // if declined
-});
+  },
+{ timestamps: true }
+);
 
 module.exports = mongoose.model('MentorVerification', mentorVerificationSchema);
