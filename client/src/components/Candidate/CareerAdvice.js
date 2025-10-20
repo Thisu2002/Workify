@@ -178,13 +178,26 @@ const CareerAdvice = () => {
   const handleSessionRequestSuccess = async (mentor, requestData) => {
     console.log('Session request success called with:', mentor, requestData);
     
-    // Add a small delay and then refresh sessions
+    // Immediately add the session to local state to update UI instantly
+    const newSession = {
+      _id: Date.now(), // Temporary ID
+      mentorId: mentor._id || mentor.id,
+      mentorName: mentor.name, // Use mentor.name, not candidate name
+      session_type: requestData.requestType || 'General Mentoring',
+      status: 'pending',
+      message: requestData.sessionGoals,
+      requestDate: new Date()
+    };
+    
+    // Add to sessions immediately to update button state
+    setSessions(prevSessions => [newSession, ...prevSessions]);
+    console.log('Added session to local state, button should now be disabled');
+    
+    // Also refresh from backend to get the real data
     setTimeout(async () => {
       await fetchSessions();
-      console.log('Sessions refreshed, button states should update');
+      console.log('Sessions refreshed from backend');
     }, 1000);
-    
-    // Don't close the form here - let the RequestForm handle it
   };
 
   const getStatusColor = (status) => {
