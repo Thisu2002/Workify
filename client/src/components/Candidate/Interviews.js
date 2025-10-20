@@ -13,7 +13,8 @@ import {
   IconButton,
   Popover,
   CircularProgress,
-  Alert
+  Alert,
+  Snackbar
 } from "@mui/material";
 import { 
   Event, 
@@ -23,7 +24,8 @@ import {
   CheckCircle, 
   Cancel,
   CalendarToday,
-  HourglassEmpty
+  HourglassEmpty,
+  Check
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -38,6 +40,8 @@ const Interviews = () => {
   const [pastInterviews, setPastInterviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [confirmingIds, setConfirmingIds] = useState(new Set()); // Track which interviews are being confirmed
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // State for the calendar popover
   const [anchorEl, setAnchorEl] = useState(null);
@@ -90,6 +94,57 @@ const Interviews = () => {
     }
   };
 
+  // Confirm interview (change status from interviewPending to interviewScheduled)
+  const confirmInterview = async (interview) => {
+    setConfirmingIds(prev => new Set([...prev, interview.id]));
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Update candidate_job status
+      const response = await axios.patch(
+        `http://localhost:5000/api/interviews/confirm/${interview.applicationId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      if (response.data.success) {
+        setSnackbar({
+          open: true,
+          message: 'Interview confirmed successfully!',
+          severity: 'success'
+        });
+        
+        // Update the local state to show the interview as confirmed
+        setUpcomingInterviews(prev =>
+          prev.map(item =>
+            item.id === interview.id
+              ? { ...item, candidate_job_status: item.candidate_job_status.replace('Pending', 'Scheduled') }
+              : item
+          )
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to confirm interview');
+      }
+      
+    } catch (error) {
+      console.error('Error confirming interview:', error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || 'Error confirming interview',
+        severity: 'error'
+      });
+    } finally {
+      setConfirmingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(interview.id);
+        return newSet;
+      });
+    }
+  };
+
   // Fetch data when component loads
   useEffect(() => {
     fetchInterviews();
@@ -104,7 +159,16 @@ const Interviews = () => {
     setAnchorEl(null);
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const isCalendarOpen = Boolean(anchorEl);
+
+  // Check if interview is already confirmed (scheduled)
+  const isInterviewConfirmed = (interview) => {
+    return interview.candidate_job_status && interview.candidate_job_status.includes('Scheduled');
+  };
 
   const getOutcomeChip = (outcome) => {
     if (outcome === 'Advanced to Next Round') {
@@ -146,15 +210,6 @@ const Interviews = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box>
-        {/* Header with Refresh Button */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            My Interviews
-          </Typography>
-          <Button variant="outlined" onClick={fetchInterviews} disabled={isLoading}>
-            {isLoading ? <CircularProgress size={20} /> : 'Refresh'}
-          </Button>
-        </Box>
 
         {/* Upcoming Interviews Section */}
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
@@ -203,8 +258,7 @@ const Interviews = () => {
                   <Chip 
                     label={interview.stage} 
                     color="primary" 
-                    variant="outlined" 
-                    sx={{ ml: 2 }} 
+                    variant="outlined"
                   />
                 </ListItem>
                 <Divider sx={{ my: 1.5 }} />
@@ -221,23 +275,45 @@ const Interviews = () => {
                     {interview.format === 'On-site' ? interview.location : interview.format}
                   </Box>
                 </Box>
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                  <IconButton 
-                    size="small" 
-                    onClick={(event) => handleOpenCalendar(event, interview.date)}
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {/* Left side - Confirm Button */}
+                  <Button
+                    variant={isInterviewConfirmed(interview) ? "outlined" : "contained"}
+                    color={isInterviewConfirmed(interview) ? "success" : "success"}
+                    size="small"
+                    startIcon={isInterviewConfirmed(interview) ? <CheckCircle /> : <Check />}
+                    onClick={() => confirmInterview(interview)}
+                    disabled={isInterviewConfirmed(interview) || confirmingIds.has(interview.id)}
+                    sx={{ minWidth: '120px' }}
                   >
-                    <CalendarToday />
-                  </IconButton>
-                  {interview.link && interview.format !== 'On-site' && 
-                    <Button 
-                      variant="contained" 
+                    {confirmingIds.has(interview.id) ? (
+                      <CircularProgress size={16} />
+                    ) : isInterviewConfirmed(interview) ? (
+                      'Confirmed'
+                    ) : (
+                      'Confirm'
+                    )}
+                  </Button>
+
+                  {/* Right side - Calendar and Join Meeting buttons */}
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton 
                       size="small" 
-                      href={interview.link} 
-                      target="_blank"
+                      onClick={(event) => handleOpenCalendar(event, interview.date)}
                     >
-                      Join Meeting
-                    </Button>
-                  }
+                      <CalendarToday />
+                    </IconButton>
+                    {interview.link && interview.format !== 'On-site' && 
+                      <Button 
+                        variant="contained" 
+                        size="small" 
+                        href={interview.link} 
+                        target="_blank"
+                      >
+                        Join Meeting
+                      </Button>
+                    }
+                  </Box>
                 </Box>
               </Paper>
             ))}
@@ -296,6 +372,17 @@ const Interviews = () => {
             onChange={() => {}}
           />
         </Popover>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+        >
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </LocalizationProvider>
   );
