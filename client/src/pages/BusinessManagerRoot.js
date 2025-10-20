@@ -64,18 +64,24 @@ const menuTabs = [
     path: "/manager/jobPosts",
     icon: <WorkOutline />,
   },
-  {
-    id: "feedback",
-    label: "Feedback",
-    path: "/manager/feedback",
-    icon: <InsertChartIcon />,
-  },
+  // {
+  //   id: "feedback",
+  //   label: "Feedback",
+  //   path: "/manager/feedback",
+  //   icon: <InsertChartIcon />,
+  // },
   {
     id: "subscription-plans",
     label: "Subscription Plans",
     path: "/manager/subscription-plans",
     icon: <Subscriptions  />,
   },
+  {
+      id: "analytics",
+      label: "Analytics",
+      path: "/manager/analytics",
+      icon: <Schedule />,
+    },
 ];
 
 const BusinessManagerRoot = () => {
