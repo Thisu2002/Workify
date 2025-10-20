@@ -41,8 +41,8 @@ const MentorSchema = new mongoose.Schema({
     //required: true
   }],
   experience: {
-    type: Number, // years of experience
-    default: 0
+    type: String, // years of experience
+    default: '0'
   },
   rating: {
     type: Number,
