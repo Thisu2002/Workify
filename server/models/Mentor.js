@@ -4,15 +4,15 @@ const MentorSchema = new mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    //required: true
   },
   name: {
     type: String,
-    required: true
+    //required: true
   },
   email: {
     type: String,
-    required: true
+    //required: true
   },
   avatar: {
     type: String,
@@ -20,11 +20,11 @@ const MentorSchema = new mongoose.Schema({
   },
   field: {
     type: String,
-    required: true
+    //required: true
   },
   role: {
     type: String,
-    required: true
+    //required: true
   },
   company: {
     type: String,
@@ -32,13 +32,13 @@ const MentorSchema = new mongoose.Schema({
   },
   bio: {
     type: String,
-    required: true
+    //required: true
   },
   linkedin: { type: String },
   contactNumber: { type: String },
   specialties: [{
     type: String,
-    required: true
+    //required: true
   }],
   experience: {
     type: Number, // years of experience

@@ -8,7 +8,7 @@ const recruiterSchema = new mongoose.Schema({
     required: true
   },
 
-  location: { type: String },
+  address: { type: String },
   
   company_id: {
     type: mongoose.Schema.Types.ObjectId,
