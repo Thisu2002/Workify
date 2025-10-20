@@ -16,6 +16,11 @@ const jobPostSchema = new mongoose.Schema({
     ref: "Recruiter",
     required: true,
   },
+  company_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+    required: true,
+  },
   skills: {
     type: [Number], // skill IDs
   },

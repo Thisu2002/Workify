@@ -245,17 +245,28 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getJobPosts = async (req, res) => {
   try {
-    //const posts = await Post.find().populate('recruiter_id');
-    const posts = await Post.find(); // Without populate
+    const authHeader = req.headers.authorization;
 
-    //console.log("Fetched Job Posts:", posts);
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const recruiter = await Recruiter.findById(decoded.id).select("company_id");
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
+
+    const posts = await Post.find({ company_id: recruiter.company_id });
     res.status(200).json(posts);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching job posts", error: err.message });
+    console.error("Error fetching job posts:", err);
+    res.status(500).json({ message: "Error fetching job posts", error: err.message });
   }
 };
+
 
 exports.postJob = async (req, res) => {
   const {
@@ -275,8 +286,6 @@ exports.postJob = async (req, res) => {
     quiz,
   } = req.body;
 
-  //console.log("Received Job Post Data:", req.body);
-
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -288,6 +297,11 @@ exports.postJob = async (req, res) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const recruiter_id = decoded.id;
+
+    const recruiter = await Recruiter.findById(recruiter_id).select("company_id");
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
 
     const newPost = new Post({
       title,
@@ -303,6 +317,7 @@ exports.postJob = async (req, res) => {
       preferred_qualifications,
       comments,
       recruiter_id,
+      company_id: recruiter.company_id,
       interview_rounds,
       quiz,
     });
