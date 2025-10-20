@@ -264,21 +264,11 @@ const Interviews = () => {
                       </Typography>
                     }
                   />
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Chip 
-                      label={interview.stage} 
-                      color="primary" 
-                      variant="outlined"
-                    />
-                    {isInterviewConfirmed(interview) && (
-                      <Chip
-                        icon={<CheckCircle />}
-                        label="Confirmed"
-                        color="success"
-                        size="small"
-                      />
-                    )}
-                  </Box>
+                  <Chip 
+                    label={interview.stage} 
+                    color="primary" 
+                    variant="outlined"
+                  />
                 </ListItem>
                 <Divider sx={{ my: 1.5 }} />
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
@@ -298,7 +288,7 @@ const Interviews = () => {
                   {/* Left side - Confirm Button */}
                   <Button
                     variant={isInterviewConfirmed(interview) ? "outlined" : "contained"}
-                    color={isInterviewConfirmed(interview) ? "success" : "primary"}
+                    color={isInterviewConfirmed(interview) ? "success" : "success"}
                     size="small"
                     startIcon={isInterviewConfirmed(interview) ? <CheckCircle /> : <Check />}
                     onClick={() => confirmInterview(interview)}
