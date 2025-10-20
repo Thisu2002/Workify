@@ -54,8 +54,10 @@ const Overview = ({ setActiveTab }) => {
       pendingMentorRequests: 0,
       pendingCompanyRequests: 0
     });
+    const [subscriptions, setSubscriptions] = useState([]);
+    const [jobTrends, setJobTrends] = useState([]);
 
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
 
     useEffect(() => {
   const fetchManager = async () => {
@@ -80,6 +82,31 @@ const Overview = ({ setActiveTab }) => {
   };
   fetchStats();
 }, []);
+
+  useEffect(() => {
+  const fetchSubscriptions = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/manager/subscriptionPlans');
+      setSubscriptions(res.data);
+    } catch (err) {
+      console.error('Error fetching subscription plans:', err);
+    }
+  };
+  fetchSubscriptions();
+}, []);
+
+  useEffect(() => {
+  const fetchJobTrends = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/manager/jobPosts/trends');
+      setJobTrends(res.data);
+    } catch (err) {
+      console.error('Error fetching job posting trends:', err);
+    }
+  };
+  fetchJobTrends();
+}, []);
+
 
 
       const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
@@ -155,10 +182,10 @@ const Overview = ({ setActiveTab }) => {
             </Box>
             <Box>
               <Typography variant="h4" className="manager-welcome-text">
-                Welcome back, Sandaruwani!
+                {profile ? `Welcome back, ${profile.name}!` : 'Welcome back!'}
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
-                Business Manager • 3 years experience
+                Business Manager
               </Typography>
               <Box display="flex" gap={1} mt={1}>
                 <Chip 
@@ -262,43 +289,41 @@ const Overview = ({ setActiveTab }) => {
                         color="primary"
                         size="small"
                         sx={{ marginLeft: 'auto' }}
-                        onClick={() => setActiveTab("subscriptions")}
+                        onClick={() => navigate('/businessmanager/subscription-plans')}
+
                     >
                     View All
                 </Button>
             </Box>
 
             <Box className="subscription-list">
-                {[
-                    {
-                        label: "Total Subscriptions This Month",
-                        value: 56,
-                        color: "#10b981"
-                    },
-                    {
-                        label: "Companies Pending Payment",
-                        value: 12,
-                        color: "#ef4444"
-                    },
-                    {
-                        label: "Subscriptions Renewed",
-                        value: 33,
-                        color: "#3B5998"
-                    }
-                ].map((item, idx) => (
-                    <Box
-                        key={idx}
-                        className="subscription-summary"
-                        mb={2}
-                        p={2}
-                        sx={{ background: "#f4f7fa", borderLeft: `6px solid ${item.color}`, borderRadius: 2 }}
-                    >
-                        <Typography variant="subtitle1" fontWeight="bold">{item.label}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {item.value} companies
-                        </Typography>
-                    </Box>
-                ))}
+                {subscriptions.length > 0 ? (
+  subscriptions.map((plan, idx) => (
+    <Box
+      key={plan._id || idx}
+      className="subscription-summary"
+      mb={2}
+      p={2}
+      sx={{
+        background: "#f4f7fa",
+        borderLeft: `6px solid #3B5998`,
+        borderRadius: 2
+      }}
+    >
+      <Typography variant="subtitle1" fontWeight="bold">
+        {plan.name} ({plan.billingCycle})
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {plan.subscribers} companies subscribed
+      </Typography>
+    </Box>
+  ))
+) : (
+  <Typography color="text.secondary">
+    No subscription plans available
+  </Typography>
+)}
+
             </Box>
         </Box>
     </Paper>
@@ -312,22 +337,15 @@ const Overview = ({ setActiveTab }) => {
                 Application Statistics
               </Typography>
               {/* Example Bar Chart using recharts */}
-              <ResponsiveContainer width="100%" height={150}>
-                <BarChart
-                  data={[
-                    { name: "Mon", applications: 5 },
-                    { name: "Tue", applications: 8 },
-                    { name: "Wed", applications: 6 },
-                    { name: "Thu", applications: 10 },
-                    { name: "Fri", applications: 7 }
-                  ]}
-                >
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="applications" fill="#3B5998" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={200}>
+  <BarChart data={jobTrends}>
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip />
+    <Bar dataKey="postings" fill="#3B5998" radius={[6, 6, 0, 0]} />
+  </BarChart>
+</ResponsiveContainer>
+
             </Box>
           </Paper>
 
