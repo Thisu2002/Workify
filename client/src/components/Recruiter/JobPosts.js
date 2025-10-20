@@ -41,18 +41,6 @@ const cardColors = [
   "#f7e5e5",
 ];
 
-// const skills = [
-//   { id: 1, name: "JavaScript" },
-//   { id: 2, name: "React" },
-//   { id: 3, name: "Node.js" },
-//   { id: 4, name: "MongoDB" },
-//   { id: 5, name: "UI/UX" },
-//   { id: 6, name: "Figma" },
-//   { id: 7, name: "SQL" },
-//   { id: 8, name: "Azure" },
-//   { id: 9, name: "API Design" },
-//   { id: 10, name: "Cloud" },
-// ];
 
 const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [selectedJob, setSelectedJob] = useState(null);

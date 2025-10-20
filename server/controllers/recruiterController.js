@@ -257,6 +257,7 @@ exports.getJobPosts = async (req, res) => {
   }
 };
 
+
 exports.postJob = async (req, res) => {
   const {
     title,
@@ -274,8 +275,6 @@ exports.postJob = async (req, res) => {
     interview_rounds,
     quiz,
   } = req.body;
-
-  //console.log("Received Job Post Data:", req.body);
 
   try {
     const authHeader = req.headers.authorization;
