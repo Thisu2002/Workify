@@ -9,26 +9,26 @@ const JobPost = require('../models/JobPost');
 const Recruiter = require('../models/Recruiter');
 const Company = require('../models/Company');
 
-// Get upcoming interviews (based on interviewPending status)
+// Get upcoming interviews (based on interviewPending AND interviewScheduled status)
 router.get('/upcoming', auth, async (req, res) => {
   try {
     const candidateId = req.user.id;
     
     console.log('Fetching upcoming interviews for candidate:', candidateId);
     
-    // Step 1: Find candidate_job records with interviewPending status
+    // Step 1: Find candidate_job records with interviewPending OR interviewScheduled status
     const candidateJobs = await Candidate_Job.find({ 
       candidate_id: candidateId,
-      current_status: { $regex: /interviewPending/i }
+      current_status: { $regex: /interview(Pending|Scheduled)/i }
     });
     
-    console.log('Found candidate jobs with interviewPending status:', candidateJobs.length);
+    console.log('Found candidate jobs with interview status:', candidateJobs.length);
     
     if (candidateJobs.length === 0) {
       return res.status(200).json({
         success: true,
         data: [],
-        message: 'No pending interviews found'
+        message: 'No pending or scheduled interviews found'
       });
     }
     
@@ -86,8 +86,8 @@ router.get('/upcoming', auth, async (req, res) => {
           const recruiter = await Recruiter.findById(jobPost.recruiter_id);
           const company = recruiter ? await Company.findById(recruiter.company_id) : null;
           
-          // Extract round from candidate_job status (e.g., "1_interviewPending" -> 1)
-          const roundMatch = candidateJob.current_status.match(/(\d+)_interviewPending/i);
+          // Extract round from candidate_job status (e.g., "1_interviewPending" or "1_interviewScheduled" -> 1)
+          const roundMatch = candidateJob.current_status.match(/(\d+)_interview(Pending|Scheduled)/i);
           const round = roundMatch ? parseInt(roundMatch[1]) : 1;
           
           // Determine round label
