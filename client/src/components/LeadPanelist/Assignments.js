@@ -258,7 +258,6 @@ const Assignments = () => {
 
           console.log('Raw API response:', res.data);
 
-          // If no data, use empty array
           if (!res.data) {
             console.log('No data received from API');
             setCompletedAssignments([]);
@@ -268,13 +267,14 @@ const Assignments = () => {
           const transformedAssignments = res.data.map(job => ({
             id: job._id,
             jobName: job.title,
-            round: "Round 1 - Technical Interview",
+            description: job.description,
+            location: job.location,
+            jobType: job.jobType,
+            deadline: job.deadline,
+            salary: job.salary,
             status: "complete",
-            completedDate: new Date(job.date_posted).toLocaleDateString(),
-            time: "10:00 AM - 11:00 AM",
-            panel: "Technical Panel",
-            type: job.jobType || "Interview",
-            duration: "1 hour"
+            skills: job.skills || [],
+            date_posted: new Date(job.date_posted).toLocaleDateString()
           }));
 
           console.log('Transformed assignments:', transformedAssignments);
@@ -334,13 +334,27 @@ const Assignments = () => {
           const transformedAssignments = res.data.map(job => ({
             id: job._id,
             jobName: job.title,
-            round: "Round 1 - Technical Interview",
+            round: job.interview_rounds && job.interview_rounds.length > 0 
+              ? `Round ${job.current_status?.split('_')[0] || '1'} - ${job.interview_rounds[0]?.name || 'Technical Interview'}`
+              : "Round 1 - Technical Interview",
             status: "pending",
-            scheduledDate: new Date(job.date_posted).toLocaleDateString(),
-            time: "10:00 AM - 11:00 AM",
+            scheduledDate: job.date_posted ? new Date(job.date_posted).toLocaleDateString() : 'Not scheduled',
+            time: "10:00 AM - 11:00 AM", // Default time
             panel: job.jobType || "Technical Panel",
-            type: "Technical Assessment",
-            duration: "1 hour"
+            type: job.interview_rounds && job.interview_rounds.length > 0 
+              ? job.interview_rounds[0]?.type || "Technical Assessment"
+              : "Technical Assessment",
+            duration: "1 hour",
+            description: job.description,
+            location: job.location,
+            salary: job.salary,
+            skills: job.skills || [],
+            deadline: job.deadline,
+            education: job.education_requirements,
+            experience: job.experience,
+            qualifications: job.qualifications,
+            preferred_qualifications: job.preferred_qualifications,
+            quiz: job.quiz
           }));
 
           console.log('Transformed pending assignments:', transformedAssignments);
@@ -574,7 +588,8 @@ const Assignments = () => {
                 </Card>
               </Grid>
             ))
-          : filteredAssignments.map((assignment, idx) => (
+          : currentTab === 1
+          ? filteredAssignments.map((assignment, idx) => (
               <Grid item xs={12} md={4} key={assignment.id}>
                 <Card
                   sx={{
@@ -596,35 +611,150 @@ const Assignments = () => {
                       <Typography variant="h6" sx={{ color: "#0F2445", fontWeight: 600 }}>
                         {assignment.jobName}
                       </Typography>
-                      {assignment.status === "pending" && (
-                        <Chip label="Pending" color="warning" size="small" sx={{ fontWeight: 600 }} />
-                      )}
-                      {assignment.status === "complete" && (
-                        <Chip label="Completed" size="small" sx={{ fontWeight: 600, backgroundColor: '#3B5998', color: '#fff' }} />
-                      )}
+                      <Chip label="Pending" color="warning" size="small" sx={{ fontWeight: 600 }} />
                     </Box>
+                    {/* Remove Round and Type */}
                     <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-                      {assignment.round}
+                      {/* Removed content */}
                     </Typography>
-                    {/* Scheduled Date, Time, Duration */}
+                    
+                    {/* Scheduled Date */}
                     <Stack spacing={2}>
                       <Box display="flex" alignItems="center" gap={1}>
                         <Schedule fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          {assignment.scheduledDate ? `Scheduled: ${assignment.scheduledDate}` : assignment.time}
+                          Requested Date: {assignment.scheduledDate}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Job Type and Assessment Type */}
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Work fontSize="small" sx={{ color: "#64748b" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {assignment.panel}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Location if available */}
+                      {assignment.location && (
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Typography variant="body2" color="text.secondary">
+                            Location: {assignment.location}
+                          </Typography>
+                        </Box>
+                      )}
+                      
+                      {/* Show skills if available */}
+                      {assignment.skills && assignment.skills.length > 0 && (
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" mb={1}>
+                            Skills:
+                          </Typography>
+                          <Box display="flex" flexWrap="wrap" gap={1}>
+                            {assignment.skills.slice(0, 3).map((skill, i) => (
+                              <Chip key={i} label={skill} size="small" />
+                            ))}
+                            {assignment.skills.length > 3 && (
+                              <Chip 
+                                label={`+${assignment.skills.length - 3} more`} 
+                                size="small" 
+                                variant="outlined" 
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                      )}
+                    </Stack>
+                    
+                    {/* Action Buttons */}
+                    <Box display="flex" gap={1} justifyContent="flex-end" alignItems="center" mt={2}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        sx={{ borderColor: "#3B5998", color: "#3B5998" }}
+                        onClick={() => handleOpenCalendar(assignment.id)}
+                      >
+                        View Details
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{ backgroundColor: "#3B5998" }}
+                        onClick={() => setOpenPanelDetails(assignment.id)}
+                      >
+                        Request Panel
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          : filteredAssignments.map((assignment, idx) => (
+              <Grid item xs={12} md={4} key={assignment.id}>
+                <Card
+                  sx={{
+                    position: "relative",
+                    background: "linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)",
+                    borderRadius: "16px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                    transition: "all 0.3s ease",
+                    border: "1px solid rgba(231, 234, 245, 0.7)",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.1)"
+                    }
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                      <Typography variant="h6" sx={{ color: "#0F2445", fontWeight: 600 }}>
+                        {assignment.jobName}
+                      </Typography>
+                      <Chip 
+                        label="Completed" 
+                        size="small" 
+                        sx={{ fontWeight: 600, backgroundColor: '#3B5998', color: '#fff' }} 
+                      />
+                    </Box>
+                    <Stack spacing={2} mt={2}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Work fontSize="small" sx={{ color: "#64748b" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          Job Type: {assignment.jobType}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Schedule fontSize="small" sx={{ color: "#64748b" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          Completed Date: {assignment.date_posted}
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center" gap={1}>
                         <GroupWork fontSize="small" sx={{ color: "#64748b" }} />
                         <Typography variant="body2" color="text.secondary">
-                          {assignment.panel} • {assignment.type}
+                          Location: {assignment.location}
                         </Typography>
                       </Box>
-                      {assignment.duration && (
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body2" color="text.secondary">
-                            Duration: {assignment.duration}
-                          </Typography>
+                      {/* Only show first 2 skills if available */}
+                      {assignment.skills && assignment.skills.length > 0 && (
+                        <Box>
+                          <Box display="flex" flexWrap="wrap" gap={1}>
+                            {assignment.skills.slice(0, 2).map((skill, i) => (
+                              <Chip 
+                                key={i} 
+                                label={skill} 
+                                size="small"
+                                sx={{ backgroundColor: '#f0f2f5' }}
+                              />
+                            ))}
+                            {assignment.skills.length > 2 && (
+                              <Chip 
+                                label={`+${assignment.skills.length - 2}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
                         </Box>
                       )}
                     </Stack>
