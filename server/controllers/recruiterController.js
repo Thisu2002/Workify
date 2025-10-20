@@ -946,7 +946,8 @@ exports.notifyCandidates = async (req, res) => {
     const jobPost = await Post.findOne({
       _id: jobId,
       recruiter_id: recruiterId,
-    });
+    }).populate('company_id', 'name');
+    
     if (!jobPost) {
       return res
         .status(404)
@@ -970,36 +971,101 @@ exports.notifyCandidates = async (req, res) => {
     );
 
     // Update the final date for the current round
+    let roundNumber = 1;
     if (jobPost.interview_rounds && jobPost.interview_rounds.length > 0) {
       const currentRound =
         jobPost.interview_rounds[jobPost.interview_rounds.length - 1];
       currentRound.final_date = new Date(finalDate);
+      roundNumber = jobPost.interview_rounds.length;
     }
 
     await jobPost.save();
 
     // Update all shortlisted candidates' status from shortlisted to interviewPending
     const CandidateJob = require("../models/Candidate_Job");
+    const User = require("../models/User");
 
-    // Get all shortlisted candidates first
+    // Get all shortlisted candidates
     const shortlistedCandidates = await CandidateJob.find({
       job_id: jobId,
       current_status: { $regex: /shortlisted/i },
     });
 
-    // Update each candidate individually to preserve round number
+    // First, update all candidate statuses (critical operation - must succeed)
+    console.log(`Updating status for ${shortlistedCandidates.length} candidates for job: ${jobPost.title}`);
+    
     for (const candidate of shortlistedCandidates) {
-      candidate.current_status = candidate.current_status.replace(
-        /shortlisted/i,
-        "interviewPending"
-      );
-      await candidate.save();
+      try {
+        candidate.current_status = candidate.current_status.replace(
+          /shortlisted/i,
+          "interviewPending"
+        );
+        await candidate.save();
+      } catch (error) {
+        console.error(`Failed to update status for candidate ${candidate.firstName} ${candidate.lastName}:`, error.message);
+      }
     }
+
+    // Then, send emails (non-critical operation - failures are acceptable)
+    const { sendInterviewInvitationEmail } = require("../utils/emailService");
+    const companyName = jobPost.company_id?.name || "Our Company";
+    
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    
+    console.log(`Starting to send emails to ${shortlistedCandidates.length} candidates...`);
+    
+    // Send emails - wrapped in try-catch to prevent any email error from breaking the flow
+    for (const candidate of shortlistedCandidates) {
+      try {
+        // Fetch the candidate's email from the User model
+        const user = await User.findById(candidate.candidate_id);
+        
+        // Send email notification
+        if (user?.email) {
+          console.log(`Sending email to: ${user.email} (${candidate.firstName} ${candidate.lastName})`);
+          
+          try {
+            const emailResult = await sendInterviewInvitationEmail({
+              candidateEmail: user.email,
+              candidateName: `${candidate.firstName} ${candidate.lastName}`,
+              jobTitle: jobPost.title,
+              companyName: companyName,
+              interviewDate: finalDate,
+              interviewRound: `Round ${roundNumber}`
+            });
+
+            if (emailResult.success) {
+              emailsSent++;
+              console.log(`✓ Email sent successfully to ${user.email}`);
+            } else {
+              emailsFailed++;
+              console.error(`✗ Failed to send email to ${user.email}: ${emailResult.error}`);
+            }
+          } catch (emailError) {
+            // Email sending failed - log but continue
+            emailsFailed++;
+            console.error(`✗ Exception sending email to ${user.email}:`, emailError.message);
+          }
+        } else {
+          emailsFailed++;
+          console.warn(`✗ No email found for candidate: ${candidate.firstName} ${candidate.lastName} (Candidate ID: ${candidate.candidate_id})`);
+        }
+      } catch (error) {
+        // Error fetching user or other issue - log but continue
+        emailsFailed++;
+        console.error(`✗ Error processing email for candidate ${candidate.firstName} ${candidate.lastName}:`, error.message);
+      }
+    }
+    
+    console.log(`Email notification complete: ${emailsSent} sent, ${emailsFailed} failed`);
 
     res.status(200).json({
       success: true,
       message: "Candidates have been notified successfully",
       updatedCandidates: shortlistedCandidates.length,
+      emailsSent: emailsSent,
+      emailsFailed: emailsFailed,
       finalDate: finalDate,
     });
   } catch (err) {
