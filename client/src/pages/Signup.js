@@ -30,7 +30,7 @@ function Signup() {
   const [companyId, setCompanyId] = useState("");
   const [companies, setCompanies] = useState([]);
   const [passkey, setPasskey] = useState("");
-  const [passkeyValid, setPasskeyValid] = useState(null); // true, false, or null
+  const [passkeyValid, setPasskeyValid] = useState(null);
 
   // Company fields
   const [companyName, setCompanyName] = useState("");
@@ -47,7 +47,7 @@ function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Fetch subscription plans (for company) or companies (for recruiter)
+  // Fetch subscription plans or companies
   useEffect(() => {
     if (role === "company") {
       axios
@@ -57,15 +57,12 @@ function Signup() {
     } else if (role === "recruiter") {
       axios
         .get("http://localhost:5000/recruiter/fetchCompanies")
-        .then((res) => {
-          setCompanies(res.data);
-          console.log("Fetched companies:", res.data);
-        })
+        .then((res) => setCompanies(res.data))
         .catch((err) => console.error("Failed to load companies:", err));
     }
   }, [role]);
 
-  // Real-time email and password validation
+  // Real-time validation
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (email) {
@@ -88,7 +85,7 @@ function Signup() {
     return () => clearTimeout(delayDebounce);
   }, [email, password]);
 
-  // 🔐 Real-time passkey validation for recruiter
+  // Passkey validation for recruiter
   useEffect(() => {
     if (role === "recruiter" && companyId && passkey) {
       const selectedCompany = companies.find((c) => c._id === companyId);
@@ -186,7 +183,7 @@ function Signup() {
 
     try {
       if (role === "company") {
-        await axios.post("http://localhost:5000/company/register", {
+        await axios.post("http://localhost:5000/auth/companyRegister", {
           formData: data,
         });
         toast.success("Company registration request submitted!");
@@ -210,13 +207,14 @@ function Signup() {
             <img src={logo} alt="Workify Logo" className="logo" />
           </a>
         </div>
+
         <div className="right-side">
           <h1 className="login-title">Signup</h1>
 
           <form onSubmit={handleSubmit} className="login-form">
             {errorMessage && <span className="msg">{errorMessage}</span>}
 
-            {/* Role selection */}
+            {/* Role Selection */}
             <select
               className="role-select"
               value={role}
@@ -233,7 +231,7 @@ function Signup() {
             {/* Candidate / Mentor */}
             {(role === "candidate" || role === "mentor") && (
               <>
-                <div className="name-inputs">
+                <div className="row-inputs">
                   <input
                     type="text"
                     placeholder="First Name*"
@@ -249,6 +247,7 @@ function Signup() {
                     required
                   />
                 </div>
+
                 <input
                   type="email"
                   placeholder="Email*"
@@ -260,49 +259,58 @@ function Signup() {
                   <span className="msg">Email already exists!</span>
                 )}
 
-                {/* Passwords */}
-                <div className="password-input">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password*"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="visibility"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
+                <div className="row-inputs">
+                  <div className="password-input">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password*"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </div>
+
+                  <div className="password-input">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Retype Password*"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <IconButton
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="visibility"
+                    >
+                      {showConfirmPassword ? (
+                        <VisibilityOff />
+                      ) : (
+                        <Visibility />
+                      )}
+                    </IconButton>
+                  </div>
                 </div>
+
                 {validPassword && password && (
                   <Tooltip title={validPassword} placement="right">
                     <ErrorOutlineIcon className="error-icon" />
                   </Tooltip>
                 )}
-                <div className="password-input">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Retype Password*"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="visibility"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </div>
               </>
             )}
 
             {/* Recruiter */}
             {role === "recruiter" && (
               <>
-                <div className="name-inputs">
+                <div className="row-inputs">
                   <input
                     type="text"
                     placeholder="First Name*"
@@ -318,6 +326,7 @@ function Signup() {
                     required
                   />
                 </div>
+
                 <input
                   type="email"
                   placeholder="Email*"
@@ -333,7 +342,6 @@ function Signup() {
                   required
                 />
 
-                {/* Company Dropdown */}
                 <select
                   className="role-select"
                   value={companyId}
@@ -348,7 +356,6 @@ function Signup() {
                   ))}
                 </select>
 
-                {/* Passkey input */}
                 <input
                   type="text"
                   placeholder="Enter Company Passkey*"
@@ -365,36 +372,44 @@ function Signup() {
                   </span>
                 )}
 
-                {/* Passwords */}
-                <div className="password-input">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password*"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="visibility"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </div>
-                <div className="password-input">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Retype Password*"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="visibility"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
+                <div className="row-inputs">
+                  <div className="password-input">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password*"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </div>
+
+                  <div className="password-input">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Retype Password*"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <IconButton
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="visibility"
+                    >
+                      {showConfirmPassword ? (
+                        <VisibilityOff />
+                      ) : (
+                        <Visibility />
+                      )}
+                    </IconButton>
+                  </div>
                 </div>
               </>
             )}
@@ -402,67 +417,79 @@ function Signup() {
             {/* Company */}
             {role === "company" && (
               <>
-                {/* unchanged company fields */}
-                <input
-                  type="text"
-                  placeholder="Company Name*"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Contact Person*"
-                  value={contactPerson}
-                  onChange={(e) => setContactPerson(e.target.value)}
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email*"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-                <input
-                  type="text"
-                  placeholder="Website"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                />
-                <input
-                  type="text"
-                  placeholder="Industry*"
-                  value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Company Size*"
-                  value={companySize}
-                  onChange={(e) => setCompanySize(e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Address*"
-                  value={companyAddress}
-                  onChange={(e) => setCompanyAddress(e.target.value)}
-                  required
-                />
+                <div className="row-inputs">
+                  <input
+                    type="text"
+                    placeholder="Company Name*"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Contact Person*"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="row-inputs">
+                  <input
+                    type="email"
+                    placeholder="Email*"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="row-inputs">
+                  <input
+                    type="text"
+                    placeholder="Website"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Industry*"
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="row-inputs">
+                  <input
+                    type="text"
+                    placeholder="Company Size*"
+                    value={companySize}
+                    onChange={(e) => setCompanySize(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Address*"
+                    value={companyAddress}
+                    onChange={(e) => setCompanyAddress(e.target.value)}
+                    required
+                  />
+                </div>
+
                 <textarea
                   placeholder="Description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                 ></textarea>
+
                 <input
                   type="text"
                   placeholder="Passkey*"

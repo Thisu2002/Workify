@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const Panel = require("../models/Panel");
 const Skill = require("../models/Skill");
 const Company = require("../models/Company");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 
 exports.getJobPosts = async (req, res) => {
   try {
@@ -128,7 +129,7 @@ exports.fetchCompanies = async (req, res) => {
 
 exports.fetchSubscriptionPlans = async (req, res) => {
   try {
-    const plans = await this.fetchSubscriptionPlans.find();
+    const plans = await SubscriptionPlan.find();
     res.status(200).json(plans);
   } catch (err) {
     res

@@ -17,7 +17,7 @@ const registrationRequestSchema = new mongoose.Schema({
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan' },
     name: String,
     price: Number,
-    term: String
+    //term: String
   },
   declineReason: { type: String, default: '' },
   passkey: { type: String, required: true }

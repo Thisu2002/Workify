@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const Candidate = require('../models/Candidate');
 const Mentor = require('../models/Mentor');
 const Recruiter = require('../models/Recruiter');
+const SubscriptionPlan = require('../models/SubscriptionPlan');
+const RegistrationRequest = require('../models/RegistrationRequest');
 
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
@@ -111,5 +113,46 @@ exports.checkEmail = async (req, res) => {
     res.json({ exists: !!user });
   } catch (err) {
     res.status(500).json({ message: 'Error checking email' });
+  }
+};
+
+exports.companyRegister = async (req, res) => {
+  try {
+    const { 
+      companyName, contactPerson, email, phone, website, industry, companySize, address, description, passkey, subscriptionPlan
+    } = req.body.formData;
+
+    let planDetails = null;
+    if (subscriptionPlan) {
+      const plan = await SubscriptionPlan.findById(subscriptionPlan);
+      if (plan) {
+        planDetails = {
+          planId: plan._id,
+          name: plan.name,
+          price: plan.price,
+        };
+      }
+    }
+
+    const newRequest = new RegistrationRequest({
+      companyName,
+      contactPerson,
+      email,
+      phone: phone || '',
+      website: website || '',
+      industry: industry || '',
+      companySize: companySize || '',
+      address,
+      description: description || '',
+      passkey,
+      subscriptionPlan: planDetails || null,
+    });
+
+    await newRequest.save();
+
+    res.status(201).json({ message: 'Company registration request submitted successfully!' });
+  } catch (err) {
+    console.error('Company registration failed:', err);
+    res.status(500).json({ message: 'Server error. Please try again.' });
   }
 };
