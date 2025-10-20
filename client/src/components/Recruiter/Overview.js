@@ -57,7 +57,7 @@ const Overview = ({ setActiveTab }) => {
         setLoading(true);
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `https://organic-couscous-x59vw4p57qrvh6jxp-5000.app.github.dev/recruiter/dashboard/stats?filter=${selectedJobFilter}&acquisitionMonth=${selectedAcquisitionMonth}`,
+          `http://localhost:5000/recruiter/dashboard/stats?filter=${selectedJobFilter}&acquisitionMonth=${selectedAcquisitionMonth}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -95,7 +95,7 @@ const Overview = ({ setActiveTab }) => {
         setChartLoading(true);
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `https://organic-couscous-x59vw4p57qrvh6jxp-5000.app.github.dev/recruiter/dashboard/stats?filter=${selectedJobFilter}`,
+          `http://localhost:5000/recruiter/dashboard/stats?filter=${selectedJobFilter}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -126,7 +126,7 @@ const Overview = ({ setActiveTab }) => {
         setAcquisitionsLoading(true);
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `https://organic-couscous-x59vw4p57qrvh6jxp-5000.app.github.dev/recruiter/dashboard/stats?filter=${selectedJobFilter}&acquisitionMonth=${selectedAcquisitionMonth}`,
+          `http://localhost:5000/recruiter/dashboard/stats?filter=${selectedJobFilter}&acquisitionMonth=${selectedAcquisitionMonth}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
