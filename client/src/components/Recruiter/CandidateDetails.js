@@ -10,11 +10,8 @@ import {
   Button,
 } from "@mui/material";
 import {
-  Email,
-  MoreVert,
   CheckCircle,
   Close as CloseIcon,
-  History,
   Description,
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
@@ -100,14 +97,6 @@ const CandidateDetails = ({ candidate, skills, onClose, onStatusChange }) => {
                 sx={{ fontWeight: 500, fontSize: 15, px: 1.5, py: 0.5 }}
               />
             )}
-            <IconButton
-              sx={{
-                backgroundColor: "#f0f0f0",
-                "&:hover": { backgroundColor: "#e0e0e0" },
-              }}
-            >
-              <History />
-            </IconButton>
             <Button
               variant="outlined"
               startIcon={<Description />}

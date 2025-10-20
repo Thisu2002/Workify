@@ -115,14 +115,6 @@ const PostJob = ({ setShowJobForm, fetchPosts }) => {
     setForm({ ...form, [name]: value });
   };
 
-  const toggleSkill = (id) => {
-    setSelectedSkills((prev) =>
-      prev.includes(id)
-        ? prev.filter((skillId) => skillId !== id)
-        : [...prev, id]
-    );
-  };
-
   const handleInterviewChange = (index, e) => {
     const { name, value } = e.target;
     const updatedRounds = [...interviewRounds];
