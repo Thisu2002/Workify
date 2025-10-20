@@ -14,7 +14,7 @@ exports.getDashboardStats = async (req, res) => {
     const recruiterId = req.user.id;
 
     // Get filter parameter (default to 'weekly')
-    const { filter = 'weekly' } = req.query;
+    const { filter = 'weekly', acquisitionMonth = 'current' } = req.query;
 
     // Get recruiter with company info and user info
     const recruiter = await Recruiter.findById(recruiterId).populate('company_id');
@@ -137,35 +137,60 @@ exports.getDashboardStats = async (req, res) => {
       });
     }
 
-    // 5. Acquisitions (Application Funnel This Month)
-    const totalApplicationsThisMonth = await CandidateJob.countDocuments({
+    // 5. Acquisitions (Application Funnel - with month filter)
+    // Calculate the month range based on acquisitionMonth parameter
+    const now = new Date();
+    let acquisitionStartDate, acquisitionEndDate;
+    let monthLabel;
+    
+    if (acquisitionMonth === 'current') {
+      // Current month (October 2025)
+      acquisitionStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      acquisitionEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      monthLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    } else {
+      // Parse month offset (e.g., "1" for last month, "2" for 2 months ago, etc.)
+      const monthsAgo = parseInt(acquisitionMonth) || 0;
+      const targetMonth = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+      acquisitionStartDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
+      acquisitionEndDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0, 23, 59, 59);
+      monthLabel = targetMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+    
+    const totalApplicationsFiltered = await CandidateJob.countDocuments({
       job_id: { $in: jobIds },
-      date_applied: { $gte: firstDayOfMonth }
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
     });
 
-    const shortlistedThisMonth = await CandidateJob.countDocuments({
+    const shortlistedFiltered = await CandidateJob.countDocuments({
       job_id: { $in: jobIds },
       current_status: { $regex: /shortlisted/i },
-      date_applied: { $gte: firstDayOfMonth }
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
     });
 
-    const onHoldThisMonth = await CandidateJob.countDocuments({
+    const onHoldFiltered = await CandidateJob.countDocuments({
       job_id: { $in: jobIds },
       current_status: { $regex: /on-hold/i },
-      date_applied: { $gte: firstDayOfMonth }
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
     });
 
-    const rejectedThisMonth = await CandidateJob.countDocuments({
+    const rejectedFiltered = await CandidateJob.countDocuments({
       job_id: { $in: jobIds },
       current_status: { $regex: /rejected/i },
-      date_applied: { $gte: firstDayOfMonth }
+      date_applied: { $gte: acquisitionStartDate, $lte: acquisitionEndDate }
     });
 
     const acquisitions = {
-      applications: totalApplicationsThisMonth > 0 ? Math.round((totalApplicationsThisMonth / totalApplicationsThisMonth) * 100) : 0,
-      shortlisted: totalApplicationsThisMonth > 0 ? Math.round((shortlistedThisMonth / totalApplicationsThisMonth) * 100) : 0,
-      onHold: totalApplicationsThisMonth > 0 ? Math.round((onHoldThisMonth / totalApplicationsThisMonth) * 100) : 0,
-      rejected: totalApplicationsThisMonth > 0 ? Math.round((rejectedThisMonth / totalApplicationsThisMonth) * 100) : 0
+      applicationsPercentage: totalApplicationsFiltered > 0 ? Math.round((totalApplicationsFiltered / totalApplicationsFiltered) * 100) : 0,
+      shortlistedPercentage: totalApplicationsFiltered > 0 ? Math.round((shortlistedFiltered / totalApplicationsFiltered) * 100) : 0,
+      onHoldPercentage: totalApplicationsFiltered > 0 ? Math.round((onHoldFiltered / totalApplicationsFiltered) * 100) : 0,
+      rejectedPercentage: totalApplicationsFiltered > 0 ? Math.round((rejectedFiltered / totalApplicationsFiltered) * 100) : 0,
+      // Add actual counts
+      applicationsCount: totalApplicationsFiltered,
+      shortlistedCount: shortlistedFiltered,
+      onHoldCount: onHoldFiltered,
+      rejectedCount: rejectedFiltered,
+      monthLabel: monthLabel
     };
 
     // 6. New Applicants (Latest 10 applicants, not just today)

@@ -39,12 +39,15 @@ import "../../styles/Recruiter.css";
 
 const Overview = ({ setActiveTab }) => {
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true); // For animation control
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedJobFilter, setSelectedJobFilter] = useState('weekly');
+  const [selectedAcquisitionMonth, setSelectedAcquisitionMonth] = useState('current');
   const [dashboardData, setDashboardData] = useState(null);
   const [topActiveJobs, setTopActiveJobs] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
+  const [acquisitionsLoading, setAcquisitionsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Fetch initial dashboard data (only once)
@@ -54,7 +57,7 @@ const Overview = ({ setActiveTab }) => {
         setLoading(true);
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:5000/recruiter/dashboard/stats?filter=${selectedJobFilter}`,
+          `https://organic-couscous-x59vw4p57qrvh6jxp-5000.app.github.dev/recruiter/dashboard/stats?filter=${selectedJobFilter}&acquisitionMonth=${selectedAcquisitionMonth}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -65,6 +68,7 @@ const Overview = ({ setActiveTab }) => {
         console.log('User profile:', response.data.userProfile);
         console.log('Top active jobs:', response.data.topActiveJobs);
         console.log('Chart data:', response.data.chartData);
+        console.log('Acquisitions:', response.data.acquisitions);
         setDashboardData(response.data);
         setTopActiveJobs(response.data.topActiveJobs);
         setChartData(response.data.chartData || []);
@@ -74,6 +78,7 @@ const Overview = ({ setActiveTab }) => {
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
+        setInitialLoad(false); // Disable animation after initial load
       }
     };
 
@@ -90,7 +95,7 @@ const Overview = ({ setActiveTab }) => {
         setChartLoading(true);
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:5000/recruiter/dashboard/stats?filter=${selectedJobFilter}`,
+          `https://organic-couscous-x59vw4p57qrvh6jxp-5000.app.github.dev/recruiter/dashboard/stats?filter=${selectedJobFilter}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -109,7 +114,39 @@ const Overview = ({ setActiveTab }) => {
     };
 
     fetchTopActiveJobs();
-  }, [selectedJobFilter, dashboardData]);
+  }, [selectedJobFilter, dashboardData?.jobPosts]); // Only depend on initial data being loaded, not full dashboardData
+
+  // Fetch acquisitions data when month filter changes
+  useEffect(() => {
+    const fetchAcquisitions = async () => {
+      // Skip if this is the initial load (handled by the first useEffect)
+      if (!dashboardData) return;
+
+      try {
+        setAcquisitionsLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `https://organic-couscous-x59vw4p57qrvh6jxp-5000.app.github.dev/recruiter/dashboard/stats?filter=${selectedJobFilter}&acquisitionMonth=${selectedAcquisitionMonth}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log('Updated acquisitions:', response.data.acquisitions);
+        setDashboardData(prev => ({
+          ...prev,
+          acquisitions: response.data.acquisitions
+        }));
+      } catch (err) {
+        console.error('Error fetching acquisitions:', err);
+      } finally {
+        setAcquisitionsLoading(false);
+      }
+    };
+
+    fetchAcquisitions();
+  }, [selectedAcquisitionMonth, dashboardData && dashboardData.jobPosts]); // Only depend on initial data being loaded
 
   // Format chart data for display
   const formatChartData = () => {
@@ -129,6 +166,29 @@ const Overview = ({ setActiveTab }) => {
         Rejected: item.rejected
       };
     });
+  };
+
+  // Generate month options (current month + 5 previous months)
+  const getMonthOptions = () => {
+    const options = [];
+    const currentDate = new Date();
+    
+    // Current month
+    options.push({
+      value: 'current',
+      label: currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })
+    });
+    
+    // Previous 5 months
+    for (let i = 1; i <= 5; i++) {
+      const pastDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      options.push({
+        value: i.toString(),
+        label: pastDate.toLocaleString('default', { month: 'long', year: 'numeric' })
+      });
+    }
+    
+    return options;
   };
 
   // Initialize profile from dashboard data
@@ -151,8 +211,8 @@ const Overview = ({ setActiveTab }) => {
   });
     // const navigate = useNavigate();
 
-      const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
-        <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
+      const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => {
+        const cardContent = (
           <Card className="recruiter-stat-card">
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="flex-start">
@@ -173,8 +233,19 @@ const Overview = ({ setActiveTab }) => {
               </Box>
             </CardContent>
           </Card>
-        </Zoom>
-      );
+        );
+
+        // Only animate on initial load
+        if (initialLoad) {
+          return (
+            <Zoom in={true} style={{ transitionDelay: '200ms' }}>
+              {cardContent}
+            </Zoom>
+          );
+        }
+
+        return cardContent;
+      };
 
       const handleEditOpen = () => setOpenEdit(true);
       const handleEditClose = () => setOpenEdit(false);
@@ -372,46 +443,98 @@ const Overview = ({ setActiveTab }) => {
             {/* Acquisitions Card */}
             <Paper className="content-card acquisitions-card" elevation={2} style={{ flex: 1, minWidth: 0 }}>
               <Box p={3}>
-                <Box display="flex" justifyContent="space-between" >
-                  <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Typography variant="subtitle1" fontWeight="bold">
                     Acquisitions
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">This Month</Typography>
+                  <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel>Month</InputLabel>
+                    <Select
+                      value={selectedAcquisitionMonth}
+                      label="Month"
+                      onChange={(e) => setSelectedAcquisitionMonth(e.target.value)}
+                    >
+                      {getMonthOptions().map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Box>
                 
-                <Stack spacing={1}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="body2" color="#a259e6">Applications</Typography>
-                    <Typography variant="body2" fontWeight="bold">{dashboardData?.acquisitions?.applications || 0}%</Typography>
+                {acquisitionsLoading ? (
+                  <Box display="flex" justifyContent="center" py={4}>
+                    <CircularProgress size={30} />
                   </Box>
-                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
-                    <Box sx={{ width: `${dashboardData?.acquisitions?.applications || 0}%`, height: 6, bgcolor: "#a259e6", borderRadius: 3 }} />
-                  </Box>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="body2" color="#3be6c6">Shortlisted</Typography>
-                    <Typography variant="body2" fontWeight="bold">{dashboardData?.acquisitions?.shortlisted || 0}%</Typography>
-                  </Box>
-                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
-                    <Box sx={{ width: `${dashboardData?.acquisitions?.shortlisted || 0}%`, height: 6, bgcolor: "#3be6c6", borderRadius: 3 }} />
-                  </Box>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="body2" color="#f7b731">On-hold</Typography>
-                    <Typography variant="body2" fontWeight="bold">{dashboardData?.acquisitions?.onHold || 0}%</Typography>
-                  </Box>
-                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
-                    <Box sx={{ width: `${dashboardData?.acquisitions?.onHold || 0}%`, height: 6, bgcolor: "#f7b731", borderRadius: 3 }} />
-                  </Box>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="body2" color="#e6a2a2">Rejected</Typography>
-                    <Typography variant="body2" fontWeight="bold">{dashboardData?.acquisitions?.rejected || 0}%</Typography>
-                  </Box>
-                  <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3 }}>
-                    <Box sx={{ width: `${dashboardData?.acquisitions?.rejected || 0}%`, height: 6, bgcolor: "#e6a2a2", borderRadius: 3 }} />
-                  </Box>
-                </Stack>
-                {/* <Box mt={2} display="flex" justifyContent="flex-end">
-                  <Typography variant="caption" color="text.secondary">This Month</Typography>
-                </Box> */}
+                ) : (
+                  <Stack spacing={1}>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Typography variant="body2" color="#a259e6">
+                        Applications ({dashboardData?.acquisitions?.applicationsCount || 0})
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {dashboardData?.acquisitions?.applicationsPercentage || 0}%
+                      </Typography>
+                    </Box>
+                    <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
+                      <Box sx={{ 
+                        width: `${dashboardData?.acquisitions?.applicationsPercentage || 0}%`, 
+                        height: 6, 
+                        bgcolor: "#a259e6", 
+                        borderRadius: 3 
+                      }} />
+                    </Box>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Typography variant="body2" color="#3be6c6">
+                        Shortlisted ({dashboardData?.acquisitions?.shortlistedCount || 0})
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {dashboardData?.acquisitions?.shortlistedPercentage || 0}%
+                      </Typography>
+                    </Box>
+                    <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
+                      <Box sx={{ 
+                        width: `${dashboardData?.acquisitions?.shortlistedPercentage || 0}%`, 
+                        height: 6, 
+                        bgcolor: "#3be6c6", 
+                        borderRadius: 3 
+                      }} />
+                    </Box>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Typography variant="body2" color="#f7b731">
+                        On-hold ({dashboardData?.acquisitions?.onHoldCount || 0})
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {dashboardData?.acquisitions?.onHoldPercentage || 0}%
+                      </Typography>
+                    </Box>
+                    <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3, mb: 1 }}>
+                      <Box sx={{ 
+                        width: `${dashboardData?.acquisitions?.onHoldPercentage || 0}%`, 
+                        height: 6, 
+                        bgcolor: "#f7b731", 
+                        borderRadius: 3 
+                      }} />
+                    </Box>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Typography variant="body2" color="#e6a2a2">
+                        Rejected ({dashboardData?.acquisitions?.rejectedCount || 0})
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {dashboardData?.acquisitions?.rejectedPercentage || 0}%
+                      </Typography>
+                    </Box>
+                    <Box sx={{ width: "100%", height: 6, bgcolor: "#f0f0f0", borderRadius: 3 }}>
+                      <Box sx={{ 
+                        width: `${dashboardData?.acquisitions?.rejectedPercentage || 0}%`, 
+                        height: 6, 
+                        bgcolor: "#e6a2a2", 
+                        borderRadius: 3 
+                      }} />
+                    </Box>
+                  </Stack>
+                )}
               </Box>
             </Paper>
 
