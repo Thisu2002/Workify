@@ -85,7 +85,7 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
           (Date.now() - new Date(p.date_posted)) / (1000 * 60 * 60 * 24)
         );
         let postedAgo;
-        if(daysAgo < 0) postedAgo = "today";
+        if(daysAgo <= 0) postedAgo = "today";
         else if(daysAgo === 1) postedAgo = "yesterday";
         else postedAgo = `${daysAgo} days ago`;
         return {
