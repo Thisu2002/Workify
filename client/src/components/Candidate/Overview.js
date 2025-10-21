@@ -136,7 +136,7 @@ const Overview = React.memo(() => {
             </Box>
             <Box>
               <Typography variant="h4" className="recruiter-welcome-text">
-                Welcome back, Sajani Upeksha
+                Welcome back, Lilly Collins
               </Typography>
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 Aspiring Software Engineer • 3 years experience
