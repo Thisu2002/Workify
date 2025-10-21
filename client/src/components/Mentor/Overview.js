@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -12,7 +12,8 @@ import {
   Stack,
   Button,
   Zoom,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  CircularProgress
 } from "@mui/material";
 import {
   School,
@@ -26,18 +27,23 @@ import {
   FiberManualRecord as OnlineIcon
 } from "@mui/icons-material";
 import { ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, Line, Legend } from "recharts";
+import axios from 'axios';
+import { useSnackbar } from 'notistack';
 import "../../styles/Recruiter.css";
 
 const Overview = () => {
   const [loading, setLoading] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState(0);
   const [profile, setProfile] = useState({
-    name: "Priyantha Hettiarachchi", 
-    expertise: "Senior Tech Mentor",
+    name: "Sandun Lakshan",
+    expertise: "Computer Science",
     experience: "5 years mentoring experience",
-    description: "Experienced mentor specializing in software development, career guidance, and interview preparation.",
-    photoUrl: "https://randomuser.me/api/portraits/men/39.jpg" 
+    description: "Expert in Software Engineering.",
+    photoUrl: "https://randomuser.me/api/portraits/men/39.jpg"
   });
+  const { enqueueSnackbar } = useSnackbar();
 
   const StatCard = ({ icon, title, value, change, color = '#96BEC5' }) => (
     <Zoom in={!loading} style={{ transitionDelay: '200ms' }}>
@@ -72,6 +78,61 @@ const Overview = () => {
   const handleSave = () => {
     setOpenEdit(false);
   };
+
+  // Fetch total sessions count
+  const fetchTotalSessions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      const response = await axios.get('http://localhost:5000/api/mentoring/sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        // Count all sessions for this mentor (completed, scheduled, pending, etc.)
+        const sessions = response.data.data || [];
+        setTotalSessions(sessions.length);
+      }
+    } catch (error) {
+      console.error('Error fetching total sessions:', error);
+      enqueueSnackbar('Failed to load session count', { variant: 'error' });
+    }
+  };
+
+  // Fetch pending mentoring sessions count
+  const fetchPendingRequests = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      const response = await axios.get('http://localhost:5000/api/mentoring/pending-sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setPendingRequests(response.data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching pending mentoring sessions:', error);
+      enqueueSnackbar('Failed to load pending requests count', { variant: 'error' });
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalSessions();
+    fetchPendingRequests();
+  }, []);
 
   return (
     <Box>
@@ -124,18 +185,18 @@ const Overview = () => {
           <Box display="flex" alignItems="center" gap={2}>
             <Grid container spacing={2} wrap="nowrap">
               <Grid item xs={4}>
-                <StatCard 
+                <StatCard
                   icon={<School />}
                   title="Total Sessions"
-                  value="45"
+                  value={totalSessions.toString()}
                   change="+12 this month"
                 />
               </Grid>
               <Grid item>
-                <StatCard 
+                <StatCard
                   icon={<Person />}
                   title="Pending Requests"
-                  value="8"
+                  value={pendingRequests.toString()}
                   change="New this week"
                   color="#ffa502"
                 />
@@ -334,15 +395,7 @@ const Overview = () => {
               <Typography variant="body2" align="center" sx={{ mb: 2 }}>
                 {profile.description}
               </Typography>
-              <Button
-                className="new-button"
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={handleEditOpen}
-              >
-                Edit Profile
-              </Button>
+              
             </Box>
           </Paper>
         </Box>
