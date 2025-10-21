@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect} from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -16,8 +16,7 @@ import {
   ListItemText,
   TextField,
   InputAdornment,
-  Stack,
-  CircularProgress
+  Stack
 } from "@mui/material";
 import { 
   BookmarkBorder, 
@@ -31,7 +30,103 @@ import CheckIcon from '@mui/icons-material/Check';
 import ApplyForm from './ApplyForm';
 import axios from 'axios';
 
+// EXPANDED MOCK DATA to demonstrate functionality
+const jobPostings = [
+  {
+    _id: '650d2f9b9c1e4d3f2c8a0001',
+    id: 1,
+    title: 'Software Engineer',
+    company: 'WealthOS',
+    logo: 'https://via.placeholder.com/40?text=W',
+    location: 'Colombo',
+    type: 'Full-time',
+    model: 'Remote',
+    salary: 'LKR 100,000 - 150,000 per month',
+    postedDate: 'Today',
+    description: 'Join our engineering team to build scalable web applications for international clients. Opportunity to work with cutting-edge technologies in a fast-paced environment.',
+    responsibilities: ['Developing new user-facing features', 'Building reusable components', 'Translating designs into high-quality code'],
+    qualifications: ['5+ years of React experience', 'Strong proficiency in JavaScript & CSS', 'Experience with RESTful APIs']
+  },
+  {
+    _id: '650d2f9b9c1e4d3f2c8a0002',
+    id: 2,
+    title: 'UI/UX Designer',
+    company: 'IFS',
+    logo: 'https://via.placeholder.com/40?text=I',
+    location: 'Colombo',
+    type: 'Contract',
+    model: 'Hybrid',
+    salary: 'LKR 90,000 - 110,000 per month',
+    postedDate: '2d ago',
+    description: 'We are looking for a talented UI/UX Designer to create amazing user experiences. The ideal candidate should have an eye for clean and artful design, possess superior UI skills and be able to translate high-level requirements into interaction flows and artifacts.',
+    responsibilities: ['Gather and evaluate user requirements', 'Illustrate design ideas using storyboards', 'Design graphical user interface elements'],
+    qualifications: ['Proven UX/UI experience', 'Portfolio of design projects', 'Proficiency in Figma, Sketch, or Adobe XD']
+  },
+  {
+    _id: '650d2f9b9c1e4d3f2c8a0003',
+    id: 3,
+    title: 'Junior QA Engineer',
+    company: 'Furtado',
+    logo: 'https://via.placeholder.com/40?text=F',
+    location: 'Colombo',
+    type: 'Full-time',
+    model: 'Onsite',
+    salary: 'LKR 70,000 - 90,000 per month',
+    postedDate: '1d ago',
+    description: 'We are seeking a detail-oriented Junior QA Engineer to join our quality assurance team. You will be responsible for testing our software to ensure it meets our high-quality standards.',
+    responsibilities: ['Executing test cases (manual or automated)', 'Reporting and documenting technical issues', 'Participating in design reviews'],
+    qualifications: ['BSc in Computer Science or related field', 'Strong analytical skills', 'Familiarity with Agile frameworks']
+  },
+  {
+    _id: '650d2f9b9c1e4d3f2c8a0004',
+    id: 4,
+    title: 'Node.js Backend Developer',
+    company: 'Surge Global',
+    logo: 'https://via.placeholder.com/40?text=S',
+    location: 'Remote',
+    type: 'Full-time',
+    model: 'Remote',
+    salary: 'LKR 120,000 - 160,000 per month',
+    postedDate: '3d ago',
+    description: 'We are looking for a Node.js Developer to join our backend team. You will be responsible for managing the interchange of data between the server and the users.',
+    responsibilities: ['Developing server-side logic', 'Defining and maintaining the central database', 'Ensuring high performance and responsiveness'],
+    qualifications: ['2+ years of Node.js and Express experience', 'Experience with MongoDB', 'Understanding of RESTful APIs']
+  },
+  {
+    _id: '650d2f9b9c1e4d3f2c8a0005',
+    id: 5,
+    title: 'DevOps Engineer',
+    company: 'Sysco Labs',
+    logo: 'https://via.placeholder.com/40?text=SL',
+    location: 'Colombo',
+    type: 'Full-time',
+    model: 'Hybrid',
+    salary: 'LKR 150,000 - 200,000 per month',
+    postedDate: '7d ago',
+    description: 'Join our team to manage our infrastructure and tools. You will work with developers to facilitate a smooth and efficient development and deployment pipeline.',
+    responsibilities: ['CI/CD pipeline management', 'Infrastructure as Code (IaC) with Terraform', 'Monitoring with Prometheus/Grafana'],
+    qualifications: ['Experience with AWS or Azure', 'Proficiency in scripting languages like Bash or Python', 'Knowledge of Docker and Kubernetes']
+  },
+  {
+    _id: '650d2f9b9c1e4d3f2c8a0006',
+    id: 6,
+    title: 'Project Manager',
+    company: 'LSEG',
+    logo: 'https://via.placeholder.com/40?text=L',
+    location: 'Colombo',
+    type: 'Full-time',
+    model: 'Onsite',
+    salary: 'LKR 180,000 - 220,000 per month',
+    postedDate: '10d ago',
+    description: 'We need an experienced Project Manager to coordinate people and processes to ensure that our projects are delivered on time and produce the desired results.',
+    responsibilities: ['Developing project plans', 'Managing project budget', 'Communicating with stakeholders'],
+    qualifications: ['Proven experience in project management', 'PMP certification is a plus', 'Strong leadership skills']
+  }
+];
 
+
+// We'll fetch the real candidate profile and pass it to the Apply modal
+const INITIAL_PROFILE = null;
 
 const FindJobs = () => {
   const [selectedJobId, setSelectedJobId] = useState(null);
@@ -41,33 +136,27 @@ const FindJobs = () => {
   const [viewMode, setViewMode] = useState('top');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // NEW states for fetching data from the backend
-  const [allJobs, setAllJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   const [isApplyFormOpen, setApplyFormOpen] = useState(false);
   const [applyingForJob, setApplyingForJob] = useState(null);
+  const [userProfile, setUserProfile] = useState(INITIAL_PROFILE);
 
-  // FETCH DATA using useEffect
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchUserProfile = async () => {
       try {
-        setLoading(true);
-        // Make sure the URL matches your backend endpoint
-        const response = await axios.get('http://localhost:5000/api/jobs/open');
-        setAllJobs(response.data);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-        setError("Could not load job postings. Please try again later.");
-      } finally {
-        setLoading(false);
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await axios.get('http://localhost:5000/candidate/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUserProfile(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile in FindJobs:', error);
       }
     };
 
-    fetchJobs();
-  }, []); // Empty dependency array means this runs once on component mount
+    fetchUserProfile();
+  }, []);
 
   const handleToggleDetails = (jobId) => {
     setSelectedJobId(prevId => (prevId === jobId ? null : jobId));
@@ -94,15 +183,14 @@ const FindJobs = () => {
   
   // UPDATED logic to determine which jobs to show based on the view mode and search term
   const displayedJobs = useMemo(() => {
-    const sourceJobs = allJobs;
     switch (viewMode) {
       case 'top':
-        return sourceJobs.slice(0, 5);
+        return jobPostings.slice(0, 5);
       case 'saved':
-        return sourceJobs.filter(job => savedJobs.has(job.id));
+        return jobPostings.filter(job => savedJobs.has(job.id));
       case 'explore':
-        if (!searchTerm) return sourceJobs;
-        return sourceJobs.filter(job =>
+        if (!searchTerm) return jobPostings;
+        return jobPostings.filter(job =>
           job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
           job.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -110,32 +198,13 @@ const FindJobs = () => {
       default:
         return [];
     }
-  }, [viewMode, searchTerm, savedJobs, allJobs]);
+  }, [viewMode, searchTerm, savedJobs]);
 
   const titles = {
     top: 'Top job picks for you',
     explore: 'Explore All Opportunities',
     saved: 'Your Saved Jobs',
   };
-
-  // NEW: Render loading state
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading Jobs...</Typography>
-      </Box>
-    );
-  }
-
-  // NEW: Render error state
-  if (error) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <Typography color="error">{error}</Typography>
-      </Box>
-    );
-  }
 
   return (
     <Box>
@@ -201,7 +270,7 @@ const FindJobs = () => {
       <Box>
         {displayedJobs.length > 0 ? (
           displayedJobs.map((job) => (
-            <Paper key={job.id} elevation={2} sx={{ mb: 2, p: 2.5, borderRadius: 2, transition: 'box-shadow 0.3s,transform 0.2s','&:hover': { boxShadow: 6, transform: 'translateY(-4px)' } }}>
+            <Paper key={job.id} elevation={2} sx={{ mb: 2, p: 2.5, borderRadius: 2, transition: 'box-shadow 0.3s', '&:hover': { boxShadow: 6 } }}>
               {/* Job Card content remains the same */}
               <Grid container spacing={2} alignItems="center">
                 <Grid item><Avatar src={job.logo} sx={{ width: 50, height: 50 }} /></Grid>
@@ -256,6 +325,7 @@ const FindJobs = () => {
             open={isApplyFormOpen}
             onClose={handleCloseApplyForm}
             job={applyingForJob}
+            userProfile={userProfile}
           />
       )}
     </Box>
