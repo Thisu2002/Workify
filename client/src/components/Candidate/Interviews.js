@@ -320,36 +320,7 @@ const Interviews = () => {
           </List>
         )}
 
-        {/* Past Interviews Section */}
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-          Past Interviews ({pastInterviews.length})
-        </Typography>
-        
-        {pastInterviews.length === 0 ? (
-          <Paper elevation={1} sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              No past interviews found.
-            </Typography>
-          </Paper>
-        ) : (
-          <List>
-            {pastInterviews.map((interview) => (
-              <Paper 
-                key={interview.id} 
-                elevation={1} 
-                sx={{ mb: 2, p: 2, borderRadius: 2, opacity: 0.8 }}
-              >
-                <ListItem sx={{ p: 0 }}>
-                  <ListItemText
-                    primary={interview.jobTitle}
-                    secondary={`at ${interview.companyName} on ${new Date(interview.date).toLocaleDateString()}`}
-                  />
-                  {getOutcomeChip(interview.outcome)}
-                </ListItem>
-              </Paper>
-            ))}
-          </List>
-        )}
+    
 
         {/* Calendar Popover */}
         <Popover
