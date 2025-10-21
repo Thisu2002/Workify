@@ -763,4 +763,51 @@ exports.getCompanyDetails = async (req, res) => {
   }
 };
 
+// module.exports = async function checkSubscriptionLimit(req, res, next) {
+//   try {
+//     // determine company id: prefer explicit company_id in request body,
+//     // otherwise use recruiter_id -> lookup recruiter.company_id
+//     let companyId = req.body.company_id;
+//     if (!companyId && req.body.recruiter_id) {
+//       const recruiter = await Recruiter.findById(req.body.recruiter_id).lean();
+//       companyId = recruiter?.company_id;
+//     }
+
+//     if (!companyId) {
+//       // If company not determinable, allow (or you can block)
+//       return res.status(400).json({ message: 'company_id or recruiter_id required' });
+//     }
+
+//     const company = await Company.findById(companyId).lean();
+//     if (!company) return res.status(404).json({ message: 'Company not found' });
+
+//     const planRef = company.currentSubscription?.plan;
+//     if (!planRef) return next(); // no plan => treat as allowed (or if you want block, change here)
+
+//     // get plan (planRef may be populated or an ObjectId)
+//     const plan = await (typeof planRef === 'object' && planRef.name
+//       ? Promise.resolve(planRef)
+//       : SubscriptionPlan.findById(planRef).lean());
+
+//     if (!plan || plan.maxPosts == null) {
+//       // unlimited or no well-defined plan -> allow
+//             return next();
+//     }
+
+//     // count active / open posts for this company
+//     const activeCount = await Post.countDocuments({ company_id: companyId, status: 'Open' });
+
+//     if (activeCount >= plan.maxPosts) {
+//       return res.status(403).json({
+//         message: `Post limit reached for current subscription plan (${plan.name}). Max active posts allowed: ${plan.maxPosts}. Please upgrade the plan to post more jobs.`
+//       });
+//     }
+
+//     return next();
+//   } catch (err) {
+//     console.error('checkSubscriptionLimit error:', err);
+//     return res.status(500).json({ message: 'Error verifying subscription', error: err.message });
+//   }
+// };
+
 
