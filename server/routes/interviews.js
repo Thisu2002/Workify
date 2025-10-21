@@ -16,10 +16,13 @@ router.get('/upcoming', auth, async (req, res) => {
     
     console.log('Fetching upcoming interviews for candidate:', candidateId);
     
-    // Step 1: Find candidate_job records with interviewPending OR interviewScheduled status
+    // Step 1: Find candidate_job records that include "interviewPending" OR "interviewScheduled" in status
     const candidateJobs = await Candidate_Job.find({ 
       candidate_id: candidateId,
-      current_status: { $regex: /interview(Pending|Scheduled)/i }
+      $or: [
+        { current_status: { $regex: /interviewPending/i } },
+        { current_status: { $regex: /interviewScheduled/i } }
+      ]
     });
     
     console.log('Found candidate jobs with interview status:', candidateJobs.length);
@@ -73,8 +76,7 @@ router.get('/upcoming', auth, async (req, res) => {
               companyName: 'Unknown Company',
               date: interview.scheduled_date,
               time: interview.scheduled_time,
-              stage: '1st Round',
-              round: 1,
+              stage: 'Interview',
               format: interview.location ? 'On-site' : 'Online',
               location: interview.location || 'Online Meeting',
               link: interview.meeting_link || null,
@@ -86,16 +88,6 @@ router.get('/upcoming', auth, async (req, res) => {
           const recruiter = await Recruiter.findById(jobPost.recruiter_id);
           const company = recruiter ? await Company.findById(recruiter.company_id) : null;
           
-          // Extract round from candidate_job status (e.g., "1_interviewPending" or "1_interviewScheduled" -> 1)
-          const roundMatch = candidateJob.current_status.match(/(\d+)_interview(Pending|Scheduled)/i);
-          const round = roundMatch ? parseInt(roundMatch[1]) : 1;
-          
-          // Determine round label
-          let roundLabel = 'Interview';
-          if (round === 1) roundLabel = '1st Round';
-          else if (round === 2) roundLabel = '2nd Round'; 
-          else if (round >= 3) roundLabel = 'Final Round';
-          
           return {
             id: interview._id,
             applicationId: candidateJob._id,
@@ -103,8 +95,7 @@ router.get('/upcoming', auth, async (req, res) => {
             companyName: company?.name || 'Unknown Company',
             date: interview.scheduled_date,
             time: interview.scheduled_time,
-            stage: roundLabel,
-            round: round,
+            stage: 'Interview',
             format: interview.location ? 'On-site' : 'Online',
             location: interview.location || 'Online Meeting',
             link: interview.meeting_link || null,
