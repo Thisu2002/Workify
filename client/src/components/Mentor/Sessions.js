@@ -50,6 +50,7 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
   const [error, setError] = useState(null);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [completionNote, setCompletionNote] = useState('');
+  const [submitting, setSubmitting] = useState(false); // Add this for handling submission state
 
   // Fetch scheduled sessions
   const fetchSessions = async () => {
@@ -147,11 +148,13 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
       console.log('Submitting session with data:', formData);
       
       // When creating new sessions from mentor dashboard, they should be created with status="scheduled"
+      // Removing the default "medium" urgency value
       const response = await axios.post(
         'http://localhost:5000/api/mentoring/sessions', 
         {
           ...formData,
           status: 'scheduled' // Ensure the session is created with scheduled status
+          // Not sending urgency field so it won't default to "medium"
         },
         {
           headers: {
@@ -206,6 +209,7 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
   const handleCompleteSession = (session) => {
     setSelectedSession(session);
     setShowNoteDialog(true);
+    setCompletionNote(''); // Reset the note when opening dialog
   };
 
   const handleCloseDialog = () => {
@@ -215,13 +219,20 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
   };
 
   const handleSessionComplete = async () => {
+    // Validate completion note
+    if (!completionNote.trim()) {
+      enqueueSnackbar('Please add feedback before completing the session', { variant: 'warning' });
+      return;
+    }
+
     try {
+      setSubmitting(true);
       const token = localStorage.getItem('token');
       
-      await axios.put(`http://localhost:5000/api/mentoring/sessions/${selectedSession._id}`, 
+      const response = await axios.put(`http://localhost:5000/api/mentoring/sessions/${selectedSession._id}`, 
         {
           status: 'completed',
-          message: completionNote  // Store the completion note in the message field instead of notes
+          message: completionNote  // Ensure the feedback is sent as 'message'
         },
         {
           headers: {
@@ -230,12 +241,17 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
         }
       );
       
+      console.log('Session completion response:', response.data);
+      
+      // Update the sessions list by removing the completed session
       setMentorSessions(prev => prev.filter(session => session._id !== selectedSession._id));
       handleCloseDialog();
       enqueueSnackbar('Session marked as completed', { variant: 'success' });
     } catch (error) {
       console.error('Error completing session:', error);
-      enqueueSnackbar('Failed to update session', { variant: 'error' });
+      enqueueSnackbar(error.response?.data?.message || 'Failed to update session', { variant: 'error' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -735,11 +751,18 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
           </Box>
           
           <Dialog open={showNoteDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-            <DialogTitle>Complete Session with {selectedSession?.candidateName}</DialogTitle>
+            <DialogTitle sx={{ pb: 1 }}>
+              <Typography variant="h6" component="div">
+                Complete Session with {selectedSession?.candidateName || 'Candidate'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Session: {selectedSession?.session_type || 'Mentoring Session'}
+              </Typography>
+            </DialogTitle>
             <DialogContent>
               <Box mt={2}>
                 <Typography variant="body2" color="text.secondary" mb={2}>
-                  Add your feedback and summary of the session. These notes will be stored with the completed session record.
+                  Add your feedback and summary of the session. This feedback is valuable for tracking candidate progress and will be stored with the completed session.
                 </Typography>
                 <TextField 
                   label="Session Feedback" 
@@ -749,20 +772,38 @@ const Sessions = ({ showSessionForm, setShowSessionForm }) => {
                   value={completionNote}
                   onChange={(e) => setCompletionNote(e.target.value)}
                   placeholder="Add notes about the session, progress made, and recommendations for the candidate..."
+                  error={showNoteDialog && completionNote.trim() === ''}
+                  helperText={showNoteDialog && completionNote.trim() === '' ? "Feedback is required" : ""}
+                  disabled={submitting}
                 />
+                <Box sx={{ 
+                  mt: 2, 
+                  p: 1.5, 
+                  bgcolor: '#f0f8ff', 
+                  borderRadius: 1, 
+                  border: '1px solid #e3f2fd'
+                }}>
+                  <Typography variant="body2" fontWeight="500" color="#2c3e50">
+                    Why feedback matters:
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Your feedback helps candidates track their progress and provides important context for future mentoring sessions.
+                  </Typography>
+                </Box>
               </Box>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDialog} color="inherit">
+              <Button onClick={handleCloseDialog} color="inherit" disabled={submitting}>
                 Cancel
               </Button>
               <Button 
                 onClick={handleSessionComplete} 
                 variant="contained" 
                 color="success"
-                startIcon={<CompleteIcon />}
+                startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <CompleteIcon />}
+                disabled={submitting || !completionNote.trim()}
               >
-                Complete Session
+                {submitting ? 'Completing...' : 'Complete Session'}
               </Button>
             </DialogActions>
           </Dialog>
