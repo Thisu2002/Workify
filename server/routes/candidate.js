@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { getProfile, updateProfile } = require('../controllers/candidateController');
 const authMiddleware = require('../middleware/auth'); // Make sure the path to your auth middleware is correct
-
+const { parseCv, apply } = require('../controllers/cvController');
+const { uploadCv } = require('../middleware/localUpload');
 
 // @route   GET /api/candidate/profile
 // @desc    Get the logged-in candidate's profile
@@ -14,24 +15,10 @@ router.get('/profile', authMiddleware, getProfile);
 // @access  Private
 router.put('/profile', authMiddleware, updateProfile);
 
-const { uploadAvatar, uploadCv } = require('../middleware/localUpload');
-const candidateController = require('../controllers/candidateController');
+// POST /candidate/parse-cv - parse-only endpoint
+router.post('/parse-cv', authMiddleware, uploadCv.single('cv'), parseCv);
 
-router.post(
-  '/upload-avatar',
-  authMiddleware,
-  uploadAvatar.single('avatar'),
-  candidateController.uploadAvatar
-);
-router.post('/upload-cv', authMiddleware, uploadCv.single('cv'),candidateController.handleCvUpload);
-
-router.delete('/delete-avatar', authMiddleware, async (req, res) => {
-  // Your logic to delete the avatar file and update the user profile
-  // Example:
-  // await Candidate.findByIdAndUpdate(req.user.id, { avatarUrl: '' });
-  res.json({ msg: 'Avatar deleted' });
-});
-
-router.delete('/cv/:cv_id', authMiddleware, candidateController.handleCvDelete);
+// POST /candidate/apply - apply and save parsed fields
+router.post('/apply', authMiddleware, uploadCv.single('cv'), apply);
 
 module.exports = router;

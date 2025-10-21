@@ -101,6 +101,9 @@ const candidateJobSchema = new mongoose.Schema({
       description: { type: String , default:'' }
     },
   ],
+  // Raw parsed fields from a CV parser (kept for audit / re-processing)
+  parsed_skills: [{ type: String }],
+  parsed_cv: { type: Object, default: {} },
 });
 
 module.exports = mongoose.model("Candidate_Job", candidateJobSchema);
