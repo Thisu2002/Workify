@@ -35,16 +35,16 @@ const jobPostings = [
   {
     _id: '650d2f9b9c1e4d3f2c8a0001',
     id: 1,
-    title: 'Software Engineer',
+    title: 'Senior React Developer',
     company: 'WealthOS',
     logo: 'https://via.placeholder.com/40?text=W',
-    location: 'Colombo',
+    location: 'Colombo, Sri Lanka (Hybrid)',
     type: 'Full-time',
     model: 'Remote',
-    salary: 'LKR 100,000 - 150,000 per month',
+    salary: 'LKR 300,000 - 400,000 per month',
     postedDate: 'Today',
-    description: 'Join our engineering team to build scalable web applications for international clients. Opportunity to work with cutting-edge technologies in a fast-paced environment.',
-    responsibilities: ['Developing new user-facing features', 'Building reusable components', 'Translating designs into high-quality code'],
+    description: 'Lead frontend development for our international clients from our Colombo office. Must have strong React expertise.',
+    responsibilities: ['Must be available for overlap with European timezone 3 hours daily'],
     qualifications: ['5+ years of React experience', 'Strong proficiency in JavaScript & CSS', 'Experience with RESTful APIs']
   },
   {
