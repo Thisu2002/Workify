@@ -211,13 +211,41 @@ const CareerAdvice = () => {
   };
 
   const getFilteredSessions = () => {
+    let filteredSessions;
+    
     switch (sessionsTab) {
-      case 1: return sessions.filter(s => (s.status || s.session?.status) === 'pending');
-      case 2: return sessions.filter(s => (s.status || s.session?.status) === 'scheduled');
-      case 3: return sessions.filter(s => (s.status || s.session?.status) === 'completed');
-      case 4: return sessions.filter(s => (s.status || s.session?.status) === 'cancelled');
-      default: return sessions;
+      case 1: 
+        filteredSessions = sessions.filter(s => (s.status || s.session?.status) === 'pending');
+        break;
+      case 2: 
+        filteredSessions = sessions.filter(s => (s.status || s.session?.status) === 'scheduled');
+        break;
+      case 3: 
+        filteredSessions = sessions.filter(s => (s.status || s.session?.status) === 'completed');
+        break;
+      case 4: 
+        filteredSessions = sessions.filter(s => (s.status || s.session?.status) === 'cancelled');
+        break;
+      default: 
+        filteredSessions = sessions;
+        break;
     }
+    
+    // Sort sessions: pending first, then by request date (newest first)
+    return filteredSessions.sort((a, b) => {
+      const statusA = a.status || a.session?.status;
+      const statusB = b.status || b.session?.status;
+      
+      // If one is pending and other is not, pending comes first
+      if (statusA === 'pending' && statusB !== 'pending') return -1;
+      if (statusB === 'pending' && statusA !== 'pending') return 1;
+      
+      // If both have same status or both are pending, sort by date (newest first)
+      const dateA = new Date(a.requestDate || a.session?.requestDate || 0);
+      const dateB = new Date(b.requestDate || b.session?.requestDate || 0);
+      
+      return dateB - dateA;
+    });
   };
 
   const filteredMentors = mentors.filter(mentor =>
@@ -226,122 +254,191 @@ const CareerAdvice = () => {
     (mentor.specialties && mentor.specialties.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
-  const renderAllMentors = () => (
-    <>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        Get personalized advice from experienced professionals to accelerate your career.
-      </Typography>
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Search by name, role, or specialty (e.g., 'Resume Review')"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ mb: 4 }}
-      />
+  const renderAllMentors = () => {
+    // Sort mentors: those with pending sessions first, then others
+    const sortedMentors = filteredMentors.sort((a, b) => {
+      const mentorIdA = a._id || a.id;
+      const mentorIdB = b._id || b.id;
+      
+      const sessionStatusA = getMentorSessionStatus(mentorIdA);
+      const sessionStatusB = getMentorSessionStatus(mentorIdB);
+      
+      // If one has pending session and other doesn't, pending comes first
+      if (sessionStatusA === 'pending' && sessionStatusB !== 'pending') return -1;
+      if (sessionStatusB === 'pending' && sessionStatusA !== 'pending') return 1;
+      
+      // If one has scheduled session and other has no session, scheduled comes first
+      if (sessionStatusA === 'scheduled' && !sessionStatusB) return -1;
+      if (sessionStatusB === 'scheduled' && !sessionStatusA) return 1;
+      
+      // Otherwise maintain original order (or sort alphabetically by name)
+      return a.name.localeCompare(b.name);
+    });
 
-      {/* Loading State */}
-      {isLoadingMentors && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
+    return (
+      <>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+          Get personalized advice from experienced professionals to accelerate your career.
+        </Typography>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Search by name, role, or specialty (e.g., 'Resume Review')"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ mb: 4 }}
+        />
 
-      {/* Error State */}
-      {mentorsError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {mentorsError}
-          <Button onClick={fetchMentors} sx={{ ml: 2 }}>
-            Retry
-          </Button>
-        </Alert>
-      )}
+        {/* Loading State */}
+        {isLoadingMentors && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
 
-      {/* Mentors Grid */}
-      {!isLoadingMentors && !mentorsError && (
-        <Grid container spacing={3}>
-          {filteredMentors.map(mentor => {
-            const mentorId = mentor._id || mentor.id;
-            const sessionStatus = getMentorSessionStatus(mentorId);
-            const isRequested = sessionStatus === 'pending' || sessionStatus === 'scheduled';
-            
-            return (
-              <Grid item key={mentorId} xs={12} sm={6} lg={4} sx={{ flexGrow: 1 }}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2.5, 
-                    borderRadius: 2, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    height: '100%', 
-                    transition: 'box-shadow 0.3s, transform 0.2s', 
-                    '&:hover': { boxShadow: 6, transform: 'translateY(-4px)' },
-                    opacity: isRequested ? 0.8 : 1
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar src={mentor.avatar} sx={{ width: 60, height: 60, mr: 2 }}>
-                      {mentor.name.charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6">{mentor.name}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {mentor.role}{mentor.company && ` at ${mentor.company}`}
-                      </Typography>
-                      {mentor.rating > 0 && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                          <Star fontSize="small" color="warning" />
-                          <Typography variant="body2" sx={{ ml: 0.5 }}>
-                            {mentor.rating.toFixed(1)} ({mentor.totalSessions} sessions)
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                  <Typography variant="body2" sx={{ flexGrow: 1, mb: 2 }}>{mentor.bio}</Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Can help with:</Typography>
-                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                      {mentor.specialties && mentor.specialties.map(specialty => (
-                        <Chip key={specialty} icon={<Star fontSize="small" />} label={specialty} size="small" variant="outlined" color="primary" />
-                      ))}
-                    </Stack>
-                  </Box>
-                  <Button 
-                    variant={isRequested ? "outlined" : "contained"} 
-                    startIcon={isRequested ? <CheckCircle /> : <ChatBubbleOutline />} 
-                    fullWidth 
-                    sx={{ mt: 'auto' }} 
-                    onClick={() => handleRequestSession(mentor)}
-                    disabled={isRequested}
-                    color={isRequested ? "success" : "primary"}
+        {/* Error State */}
+        {mentorsError && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {mentorsError}
+            <Button onClick={fetchMentors} sx={{ ml: 2 }}>
+              Retry
+            </Button>
+          </Alert>
+        )}
+
+        {/* Mentors Grid - Using sorted mentors */}
+        {!isLoadingMentors && !mentorsError && (
+          <Grid container spacing={3}>
+            {sortedMentors.map(mentor => {
+              const mentorId = mentor._id || mentor.id;
+              const sessionStatus = getMentorSessionStatus(mentorId);
+              const isRequested = sessionStatus === 'pending' || sessionStatus === 'scheduled';
+              
+              return (
+                <Grid item key={mentorId} xs={12} md={6}>
+                  <Paper 
+                    elevation={2} 
+                    sx={{ 
+                      p: 3, 
+                      borderRadius: 2, 
+                      transition: 'box-shadow 0.3s, transform 0.2s', 
+                      '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' },
+                      opacity: isRequested ? 0.8 : 1,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      // Highlight pending sessions
+                      border: sessionStatus === 'pending' ? '2px solid #ff9800' : 'none',
+                      backgroundColor: sessionStatus === 'pending' ? '#fff3e0' : 'white'
+                    }}
                   >
-                    {sessionStatus === 'pending' ? 'Request Pending' : 
-                     sessionStatus === 'scheduled' ? 'Session Scheduled' : 
-                     'Request a Session'}
-                  </Button>
-                </Paper>
-              </Grid>
-            );
-          })}
-        </Grid>
-      )}
+                    {/* Avatar and Basic Info */}
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                      <Avatar 
+                        src={mentor.avatar} 
+                        sx={{ width: 60, height: 60, flexShrink: 0 }}
+                      >
+                        {mentor.name.charAt(0)}
+                      </Avatar>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="h6" sx={{ mb: 0.5, fontSize: '1.1rem' }}>
+                          {mentor.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {mentor.role}{mentor.company && ` at ${mentor.company}`}
+                        </Typography>
+                        {mentor.rating > 0 && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <Star fontSize="small" color="warning" />
+                            <Typography variant="body2" sx={{ ml: 0.5 }}>
+                              {mentor.rating.toFixed(1)} ({mentor.totalSessions} sessions)
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
 
-      {!isLoadingMentors && !mentorsError && filteredMentors.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 5 }}>
-          <Typography variant="h6" color="text.secondary">No mentors found matching your search.</Typography>
-        </Box>
-      )}
-    </>
-  );
+                    {/* Bio */}
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        mb: 2, 
+                        color: 'text.secondary',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        flex: 1
+                      }}
+                    >
+                      {mentor.bio}
+                    </Typography>
+
+                    {/* Specialties */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                        Can help with:
+                      </Typography>
+                      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                        {mentor.specialties && mentor.specialties.slice(0, 3).map(specialty => (
+                          <Chip 
+                            key={specialty} 
+                            icon={<Star fontSize="small" />} 
+                            label={specialty} 
+                            size="small" 
+                            variant="outlined" 
+                            color="primary" 
+                          />
+                        ))}
+                        {mentor.specialties && mentor.specialties.length > 3 && (
+                          <Chip 
+                            label={`+${mentor.specialties.length - 3} more`}
+                            size="small" 
+                            variant="outlined" 
+                            color="default"
+                          />
+                        )}
+                      </Stack>
+                    </Box>
+
+                    {/* Action Button */}
+                    <Box sx={{ mt: 'auto' }}>
+                      <Button 
+                        variant={isRequested ? "outlined" : "contained"} 
+                        startIcon={isRequested ? <CheckCircle /> : <ChatBubbleOutline />} 
+                        onClick={() => handleRequestSession(mentor)}
+                        disabled={isRequested}
+                        color={isRequested ? "success" : "primary"}
+                        fullWidth
+                        sx={{ py: 1.2 }}
+                      >
+                        {sessionStatus === 'pending' ? 'Request Pending' : 
+                         sessionStatus === 'scheduled' ? 'Session Scheduled' : 
+                         'Request a Session'}
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
+        )}
+
+        {!isLoadingMentors && !mentorsError && sortedMentors.length === 0 && (
+          <Box sx={{ textAlign: 'center', py: 5 }}>
+            <Typography variant="h6" color="text.secondary">No mentors found matching your search.</Typography>
+          </Box>
+        )}
+      </>
+    );
+  };
 
   const renderScheduledSessions = () => {
     const filteredSessions = getFilteredSessions();
