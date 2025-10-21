@@ -46,7 +46,6 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedJob, setEditedJob] = useState(null);
-  const [jobs, setJobs] = useState([]);
   const [openJobs, setOpenJobs] = useState([]);
   const [closedJobs, setClosedJobs] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -98,7 +97,6 @@ const JobPosts = ({ showJobForm, setShowJobForm }) => {
           postedDate: new Date(p.date_posted),
         };
       });
-      setJobs(posts);
       setOpenJobs(posts.filter((p) => p.status === "Open"));
       setClosedJobs(posts.filter((p) => p.status === "Closed"));
     } catch (err) {

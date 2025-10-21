@@ -1,28 +1,28 @@
 const mongoose = require('mongoose');
 
-const recruiterSchema = new mongoose.Schema({
+const leadPanelistSchema = new mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // link back to User
     required: true
   },
-
-  // ✅ Link to LeadPanelist model
-  leadPanelist_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'LeadPanelist',  // reference to LeadPanelist
-    required: true
-  },
-
+  
   location: { 
     type: String 
   },
   
+  specialization: {
+    type: String
+  },
+  
+  experience_years: {
+    type: Number
+  },
+  
   company_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company', // references the Company model
-    required: true
+    ref: 'Company'
   }
 });
 
-module.exports = mongoose.model('Recruiter', recruiterSchema);
+module.exports = mongoose.model('LeadPanelist', leadPanelistSchema);

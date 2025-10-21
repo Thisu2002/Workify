@@ -10,8 +10,36 @@ const RegistrationRequest = require('../models/RegistrationRequest');
 const BusinessManager = require('../models/BusinessManager');
 const Skill = require('../models/Skill');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
+// Prefer explicit Gmail config using EMAIL_USER / EMAIL_PASS (app password)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: (process.env.SMTP_SECURE === 'true'), // true for 465, false for 587
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // must be 16-char app password (no spaces) for Gmail
+  },
+});
 
+// verify transporter at startup (logs useful errors)
+transporter.verify().then(() => {
+  console.log('Email transporter ready');
+}).catch(err => {
+  console.error('Email transporter verify failed:', err);
+});
+
+async function sendEmail(to, subject, html, text) {
+  const from = process.env.FROM_EMAIL || process.env.EMAIL_USER || 'no-reply@workify.local';
+  try {
+    await transporter.sendMail({ from, to, subject, text: text || '', html });
+    console.log('Email sent to', to, 'subject:', subject);
+  } catch (err) {
+    console.error('sendEmail error:', err);
+  }
+}
 
 console.log('managerController loaded'); // debug
 
@@ -175,7 +203,6 @@ exports.acceptMentor = async (req, res) => {
   try {
     const { id } = req.params;
     const mentorReq = await MentorVerification.findById(id);
-
     if (!mentorReq) {
       return res.status(404).json({ message: 'Mentor request not found' });
     }
@@ -206,8 +233,14 @@ exports.acceptMentor = async (req, res) => {
     mentorReq.status = 'Accepted';
     await mentorReq.save();
 
-    // (4️⃣ Send email later — commented out)
-    // sendAcceptanceEmail(mentorReq.email);
+    // Notify mentor by email
+    const html = `
+      <p>Hi ${mentorReq.firstName},</p>
+      <p>Your mentor verification request has been <strong>accepted</strong>. Welcome aboard!</p>
+      <p>We will notify you with login details / next steps shortly.</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(mentorReq.email, 'Mentor Verification Accepted - Workify', html);
 
     res.status(200).json({ message: 'Mentor accepted successfully.' });
   } catch (err) {
@@ -231,8 +264,14 @@ exports.declineMentor = async (req, res) => {
     mentorReq.reason = reason;
     await mentorReq.save();
 
-    // (Commented out email)
-    // sendDeclineEmail(mentorReq.email, reason);
+    // Notify mentor by email
+    const html = `
+      <p>Hi ${mentorReq.firstName},</p>
+      <p>Your mentor verification request has been <strong>declined</strong>.</p>
+      <p>Reason: ${reason || 'Not specified'}</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(mentorReq.email, 'Mentor Verification Declined - Workify', html);
 
     res.status(200).json({ message: 'Mentor declined successfully.' });
   } catch (err) {
@@ -364,7 +403,6 @@ exports.acceptRegistrationRequest = async (req, res) => {
     const request = await RegistrationRequest.findById(id);
     if (!request) return res.status(404).json({ message: 'Request not found' });
 
-    // ✅ Create a new Company document
     const newCompany = new Company({
       name: request.companyName,
       location: request.address || 'N/A',
@@ -375,7 +413,8 @@ exports.acceptRegistrationRequest = async (req, res) => {
         startDate: new Date(),
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)),
         status: 'active'
-      }
+      },
+      passkey: request.passkey || crypto.randomBytes(12).toString('hex')
     });
 
     await newCompany.save();
@@ -384,8 +423,19 @@ exports.acceptRegistrationRequest = async (req, res) => {
     request.status = 'Accepted';
     await request.save();
 
+    // Notify requester by email
+    const html = `
+      <p>Dear ${request.contactPerson || request.companyName},</p>
+      <p>Your company registration request has been <strong>accepted</strong>.</p>
+      <p>Company: <strong>${newCompany.name}</strong></p>
+      <p>Passkey: <code>${newCompany.passkey}</code></p>
+      <p>You can now login and complete your profile.</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(request.email, 'Company Registration Accepted - Workify', html);
+    
     // (Optional: Send notification/email here)
-    res.status(200).json({ message: 'Registration request accepted', company: newCompany });
+    res.status(200).json({ message: 'Registration request accepted and email sent', company: newCompany });
   } catch (err) {
     console.error('acceptRegistrationRequest error:', err);
     res.status(500).json({ message: 'Error accepting registration request', error: err.message });
@@ -405,8 +455,18 @@ exports.declineRegistrationRequest = async (req, res) => {
     request.declineReason = reason;
     await request.save();
 
+    // Notify requester by email
+    const html = `
+      <p>Dear ${request.contactPerson || request.companyName},</p>
+      <p>We regret to inform you that your company registration request has been <strong>declined</strong>.</p>
+      <p>Reason: ${reason || 'Not specified'}</p>
+      <p>If you believe this is a mistake please contact support.</p>
+      <p>Regards,<br/>Workify Team</p>
+    `;
+    await sendEmail(request.email, 'Company Registration Declined - Workify', html);
+
     // (Optional: Send alert/email here)
-    res.status(200).json({ message: 'Registration request declined', request });
+    res.status(200).json({ message: 'Registration request declined and email sent', request });
   } catch (err) {
     console.error('declineRegistrationRequest error:', err);
     res.status(500).json({ message: 'Error declining registration request', error: err.message });
@@ -513,14 +573,17 @@ exports.getAnalyticsData = async (req, res) => {
       }
     ]);
 
-    // 2️⃣ Companies: registrations over time
-    const companyTrends = await Company.aggregate([
+    // 2️⃣ Companies: registrations over time (use RegistrationRequest pending requests)
+    const companyTrends = await RegistrationRequest.aggregate([
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: { $ifNull: ["$createdAt", "$requestDate", { $toDate: "$_id" }] }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo }, status: "Pending" } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$createdAtAgg" },
           count: { $sum: 1 }
         }
       },
@@ -563,12 +626,21 @@ exports.getAnalyticsData = async (req, res) => {
 
     // 5️⃣ Mentor verifications trend
     const mentorVerificationTrends = await MentorVerification.aggregate([
+      // ensure we have a date field to work with (createdAt or ObjectId timestamp)
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: {
+            $ifNull: ["$createdAt", { $toDate: "$_id" }]
+          }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: {
+            year: { $year: "$createdAtAgg" },
+            month: { $month: "$createdAtAgg" }
+          },
           total: { $sum: 1 },
           accepted: {
             $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
@@ -578,17 +650,23 @@ exports.getAnalyticsData = async (req, res) => {
           }
         }
       },
-      { $sort: { "_id": 1 } }
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
     ]);
 
     // 6️⃣ Registration requests trend
     const registrationTrends = await RegistrationRequest.aggregate([
+      // ensure we have a date to work with: prefer createdAt, then requestDate, then ObjectId timestamp
       {
-        $match: { createdAt: { $gte: sixMonthsAgo } }
+        $addFields: {
+          createdAtAgg: {
+            $ifNull: ["$createdAt", "$requestDate", { $toDate: "$_id" }]
+          }
+        }
       },
+      { $match: { createdAtAgg: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: { $month: "$createdAtAgg" },
           total: { $sum: 1 },
           accepted: {
             $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] }
@@ -684,5 +762,52 @@ exports.getCompanyDetails = async (req, res) => {
     res.status(500).json({ message: 'Error fetching company details', error: err.message });
   }
 };
+
+// module.exports = async function checkSubscriptionLimit(req, res, next) {
+//   try {
+//     // determine company id: prefer explicit company_id in request body,
+//     // otherwise use recruiter_id -> lookup recruiter.company_id
+//     let companyId = req.body.company_id;
+//     if (!companyId && req.body.recruiter_id) {
+//       const recruiter = await Recruiter.findById(req.body.recruiter_id).lean();
+//       companyId = recruiter?.company_id;
+//     }
+
+//     if (!companyId) {
+//       // If company not determinable, allow (or you can block)
+//       return res.status(400).json({ message: 'company_id or recruiter_id required' });
+//     }
+
+//     const company = await Company.findById(companyId).lean();
+//     if (!company) return res.status(404).json({ message: 'Company not found' });
+
+//     const planRef = company.currentSubscription?.plan;
+//     if (!planRef) return next(); // no plan => treat as allowed (or if you want block, change here)
+
+//     // get plan (planRef may be populated or an ObjectId)
+//     const plan = await (typeof planRef === 'object' && planRef.name
+//       ? Promise.resolve(planRef)
+//       : SubscriptionPlan.findById(planRef).lean());
+
+//     if (!plan || plan.maxPosts == null) {
+//       // unlimited or no well-defined plan -> allow
+//             return next();
+//     }
+
+//     // count active / open posts for this company
+//     const activeCount = await Post.countDocuments({ company_id: companyId, status: 'Open' });
+
+//     if (activeCount >= plan.maxPosts) {
+//       return res.status(403).json({
+//         message: `Post limit reached for current subscription plan (${plan.name}). Max active posts allowed: ${plan.maxPosts}. Please upgrade the plan to post more jobs.`
+//       });
+//     }
+
+//     return next();
+//   } catch (err) {
+//     console.error('checkSubscriptionLimit error:', err);
+//     return res.status(500).json({ message: 'Error verifying subscription', error: err.message });
+//   }
+// };
 
 

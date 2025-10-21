@@ -44,6 +44,13 @@ function Signup() {
   const [subscriptionPlans, setSubscriptionPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
+  // Mentor fields
+  const [contactNumber, setContactNumber] = useState("");
+  const [field, setField] = useState("");
+  const [experience, setExperience] = useState("");
+  const [bio, setBio] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -106,7 +113,7 @@ function Signup() {
 
     let data = {};
 
-    if (role === "candidate" || role === "mentor") {
+    if (role === "candidate") {
       if (!firstName || !lastName || !email || !password || !confirmPassword)
         return setErrorMessage("Please fill in all fields.");
 
@@ -116,6 +123,38 @@ function Signup() {
         return setErrorMessage("Passwords do not match.");
 
       data = { role, firstName, lastName, email, password };
+    }
+
+    if (role === "mentor") {
+      if (
+        !firstName ||
+        !lastName ||
+        !email ||
+        !password ||
+        !confirmPassword ||
+        !contactNumber ||
+        !field ||
+        !experience
+      )
+        return setErrorMessage("Please fill all required fields.");
+
+      if (emailExists) return setErrorMessage("Email already in use.");
+      if (validPassword) return setErrorMessage(validPassword);
+      if (password !== confirmPassword)
+        return setErrorMessage("Passwords do not match.");
+
+      data = {
+        role,
+        firstName,
+        lastName,
+        email,
+        password,
+        contactNumber,
+        field,
+        experience,
+        bio,
+        linkedin,
+      };
     }
 
     if (role === "recruiter") {
@@ -228,8 +267,8 @@ function Signup() {
               <option value="mentor">Mentor</option>
             </select>
 
-            {/* Candidate / Mentor */}
-            {(role === "candidate" || role === "mentor") && (
+            {/* Candidate */}
+            {role === "candidate" && (
               <>
                 <div className="row-inputs">
                   <input
@@ -255,9 +294,7 @@ function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-                {emailExists && (
-                  <span className="msg">Email already exists!</span>
-                )}
+                {emailExists && <span className="msg">Email already exists!</span>}
 
                 <div className="row-inputs">
                   <div className="password-input">
@@ -285,16 +322,10 @@ function Signup() {
                       required
                     />
                     <IconButton
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="visibility"
                     >
-                      {showConfirmPassword ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </div>
                 </div>
@@ -304,6 +335,105 @@ function Signup() {
                     <ErrorOutlineIcon className="error-icon" />
                   </Tooltip>
                 )}
+              </>
+            )}
+
+            {/* Mentor */}
+            {role === "mentor" && (
+              <>
+                <div className="row-inputs">
+                  <input
+                    type="text"
+                    placeholder="First Name*"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last Name*"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <input
+                  type="email"
+                  placeholder="Email*"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                {emailExists && <span className="msg">Email already exists!</span>}
+
+                <input
+                  type="text"
+                  placeholder="Contact Number*"
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Field (e.g. Software, HR, Design)*"
+                  value={field}
+                  onChange={(e) => setField(e.target.value)}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Experience (e.g. 5 years)*"
+                  value={experience}
+                  onChange={(e) => setExperience(e.target.value)}
+                  required
+                />
+                <textarea
+                  placeholder="Bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                ></textarea>
+                <input
+                  type="text"
+                  placeholder="LinkedIn Profile"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                />
+
+                <div className="row-inputs">
+                  <div className="password-input">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password*"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </div>
+
+                  <div className="password-input">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Retype Password*"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="visibility"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </div>
+                </div>
               </>
             )}
 
